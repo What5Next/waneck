@@ -90,6 +90,34 @@ lib/
 }
 ```
 
+## DB 타입 생성 (Supabase)
+
+스키마 변경 시 TypeScript 타입을 재생성해야 한다.
+
+### 1. Access Token 등록 (최초 1회)
+
+`~/.zshrc`에 추가:
+
+```bash
+export SUPABASE_ACCESS_TOKEN=your_supabase_access_token
+```
+
+토큰 발급: Supabase 대시보드 > 우측 상단 프로필 > Account > Access Tokens
+
+적용:
+
+```bash
+source ~/.zshrc
+```
+
+### 2. 타입 재생성
+
+```bash
+npm run gen:types
+```
+
+생성 결과는 `lib/database.types.ts`에 저장된다.
+
 ## 사용 모델
 
 | 환경 | 모델 |
