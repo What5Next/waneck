@@ -78,7 +78,9 @@ export default function Home() {
           >
             {/* 배경 */}
             <div className="flex aspect-4/3 w-full items-center justify-end bg-linear-to-br from-card via-card to-muted pr-6 pt-4">
-              <span className="text-[110px] leading-none opacity-90">{featured.emoji}</span>
+              {featured.profile_image_url
+                ? <img src={featured.profile_image_url} alt={featured.name} className="h-[110px] w-[110px] rounded-full object-cover opacity-90" />
+                : <span className="text-[110px] leading-none opacity-90">{featured.name[0]}</span>}
             </div>
             {/* 오버레이 */}
             <div className="absolute inset-0 bg-linear-to-r from-black/80 via-black/30 to-transparent" />
@@ -102,9 +104,9 @@ export default function Home() {
                 캐릭터 추천
               </span>
               <h2 className="mt-2 text-lg font-bold leading-snug text-white">{featured.name}</h2>
-              <p className="mt-0.5 text-xs text-white/70">{featured.tagline}</p>
+              <p className="mt-0.5 text-xs text-white/70">{featured.short_intro}</p>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
-                {featured.suggestions.slice(0, 2).map((s, i) => (
+                {(featured.suggestions as string[] | null)?.slice(0, 2).map((s, i) => (
                   <span key={i} className="text-[11px] text-white/50">
                     #{s.replace(/\s+/g, '').slice(0, 6)}
                   </span>
@@ -198,11 +200,11 @@ export default function Home() {
                   <span className="absolute left-0 top-0 z-10 rounded-br-lg bg-red-500 px-1.5 py-0.5 text-[9px] font-bold text-white">
                     ORIGINAL
                   </span>
-                  {/* 이모지 커버 */}
+                  {/* 커버 이미지 */}
                   <div className="flex aspect-3/4 w-full items-center justify-center bg-linear-to-br from-card to-muted">
-                    <span className="text-5xl transition-transform duration-300 group-hover:scale-110">
-                      {c.emoji}
-                    </span>
+                    {c.profile_image_url
+                      ? <img src={c.profile_image_url} alt={c.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                      : <span className="text-5xl transition-transform duration-300 group-hover:scale-110">{c.name[0]}</span>}
                   </div>
                 </div>
                 {/* 카드 정보 */}

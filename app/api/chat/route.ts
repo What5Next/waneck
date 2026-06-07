@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
       model: 'gemini-2.5-flash',
       contents,
       config: {
-        systemInstruction: character.system,
+        systemInstruction: character.system_prompt,
         maxOutputTokens: 1000,
       },
     })

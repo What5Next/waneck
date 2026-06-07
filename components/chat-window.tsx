@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, MoreVertical } from 'lucide-react'
 
-import type { Character } from '@/lib/characters'
+import type { Character } from '@/lib/types'
 import type { Message } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { MobileShell } from '@/components/ui/mobile-shell'

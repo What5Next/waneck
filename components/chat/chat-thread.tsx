@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react'
 
 import type { Message } from '@/lib/types'
-import type { Character } from '@/lib/characters'
+import type { Character } from '@/lib/types'
 import { MessageBubble } from './message-bubble'
 
 export type ChatThreadProps = {

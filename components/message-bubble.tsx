@@ -1,4 +1,4 @@
-import { Character } from '@/lib/characters'
+import type { Character } from '@/lib/types'
 import { Message } from '@/lib/types'
 
 export default function MessageBubble({
@@ -13,7 +13,11 @@ export default function MessageBubble({
   return (
     <div className={`flex gap-2 items-end ${isUser ? 'flex-row-reverse' : ''}`}>
       {!isUser && (
-        <span className="text-xl w-8 text-center flex-shrink-0">{character.emoji}</span>
+        <span className="text-xl w-8 text-center flex-shrink-0">
+          {character.profile_image_url
+            ? <img src={character.profile_image_url} alt={character.name} className="h-8 w-8 rounded-full object-cover" />
+            : character.name[0]}
+        </span>
       )}
       <div className={`flex flex-col gap-1 max-w-[74%] ${isUser ? 'items-end' : ''}`}>
         <div

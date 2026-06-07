@@ -1,7 +1,6 @@
 import Link from 'next/link'
 
-import type { Character } from '@/lib/characters'
-import { MessageBubble } from '@/components/chat/message-bubble'
+import type { Character } from '@/lib/types'
 import { StartChatButton } from '@/components/start-chat-button'
 
 export function CharacterDetail({ character }: { character: Character }) {
@@ -11,7 +10,9 @@ export function CharacterDetail({ character }: { character: Character }) {
       {/* 히어로 영역 */}
       <div className="relative aspect-[3/4] w-full overflow-hidden sm:aspect-[16/9]">
         <div className="flex h-full w-full items-center justify-center bg-card">
-          <span className="text-[8rem] leading-none">{character.emoji}</span>
+          {character.profile_image_url
+            ? <img src={character.profile_image_url} alt={character.name} className="h-full w-full object-cover" />
+            : <span className="text-[8rem] leading-none">{character.name[0]}</span>}
         </div>
         {/* 텍스트 가독성용 오버레이 — 라이트/다크 공통 */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
@@ -25,7 +26,7 @@ export function CharacterDetail({ character }: { character: Character }) {
         {/* 이름·태그라인 */}
         <div className="absolute bottom-0 left-0 right-0 p-4">
           <h1 className="text-2xl font-bold text-white">{character.name}</h1>
-          <p className="mt-1 text-sm text-white/80">{character.tagline}</p>
+          <p className="mt-1 text-sm text-white/80">{character.short_intro}</p>
         </div>
       </div>
 
@@ -43,25 +44,10 @@ export function CharacterDetail({ character }: { character: Character }) {
         <section>
           <h2 className="mb-2 text-sm font-medium text-foreground/90">소개</h2>
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
-            {character.desc}
+            {character.description}
           </p>
         </section>
 
-        {/* 미리보기 */}
-        <section>
-          <h2 className="mb-2 text-sm font-medium text-foreground/90">미리보기</h2>
-          <div className="flex flex-col gap-2">
-            {character.introPreview.map((turn, idx) => (
-              <MessageBubble
-                key={idx}
-                role={turn.role}
-                content={turn.text}
-                character={character}
-                showAvatar={turn.role === 'model'}
-              />
-            ))}
-          </div>
-        </section>
       </div>
 
       {/* Sticky CTA */}

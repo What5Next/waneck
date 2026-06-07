@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { AssistantMarkdownBody } from './assistant-markdown-body'
-import type { Character } from '@/lib/characters'
+import type { Character } from '@/lib/types'
 
 export type MessageBubbleProps = {
   role: 'user' | 'model'
@@ -44,7 +44,7 @@ export function MessageBubble({
       {showAvatar ? (
         <Avatar className="h-8 w-8 shrink-0 border border-border shadow-sm">
           <AvatarFallback className="bg-muted text-base">
-            {character?.emoji ?? 'AI'}
+            {character?.name[0] ?? 'AI'}
           </AvatarFallback>
         </Avatar>
       ) : (
