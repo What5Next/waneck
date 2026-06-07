@@ -1,104 +1,222 @@
+'use client'
+
 import Link from 'next/link'
-import { Plus, Search } from 'lucide-react'
+import { useState } from 'react'
+import { ChevronRight, Plus, Search, Volume2, X } from 'lucide-react'
 
 import { CHARACTERS } from '@/lib/characters'
-import { Button } from '@/components/ui/button'
 import { MobileShell } from '@/components/ui/mobile-shell'
 import { ThemeToggle } from '@/components/chat/theme-toggle'
+import { cn } from '@/lib/utils'
+
+const CATEGORIES = [
+  '추천', '신규 랭킹', '전체 랭킹', '오늘 신작',
+  '로맨스', '판타지', '시뮬레이션', 'GL', 'BL',
+]
 
 export default function Home() {
-  const featured = CHARACTERS[0]
+  const [activeCategory, setActiveCategory] = useState('추천')
+  const [showNotice, setShowNotice] = useState(true)
+  const [featuredIdx, setFeaturedIdx] = useState(0)
+
+  const featured = CHARACTERS[featuredIdx]
 
   return (
     <MobileShell>
-      <main className="flex min-h-screen flex-col">
-        <h1 className="sr-only">Chat AI 캐릭터 홈</h1>
+      <div className="flex min-h-screen flex-col bg-background">
+        <h1 className="sr-only">Chat AI 홈</h1>
 
-        <div className="flex flex-col bg-background pb-8">
-
-          {/* 헤더 */}
-          <header className="flex items-center justify-between gap-2 border-b border-border px-4 py-4">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="text-muted-foreground"
-              aria-label="검색 (준비 중)"
-              disabled
+        {/* ── 헤더 ── */}
+        <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
+          <span className="text-lg font-bold tracking-tight text-foreground">채팅AI</span>
+          <div className="flex items-center gap-0.5">
+            <Link
+              href="/characters/create"
+              className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-muted"
+              aria-label="캐릭터 만들기"
             >
-              <Search className="h-5 w-5" />
-            </Button>
-            <span className="text-base font-medium text-foreground">캐릭터</span>
-            <Link href="/characters/create">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="text-muted-foreground hover:text-foreground"
-                aria-label="캐릭터 만들기"
-              >
-                <Plus className="h-5 w-5" />
-              </Button>
+              <Plus className="h-5 w-5 text-muted-foreground" />
             </Link>
-          </header>
+            <button
+              type="button"
+              className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-muted"
+              aria-label="검색"
+            >
+              <Search className="h-5 w-5 text-muted-foreground" />
+            </button>
+            <ThemeToggle />
+          </div>
+        </header>
 
-          {/* 피처드 배너 */}
+        {/* ── 카테고리 칩 ── */}
+        <nav
+          aria-label="카테고리"
+          className="flex gap-2 overflow-x-auto px-4 py-3 scrollbar-none"
+        >
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => setActiveCategory(cat)}
+              className={cn(
+                'shrink-0 rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors',
+                activeCategory === cat
+                  ? 'border-transparent bg-red-500 text-white'
+                  : 'border-border bg-background text-foreground hover:border-red-300',
+              )}
+            >
+              {cat}
+            </button>
+          ))}
+        </nav>
+
+        {/* ── 피처드 배너 ── */}
+        <div className="px-4">
           <Link
             href={`/characters/${featured.id}`}
-            className="group relative mx-4 mt-5 overflow-hidden rounded-2xl"
+            className="relative block overflow-hidden rounded-2xl"
           >
-            <div className="flex aspect-[16/10] w-full items-center justify-center bg-card transition-transform duration-300 group-hover:scale-[1.02]">
-              <span className="text-8xl">{featured.emoji}</span>
+            {/* 배경 */}
+            <div className="flex aspect-4/3 w-full items-center justify-end bg-linear-to-br from-card via-card to-muted pr-6 pt-4">
+              <span className="text-[110px] leading-none opacity-90">{featured.emoji}</span>
             </div>
-            {/* 텍스트 가독성용 오버레이 — 라이트/다크 공통 */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-5">
-              <p className="text-xs font-medium uppercase tracking-wider text-white/60">
-                오늘의 캐릭터
-              </p>
-              <p className="mt-2 text-xl font-bold text-white">{featured.name}</p>
-              <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-white/80">
-                {featured.tagline}
-              </p>
+            {/* 오버레이 */}
+            <div className="absolute inset-0 bg-linear-to-r from-black/80 via-black/30 to-transparent" />
+            {/* 페이지 인디케이터 */}
+            <div className="absolute right-3 top-3 rounded-full bg-black/50 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
+              {featuredIdx + 1} / {CHARACTERS.length}
+            </div>
+            {/* 우측 캐릭터 썸네일 클릭 영역 */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault()
+                setFeaturedIdx((i) => (i + 1) % CHARACTERS.length)
+              }}
+              className="absolute right-0 top-0 h-full w-1/3"
+              aria-label="다음 캐릭터"
+            />
+            {/* 본문 */}
+            <div className="absolute bottom-0 left-0 right-0 p-4">
+              <span className="inline-block rounded-sm bg-red-500 px-2 py-0.5 text-[10px] font-bold tracking-wide text-white">
+                캐릭터 추천
+              </span>
+              <h2 className="mt-2 text-lg font-bold leading-snug text-white">{featured.name}</h2>
+              <p className="mt-0.5 text-xs text-white/70">{featured.tagline}</p>
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {featured.suggestions.slice(0, 2).map((s, i) => (
+                  <span key={i} className="text-[11px] text-white/50">
+                    #{s.replace(/\s+/g, '').slice(0, 6)}
+                  </span>
+                ))}
+                <span className="text-[11px] text-white/50">#{featured.tag}</span>
+              </div>
+              <button
+                type="button"
+                className="mt-3 rounded-md border border-white/40 bg-black/30 px-3 py-1 text-xs text-white backdrop-blur-sm hover:bg-black/50"
+              >
+                자세히보기
+              </button>
             </div>
           </Link>
-
-          {/* 전체 캐릭터 캐러셀 */}
-          <section className="mt-8">
-            <h2 className="mb-4 px-4 text-sm font-medium text-muted-foreground">전체 캐릭터</h2>
-            <div className="flex snap-x snap-mandatory scroll-pl-4 gap-4 overflow-x-auto overscroll-x-contain px-4 pb-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {CHARACTERS.map((c) => (
-                <Link
-                  key={c.id}
-                  href={`/characters/${c.id}`}
-                  className="group flex w-[calc(50vw-1.5rem)] max-w-[11.5rem] shrink-0 snap-start flex-col gap-3"
-                >
-                  <div className="relative overflow-hidden rounded-2xl bg-card shadow-lg shadow-black/20 transition-shadow duration-300 group-hover:shadow-xl group-hover:shadow-black/30">
-                    <div className="flex aspect-[3/4] w-full items-center justify-center">
-                      <span className="text-6xl transition-transform duration-300 group-hover:scale-[1.06]">
-                        {c.emoji}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="px-1 pb-1">
-                    <p className="line-clamp-2 text-base font-semibold leading-snug text-foreground">
-                      {c.name}
-                    </p>
-                    <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
-                      {c.tagline}
-                    </p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
         </div>
 
-        {/* 푸터 */}
-        <footer className="mt-auto flex items-center justify-end gap-2 border-t border-border px-3 py-2 text-xs text-muted-foreground">
-          <ThemeToggle />
-        </footer>
-      </main>
+        {/* ── 2컬럼 프로모 카드 ── */}
+        <div className="mt-3 grid grid-cols-2 gap-2.5 px-4">
+          <div className="flex items-center justify-between overflow-hidden rounded-xl border border-border bg-card px-3 py-3">
+            <div>
+              <p className="text-[11px] leading-tight text-muted-foreground">함께 즐기면,{'\n'}더 재미있는</p>
+              <p className="mt-0.5 text-sm font-bold text-red-500">파티챗</p>
+            </div>
+            <span className="text-3xl">💬</span>
+          </div>
+          <div className="flex items-center justify-between overflow-hidden rounded-xl border border-border bg-card px-3 py-3">
+            <div>
+              <p className="text-[11px] leading-tight text-muted-foreground">오리지널{'\n'}A-RPG</p>
+              <p className="mt-0.5 text-sm font-bold text-red-500">이세계 모험</p>
+            </div>
+            <span className="text-3xl">⚔️</span>
+          </div>
+        </div>
+
+        {/* ── 신규 혜택 배너 ── */}
+        <div className="mx-4 mt-3 flex items-center justify-between rounded-2xl bg-amber-50 px-4 py-3.5 dark:bg-amber-950/30">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">🎁</span>
+            <div>
+              <p className="text-[13px] font-bold leading-snug text-foreground">
+                신규 사용자에게만 드리는 대박 혜택
+              </p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">
+                미션 완료 시{' '}
+                <span className="font-semibold text-red-500">포인트 1000</span> 증정
+              </p>
+            </div>
+          </div>
+          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+        </div>
+
+        {/* ── 업데이트 알림 ── */}
+        {showNotice && (
+          <div className="mx-4 mt-2.5 flex items-center justify-between rounded-xl border border-border bg-card px-4 py-2.5">
+            <div className="flex items-center gap-2">
+              <Volume2 className="h-4 w-4 shrink-0 text-red-500" />
+              <p className="text-[13px] text-foreground">[업데이트] 내 취향 설정 기능 추가</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowNotice(false)}
+              className="ml-2 flex h-6 w-6 shrink-0 items-center justify-center rounded-full hover:bg-muted"
+              aria-label="닫기"
+            >
+              <X className="h-3.5 w-3.5 text-muted-foreground" />
+            </button>
+          </div>
+        )}
+
+        {/* ── 오리지널 캐릭터 섹션 ── */}
+        <section className="mt-6 pb-10">
+          <div className="mb-3 flex items-center justify-between px-4">
+            <h2 className="text-[15px] font-bold text-foreground">요즘 트렌드</h2>
+            <Link
+              href="/characters"
+              className="flex items-center gap-0.5 text-[12px] text-muted-foreground hover:text-foreground"
+            >
+              전체보기 <ChevronRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+          <div className="flex gap-3 overflow-x-auto scroll-pl-4 px-4 pb-1 scrollbar-none">
+            {CHARACTERS.map((c) => (
+              <Link
+                key={c.id}
+                href={`/characters/${c.id}`}
+                className="group flex w-[130px] shrink-0 flex-col"
+              >
+                {/* 커버 카드 */}
+                <div className="relative overflow-hidden rounded-xl bg-card shadow-md shadow-black/10">
+                  {/* ORIGINAL 배지 */}
+                  <span className="absolute left-0 top-0 z-10 rounded-br-lg bg-red-500 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                    ORIGINAL
+                  </span>
+                  {/* 이모지 커버 */}
+                  <div className="flex aspect-3/4 w-full items-center justify-center bg-linear-to-br from-card to-muted">
+                    <span className="text-5xl transition-transform duration-300 group-hover:scale-110">
+                      {c.emoji}
+                    </span>
+                  </div>
+                </div>
+                {/* 카드 정보 */}
+                <div className="mt-2 px-0.5">
+                  <p className="line-clamp-1 text-[13px] font-semibold text-foreground">{c.name}</p>
+                  <p className="mt-0.5 text-[11px] text-muted-foreground">
+                    {c.tag} · {c.mood}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      </div>
     </MobileShell>
   )
 }
