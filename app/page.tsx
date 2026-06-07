@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Bell, Search } from 'lucide-react'
+import { Plus, Search } from 'lucide-react'
 
 import { CHARACTERS } from '@/lib/characters'
 import { Button } from '@/components/ui/button'
@@ -29,16 +29,17 @@ export default function Home() {
               <Search className="h-5 w-5" />
             </Button>
             <span className="text-base font-medium text-foreground">캐릭터</span>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="text-muted-foreground"
-              aria-label="알림 (준비 중)"
-              disabled
-            >
-              <Bell className="h-5 w-5" />
-            </Button>
+            <Link href="/characters/create">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground hover:text-foreground"
+                aria-label="캐릭터 만들기"
+              >
+                <Plus className="h-5 w-5" />
+              </Button>
+            </Link>
           </header>
 
           {/* 피처드 배너 */}
