@@ -1,6 +1,6 @@
 import { GoogleGenAI } from '@google/genai'
 import { NextRequest, NextResponse } from 'next/server'
-import { getCharacter } from '@/lib/characters'
+import { supabase } from '@/lib/supabase'
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
 
@@ -16,7 +16,12 @@ export async function POST(req: NextRequest) {
       messages: Message[]
     }
 
-    const character = getCharacter(characterId)
+    const { data: character } = await supabase
+      .from('characters')
+      .select('system_prompt')
+      .eq('id', characterId)
+      .single()
+
     if (!character) {
       return NextResponse.json({ error: 'Character not found' }, { status: 404 })
     }

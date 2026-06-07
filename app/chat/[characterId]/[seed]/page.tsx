@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 
-import { getCharacter } from '@/lib/characters'
+import { supabase } from '@/lib/supabase'
 import ChatWindow from '@/components/chat-window'
 
 export default async function ChatPage({
@@ -9,7 +9,12 @@ export default async function ChatPage({
   params: Promise<{ characterId: string; seed: string }>
 }) {
   const { characterId, seed } = await params
-  const character = getCharacter(characterId)
+  const { data: character } = await supabase
+    .from('characters')
+    .select('*')
+    .eq('id', characterId)
+    .single()
+
   if (!character) notFound()
 
   return <ChatWindow character={character} seed={seed} />
