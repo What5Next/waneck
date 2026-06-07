@@ -1,36 +1,98 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI 캐릭터 챗 MVP
 
-## Getting Started
+Gemini API + Next.js 14 App Router 기반 캐릭터 챗 서비스 MVP.
 
-First, run the development server:
+## 시작하기
+
+### 1. 패키지 설치
+
+```bash
+npm install @google/genai
+```
+
+> Next.js 프로젝트가 없다면 먼저 생성:
+> ```bash
+> npx create-next-app@latest ai-character-chat --typescript --tailwind --app
+> cd ai-character-chat
+> npm install @google/genai
+> ```
+
+### 2. 환경 변수 설정
+
+```bash
+cp .env.local.example .env.local
+```
+
+`.env.local`을 열고 Gemini API 키 입력:
+```
+GEMINI_API_KEY=your_gemini_api_key_here
+```
+
+API 키 발급: https://aistudio.google.com/app/apikey
+
+### 3. 파일 복사
+
+아래 파일들을 프로젝트에 복사:
+
+```
+lib/characters.ts
+app/page.tsx
+app/api/chat/route.ts
+app/chat/[characterId]/page.tsx
+components/CharacterCard.tsx
+components/ChatWindow.tsx
+components/MessageBubble.tsx
+components/TypingIndicator.tsx
+components/ChatInput.tsx
+```
+
+### 4. 실행
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+브라우저에서 http://localhost:3000 접속
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 구조
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+app/
+├── page.tsx                    # 캐릭터 선택 화면
+├── chat/[characterId]/
+│   └── page.tsx                # 채팅 화면
+└── api/chat/
+    └── route.ts                # Gemini API 프록시 (서버 사이드)
+components/
+├── CharacterCard.tsx
+├── ChatWindow.tsx              # 채팅 메인 (클라이언트)
+├── MessageBubble.tsx
+├── TypingIndicator.tsx
+└── ChatInput.tsx
+lib/
+└── characters.ts               # 캐릭터 데이터 + 타입 정의
+```
 
-## Learn More
+## 캐릭터 추가
 
-To learn more about Next.js, take a look at the following resources:
+`lib/characters.ts`의 `CHARACTERS` 배열에 항목 추가:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```ts
+{
+  id: 'nova',
+  name: '노바',
+  emoji: '🌌',
+  tag: '신비',
+  mood: '우주를 관찰 중',
+  desc: '신비로운 우주 탐험가.',
+  suggestions: ['우주에 대해 알려줘', '별자리 얘기 해줘', '외계인이 있을까?'],
+  system: `너의 이름은 노바야. 신비로운 우주 탐험가야. ...`,
+}
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 사용 모델
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| 환경 | 모델 |
+|---|---|
+| 현재 | `gemini-2.0-flash` |
+| 무료 한도 | 분당 15 요청, 하루 1500 요청 |
