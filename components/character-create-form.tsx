@@ -61,15 +61,18 @@ const DEFAULT_FORM: FormState = {
 function SettingsTab({
   form,
   setForm,
+  onFileChange,
 }: {
   form: FormState
   setForm: React.Dispatch<React.SetStateAction<FormState>>
+  onFileChange: (file: File | null) => void
 }) {
   const fileRef = useRef<HTMLInputElement>(null)
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
+    onFileChange(file)
     const url = URL.createObjectURL(file)
     setForm((f) => ({ ...f, imageUrl: url }))
   }
@@ -91,7 +94,7 @@ function SettingsTab({
                 />
                 <button
                   type="button"
-                  onClick={() => setForm((f) => ({ ...f, imageUrl: '' }))}
+                  onClick={() => { onFileChange(null); setForm((f) => ({ ...f, imageUrl: '' })) }}
                   className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white"
                   aria-label="이미지 제거"
                 >
@@ -408,16 +411,38 @@ export function CharacterCreateForm() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<TabId>('settings')
   const [form, setForm] = useState<FormState>(DEFAULT_FORM)
+  const [imageFile, setImageFile] = useState<File | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const currentIdx = TAB_ORDER.indexOf(activeTab)
   const isLast = currentIdx === TAB_ORDER.length - 1
 
+  async function uploadImage(file: File): Promise<string> {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    })
+    if (!res.ok) {
+      const { error } = await res.json()
+      throw new Error(error ?? '이미지 업로드 실패')
+    }
+    const { publicUrl } = await res.json()
+    return publicUrl
+  }
+
   async function handleSubmit() {
     setSubmitting(true)
     setError(null)
     try {
+      let profileImageUrl: string | null = null
+      if (imageFile) {
+        profileImageUrl = await uploadImage(imageFile)
+      }
+
       const res = await fetch('/api/characters', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -430,6 +455,7 @@ export function CharacterCreateForm() {
           description: form.desc,
           suggestions: form.suggestions.filter(Boolean),
           introTurns: form.introTurns,
+          profile_image_url: profileImageUrl,
         }),
       })
       const data = await res.json()
@@ -503,7 +529,7 @@ export function CharacterCreateForm() {
 
         {/* 탭 콘텐츠 */}
         <div className="flex-1 overflow-y-auto px-4 py-6">
-          {activeTab === 'settings' && <SettingsTab form={form} setForm={setForm} />}
+          {activeTab === 'settings' && <SettingsTab form={form} setForm={setForm} onFileChange={setImageFile} />}
           {activeTab === 'intro'    && <IntroTab    form={form} setForm={setForm} />}
           {activeTab === 'prompt'   && <PromptTab   form={form} setForm={setForm} />}
           {activeTab === 'advanced' && <AdvancedTab form={form} setForm={setForm} />}

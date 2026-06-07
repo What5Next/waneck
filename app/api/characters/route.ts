@@ -24,6 +24,7 @@ type CreateCharacterBody = {
   description?: string
   suggestions?: string[]
   introTurns?: IntroTurn[]
+  profile_image_url?: string | null
 }
 
 function toSlug(name: string): string {
@@ -54,6 +55,7 @@ export async function POST(req: NextRequest) {
       mood: body.mood?.trim() || null,
       description: body.description?.trim() || null,
       suggestions: body.suggestions?.filter(Boolean) ?? [],
+      profile_image_url: body.profile_image_url ?? null,
       is_public: true,
       genres: [],
     })
