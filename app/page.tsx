@@ -125,7 +125,7 @@ export default function Home() {
                       #{s.replace(/\s+/g, '').slice(0, 6)}
                     </span>
                   ))}
-                  <span className="text-[11px] text-white/50">#{featured.tag}</span>
+                  {featured.tag && <span className="text-[11px] text-white/50">#{featured.tag}</span>}
                 </div>
                 <button
                   type="button"

@@ -34,11 +34,13 @@ export function CharacterDetail({ character }: { character: Character }) {
       <div className="flex flex-1 flex-col gap-4 px-4 pb-28 pt-4">
 
         {/* 태그 */}
-        <div className="flex flex-wrap gap-2">
-          <span className="rounded-full border border-border px-3 py-1 text-xs text-foreground/70">
-            {character.tag}
-          </span>
-        </div>
+        {character.tag && (
+          <div className="flex flex-wrap gap-2">
+            <span className="rounded-full border border-border px-3 py-1 text-xs text-foreground/70">
+              {character.tag}
+            </span>
+          </div>
+        )}
 
         {/* 소개 */}
         <section>

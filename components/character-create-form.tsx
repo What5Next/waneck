@@ -7,6 +7,7 @@ import { ChevronLeft, Plus, Upload, User, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { MobileShell } from '@/components/ui/mobile-shell'
+import { Field, TextInput, TextArea } from '@/components/ui/form-field'
 
 // ─── 탭 정의 ───────────────────────────────────────────────────────────────
 
@@ -53,99 +54,6 @@ const DEFAULT_FORM: FormState = {
   mood: '',
   desc: '',
   suggestions: ['', '', ''],
-}
-
-// ─── 공용 입력 컴포넌트 ────────────────────────────────────────────────────
-
-function Label({ children, required }: { children: string; required?: boolean }) {
-  return (
-    <p className="mb-1.5 text-sm font-medium text-foreground">
-      {children}
-      {required && <span className="ml-0.5 text-destructive">*</span>}
-    </p>
-  )
-}
-
-function Field({
-  label,
-  required,
-  hint,
-  children,
-}: {
-  label: string
-  required?: boolean
-  hint?: string
-  children: React.ReactNode
-}) {
-  return (
-    <div className="flex flex-col gap-0">
-      <Label required={required}>{label}</Label>
-      {hint && <p className="mb-2 text-xs text-muted-foreground">{hint}</p>}
-      {children}
-    </div>
-  )
-}
-
-function TextInput({
-  value,
-  onChange,
-  placeholder,
-  maxLength,
-}: {
-  value: string
-  onChange: (v: string) => void
-  placeholder?: string
-  maxLength?: number
-}) {
-  return (
-    <div className="relative">
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        maxLength={maxLength}
-        placeholder={placeholder}
-        className="w-full rounded-xl border border-border bg-card px-4 py-3 text-[15px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
-      />
-      {maxLength !== undefined && (
-        <span className="pointer-events-none absolute bottom-3 right-4 text-xs text-muted-foreground">
-          {value.length}/{maxLength}
-        </span>
-      )}
-    </div>
-  )
-}
-
-function TextArea({
-  value,
-  onChange,
-  placeholder,
-  maxLength,
-  rows = 4,
-}: {
-  value: string
-  onChange: (v: string) => void
-  placeholder?: string
-  maxLength?: number
-  rows?: number
-}) {
-  return (
-    <div className="relative">
-      <textarea
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        maxLength={maxLength}
-        placeholder={placeholder}
-        rows={rows}
-        className="w-full resize-none rounded-xl border border-border bg-card px-4 py-3 text-[15px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
-      />
-      {maxLength !== undefined && (
-        <span className="pointer-events-none absolute bottom-3 right-4 text-xs text-muted-foreground">
-          {value.length}/{maxLength}
-        </span>
-      )}
-    </div>
-  )
 }
 
 // ─── 탭 1: 캐릭터 설정 ────────────────────────────────────────────────────
@@ -209,7 +117,6 @@ function SettingsTab({
               size="sm"
               className="gap-1.5 rounded-xl text-xs"
               onClick={() => {
-                // 이모지 팔레트 대용: 간단한 목록에서 랜덤 선택
                 const emojis = ['🌸', '⚔️', '🧪', '🦊', '🐉', '🌙', '🔮', '🎭', '🦋', '🌊']
                 const emoji = emojis[Math.floor(Math.random() * emojis.length)]
                 setForm((f) => ({ ...f, emoji, imageUrl: '' }))
@@ -383,7 +290,7 @@ function PromptTab({
         <ul className="flex flex-col gap-1 text-xs leading-relaxed text-muted-foreground">
           <li>• 이름, 나이, 성격을 명확하게 서술하세요</li>
           <li>• 말투 (반말/존댓말, 이모지 사용 여부) 를 지정하세요</li>
-          <li>• "AI라고 절대 밝히지 마" 로 몰입감을 높이세요</li>
+          <li>• &quot;AI라고 절대 밝히지 마&quot; 로 몰입감을 높이세요</li>
           <li>• 특정 표현 패턴을 예시로 포함하면 좋아요</li>
         </ul>
       </div>
@@ -501,15 +408,43 @@ export function CharacterCreateForm() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<TabId>('settings')
   const [form, setForm] = useState<FormState>(DEFAULT_FORM)
-  const [done, setDone] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const currentIdx = TAB_ORDER.indexOf(activeTab)
   const isLast = currentIdx === TAB_ORDER.length - 1
 
+  async function handleSubmit() {
+    setSubmitting(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/characters', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name,
+          short_intro: form.tagline,
+          system_prompt: form.system,
+          tag: form.tag,
+          mood: form.mood,
+          description: form.desc,
+          suggestions: form.suggestions.filter(Boolean),
+          introTurns: form.introTurns,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? '저장에 실패했어요')
+      router.push(`/characters/${data.id}`)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '저장에 실패했어요')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   function goNext() {
     if (isLast) {
-      // 완료 처리 (실제 저장 로직은 여기에 추가)
-      setDone(true)
+      handleSubmit()
     } else {
       setActiveTab(TAB_ORDER[currentIdx + 1])
     }
@@ -521,29 +456,6 @@ export function CharacterCreateForm() {
     if (activeTab === 'intro')    return form.introTurns.every((t) => t.text.trim().length > 0)
     return true
   })()
-
-  if (done) {
-    return (
-      <MobileShell>
-        <div className="flex min-h-screen flex-col items-center justify-center gap-6 px-6 text-center">
-          <div className="text-7xl">
-            {form.imageUrl ? '🖼️' : form.emoji || '✨'}
-          </div>
-          <div className="flex flex-col gap-2">
-            <p className="text-xl font-bold text-foreground">
-              {form.name || '캐릭터'}가 완성됐어요!
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {form.tagline || '캐릭터가 여러분을 기다리고 있어요'}
-            </p>
-          </div>
-          <Button onClick={() => router.push('/')} className="w-full max-w-xs rounded-xl py-3">
-            홈으로 돌아가기
-          </Button>
-        </div>
-      </MobileShell>
-    )
-  }
 
   return (
     <MobileShell>
@@ -561,7 +473,6 @@ export function CharacterCreateForm() {
             <ChevronLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-base font-semibold text-foreground">캐릭터 만들기</h1>
-          {/* 우측 균형용 빈 버튼 영역 */}
           <div className="h-10 w-10" />
         </header>
 
@@ -599,15 +510,20 @@ export function CharacterCreateForm() {
           {activeTab === 'detail'   && <DetailTab   form={form} setForm={setForm} />}
         </div>
 
+        {/* 에러 메시지 */}
+        {error && (
+          <p className="px-4 pb-2 text-center text-sm text-destructive">{error}</p>
+        )}
+
         {/* 하단 버튼 */}
         <div className="shrink-0 border-t border-border bg-background px-4 py-4">
           <Button
             type="button"
             onClick={goNext}
-            disabled={!canNext}
+            disabled={!canNext || submitting}
             className="w-full rounded-xl py-3 text-base font-semibold"
           >
-            {isLast ? '완료' : '다음'}
+            {submitting ? '저장 중...' : isLast ? '완료' : '다음'}
           </Button>
         </div>
       </div>
