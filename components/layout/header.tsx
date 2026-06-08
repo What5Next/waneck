@@ -8,7 +8,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-20 flex items-center justify-between bg-background/95 h-14 px-[20px]">
       <Link href="/">
-        <span className="text-lg font-bold tracking-tight text-foreground">채팅AI</span>
+        <span className="text-lg font-bold tracking-tight text-foreground">와넥</span>
       </Link>
       <div className="flex items-center gap-0.5">
         <Link

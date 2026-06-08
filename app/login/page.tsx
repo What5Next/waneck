@@ -21,7 +21,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen flex-col items-center justify-center gap-8 px-6">
       <div className="flex flex-col items-center gap-2 text-center">
         <span className="text-4xl">💬</span>
-        <h1 className="text-2xl font-bold text-foreground">채팅AI</h1>
+        <h1 className="text-2xl font-bold text-foreground">와넥</h1>
         <p className="text-sm text-muted-foreground">로그인하고 대화를 저장하세요</p>
       </div>
 

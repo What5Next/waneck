@@ -44,7 +44,11 @@ export function MessageBubble({
       {showAvatar ? (
         <Avatar className="h-8 w-8 shrink-0 border border-border shadow-sm">
           <AvatarFallback className="bg-muted text-base">
-            {character?.name[0] ?? 'AI'}
+            {character?.profile_image_url ? (
+              <img src={character.profile_image_url} alt={character.name} className="h-full w-full object-cover" />
+            ) : (
+              character?.name[0] ?? 'AI'
+            )}
           </AvatarFallback>
         </Avatar>
       ) : (
