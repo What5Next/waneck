@@ -2,12 +2,9 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { ChevronRight, Plus, Search, Volume2, X } from 'lucide-react'
+import { ChevronRight, Volume2, X } from 'lucide-react'
 
 import type { Character } from '@/lib/types'
-import { MobileShell } from '@/components/ui/mobile-shell'
-import { ThemeToggle } from '@/components/chat/theme-toggle'
-import { UserButton } from '@/components/auth/user-button'
 import { cn } from '@/lib/utils'
 
 const CATEGORIES = [
@@ -16,7 +13,7 @@ const CATEGORIES = [
 ]
 
 export default function Home() {
-  const [activeCategory, setActiveCategory] = useState('추천')
+  const [activeCategory, setActiveCategory] = useState('추천')  
   const [showNotice, setShowNotice] = useState(true)
   const [featuredIdx, setFeaturedIdx] = useState(0)
   const [characters, setCharacters] = useState<Character[]>([])
@@ -32,32 +29,8 @@ export default function Home() {
   const featured = characters[featuredIdx]
 
   return (
-    <MobileShell>
-      <div className="flex min-h-screen flex-col bg-background">
+      <div className="flex h-full flex-col bg-background">
         <h1 className="sr-only">Chat AI 홈</h1>
-
-        {/* ── 헤더 ── */}
-        <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
-          <span className="text-lg font-bold tracking-tight text-foreground">채팅AI</span>
-          <div className="flex items-center gap-0.5">
-            <Link
-              href="/characters/create"
-              className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-muted"
-              aria-label="캐릭터 만들기"
-            >
-              <Plus className="h-5 w-5 text-muted-foreground" />
-            </Link>
-            {/* <button
-              type="button"
-              className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-muted"
-              aria-label="검색"
-            >
-              <Search className="h-5 w-5 text-muted-foreground" />
-            </button> */}
-            {/* <ThemeToggle /> */}
-            <UserButton />
-          </div>
-        </header>
 
         {/* ── 카테고리 칩 ── */}
         <nav
@@ -84,7 +57,7 @@ export default function Home() {
         {/* ── 피처드 배너 ── */}
         {loading ? (
           <div className="px-4">
-            <div className="aspect-4/3 w-full animate-pulse rounded-2xl bg-muted" />
+            <div className="aspect-1/2 w-full animate-pulse rounded-2xl bg-muted" />
           </div>
         ) : featured && (
           <div className="px-4">
@@ -247,6 +220,5 @@ export default function Home() {
         </section>
 
       </div>
-    </MobileShell>
   )
 }

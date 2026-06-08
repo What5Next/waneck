@@ -6,7 +6,6 @@ import { ChevronLeft, Plus, Upload, User, X } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { MobileShell } from '@/components/ui/mobile-shell'
 import { Field, TextInput, TextArea } from '@/components/ui/form-field'
 
 // ─── 탭 정의 ───────────────────────────────────────────────────────────────
@@ -484,75 +483,73 @@ export function CharacterCreateForm() {
   })()
 
   return (
-    <MobileShell>
-      <div className="flex min-h-screen flex-col">
+    <div className="flex w-full flex-col">
 
-        {/* 헤더 */}
-        <header className="flex shrink-0 items-center justify-between border-b border-border bg-background px-2 py-3">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={() => router.back()}
-            aria-label="뒤로가기"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="text-base font-semibold text-foreground">캐릭터 만들기</h1>
-          <div className="h-10 w-10" />
-        </header>
-
-        {/* 탭 바 */}
-        <nav
-          className="flex shrink-0 gap-0 overflow-x-auto border-b border-border bg-background [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          aria-label="단계"
+      {/* 헤더 */}
+      <header className="flex shrink-0 items-center justify-between border-b border-border bg-background px-2 py-3">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={() => router.back()}
+          aria-label="뒤로가기"
         >
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                'relative flex shrink-0 items-center gap-0.5 px-4 py-3 text-[13px] font-medium transition-colors',
-                activeTab === tab.id
-                  ? 'text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-primary'
-                  : 'text-muted-foreground hover:text-foreground',
-              )}
-            >
-              {tab.label}
-              {tab.required && (
-                <span className="text-destructive text-[10px]">*</span>
-              )}
-            </button>
-          ))}
-        </nav>
+          <ChevronLeft className="h-5 w-5" />
+        </Button>
+        <h1 className="text-base font-semibold text-foreground">캐릭터 만들기</h1>
+        <div className="h-10 w-10" />
+      </header>
 
-        {/* 탭 콘텐츠 */}
-        <div className="flex-1 overflow-y-auto px-4 py-6">
-          {activeTab === 'settings' && <SettingsTab form={form} setForm={setForm} onFileChange={setImageFile} />}
-          {activeTab === 'intro'    && <IntroTab    form={form} setForm={setForm} />}
-          {activeTab === 'prompt'   && <PromptTab   form={form} setForm={setForm} />}
-          {activeTab === 'advanced' && <AdvancedTab form={form} setForm={setForm} />}
-          {activeTab === 'detail'   && <DetailTab   form={form} setForm={setForm} />}
-        </div>
-
-        {/* 에러 메시지 */}
-        {error && (
-          <p className="px-4 pb-2 text-center text-sm text-destructive">{error}</p>
-        )}
-
-        {/* 하단 버튼 */}
-        <div className="shrink-0 border-t border-border bg-background px-4 py-4">
-          <Button
+      {/* 탭 바 */}
+      <nav
+        className="flex shrink-0 gap-0 overflow-x-auto border-b border-border bg-background [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        aria-label="단계"
+      >
+        {TABS.map((tab) => (
+          <button
+            key={tab.id}
             type="button"
-            onClick={goNext}
-            disabled={!canNext || submitting}
-            className="w-full rounded-xl py-3 text-base font-semibold"
+            onClick={() => setActiveTab(tab.id)}
+            className={cn(
+              'relative flex shrink-0 items-center gap-0.5 px-4 py-3 text-[13px] font-medium transition-colors',
+              activeTab === tab.id
+                ? 'text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-primary'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
           >
-            {submitting ? '저장 중...' : isLast ? '완료' : '다음'}
-          </Button>
-        </div>
+            {tab.label}
+            {tab.required && (
+              <span className="text-destructive text-[10px]">*</span>
+            )}
+          </button>
+        ))}
+      </nav>
+
+      {/* 탭 콘텐츠 */}
+      <div className="flex-1 overflow-y-auto px-4 py-6">
+        {activeTab === 'settings' && <SettingsTab form={form} setForm={setForm} onFileChange={setImageFile} />}
+        {activeTab === 'intro'    && <IntroTab    form={form} setForm={setForm} />}
+        {activeTab === 'prompt'   && <PromptTab   form={form} setForm={setForm} />}
+        {activeTab === 'advanced' && <AdvancedTab form={form} setForm={setForm} />}
+        {activeTab === 'detail'   && <DetailTab   form={form} setForm={setForm} />}
       </div>
-    </MobileShell>
+
+      {/* 에러 메시지 */}
+      {error && (
+        <p className="px-4 pb-2 text-center text-sm text-destructive">{error}</p>
+      )}
+
+      {/* 하단 버튼 */}
+      <div className="shrink-0 border-t border-border bg-background px-4 py-4">
+        <Button
+          type="button"
+          onClick={goNext}
+          disabled={!canNext || submitting}
+          className="w-full rounded-xl py-3 text-base font-semibold"
+        >
+          {submitting ? '저장 중...' : isLast ? '완료' : '다음'}
+        </Button>
+      </div>
+    </div>
   )
 }

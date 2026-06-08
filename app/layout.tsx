@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { Geist, Geist_Mono } from 'next/font/google'
 
 import { ThemeProvider } from '@/app/providers/theme-provider'
+import { Header } from '@/components/layout/header'
 import './globals.css'
 
 const geistSans = Geist({
@@ -28,7 +29,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       suppressHydrationWarning
     >
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <Header />
+          <main className='flex justify-center'>
+            <div className='w-full max-w-[720px] min-w-[300px]'>
+              {children}
+            </div>
+          </main>
+        </ThemeProvider>
       </body>
     </html>
   )

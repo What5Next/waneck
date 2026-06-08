@@ -7,7 +7,6 @@ import { ChevronLeft, MoreVertical } from 'lucide-react'
 import type { Character } from '@/lib/types'
 import type { Message } from '@/lib/types'
 import { Button } from '@/components/ui/button'
-import { MobileShell } from '@/components/ui/mobile-shell'
 import { ChatThread } from '@/components/chat/chat-thread'
 import { ChatComposer } from '@/components/chat/chat-composer'
 import { LoginModal } from '@/components/auth/login-modal'
@@ -89,8 +88,8 @@ export default function ChatWindow({
 
   return (
     <>
-    <LoginModal open={showLoginModal} onOpenChange={setShowLoginModal} />
-    <MobileShell>
+      <LoginModal open={showLoginModal} onOpenChange={setShowLoginModal} />
+
       <div className="flex h-screen flex-col overflow-hidden">
 
         {/* 헤더 */}
@@ -133,7 +132,6 @@ export default function ChatWindow({
           />
         </div>
       </div>
-    </MobileShell>
     </>
   )
 }
