@@ -7,6 +7,7 @@ import { ChevronRight, Volume2, X } from 'lucide-react'
 import type { Character } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { MobileShell } from '@/components/mobile-shell'
+import { CharacterRow } from '@/components/character-row'
 
 const CATEGORIES = [
   '추천', '신규 랭킹', '전체 랭킹', '오늘 신작',
@@ -19,7 +20,6 @@ export default function Home() {
   const [featuredIdx, setFeaturedIdx] = useState(0)
   const [characters, setCharacters] = useState<Character[]>([])
   const [loading, setLoading] = useState(true)
-
   useEffect(() => {
     fetch('/api/characters')
       .then((r) => r.json())
@@ -169,58 +169,7 @@ export default function Home() {
             </div>
           )}
 
-          {/* ── 오리지널 캐릭터 섹션 ── */}
-          <section className="mt-6 pb-10">
-            <div className="mb-3 flex items-center justify-between px-4">
-              <h2 className="text-[15px] font-bold text-foreground">요즘 트렌드</h2>
-              <Link
-                href="/characters"
-                className="flex items-center gap-0.5 text-[12px] text-muted-foreground hover:text-foreground"
-              >
-                전체보기 <ChevronRight className="h-3.5 w-3.5" />
-              </Link>
-            </div>
-            <div className="flex gap-3 overflow-x-auto scroll-pl-4 px-4 pb-1 scrollbar-none">
-              {loading
-                ? Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="flex w-[130px] shrink-0 flex-col">
-                      <div className="aspect-3/4 w-full animate-pulse rounded-xl bg-muted" />
-                      <div className="mt-2 space-y-1.5 px-0.5">
-                        <div className="h-3 w-16 animate-pulse rounded bg-muted" />
-                        <div className="h-2.5 w-20 animate-pulse rounded bg-muted" />
-                      </div>
-                    </div>
-                  ))
-                : characters.map((c) => (
-                <Link
-                  key={c.id}
-                  href={`/characters/${c.id}`}
-                  className="group flex w-[130px] shrink-0 flex-col"
-                >
-                  {/* 커버 카드 */}
-                  <div className="relative overflow-hidden rounded-xl bg-card shadow-md shadow-black/10">
-                    {/* ORIGINAL 배지 */}
-                    <span className="absolute left-0 top-0 z-10 rounded-br-lg bg-red-500 px-1.5 py-0.5 text-[9px] font-bold text-white">
-                      ORIGINAL
-                    </span>
-                    {/* 커버 이미지 */}
-                    <div className="flex aspect-3/4 w-full items-center justify-center bg-linear-to-br from-card to-muted">
-                      {c.profile_image_url
-                        ? <img src={c.profile_image_url} alt={c.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110" />
-                        : <span className="text-5xl transition-transform duration-300 group-hover:scale-110">{c.name[0]}</span>}
-                    </div>
-                  </div>
-                  {/* 카드 정보 */}
-                  <div className="mt-2 px-0.5">
-                    <p className="line-clamp-1 text-[13px] font-semibold text-foreground">{c.name}</p>
-                    <p className="mt-0.5 text-[11px] text-muted-foreground">
-                      {c.tag} · {c.mood}
-                    </p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
+          <CharacterRow title="요즘 트렌드" characters={characters} loading={loading} />
         </div>
       </div>
     </MobileShell>
