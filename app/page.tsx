@@ -47,14 +47,14 @@ export default function Home() {
             >
               <Plus className="h-5 w-5 text-muted-foreground" />
             </Link>
-            <button
+            {/* <button
               type="button"
               className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-muted"
               aria-label="검색"
             >
               <Search className="h-5 w-5 text-muted-foreground" />
-            </button>
-            <ThemeToggle />
+            </button> */}
+            {/* <ThemeToggle /> */}
             <UserButton />
           </div>
         </header>
