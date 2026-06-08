@@ -9,12 +9,23 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 
-export function LoginModal({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+export function LoginModal({
+  open,
+  onOpenChange,
+  redirectPath,
+}: {
+  open: boolean
+  onOpenChange: (v: boolean) => void
+  redirectPath?: string
+}) {
   async function signInWithGoogle() {
     const supabase = createClient()
+    const callbackUrl = redirectPath
+      ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectPath)}`
+      : `${window.location.origin}/auth/callback`
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: callbackUrl },
     })
   }
 

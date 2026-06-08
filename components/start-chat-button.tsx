@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { Button } from '@/components/ui/button'
@@ -12,7 +12,7 @@ export function StartChatButton({ characterId }: { characterId: string }) {
   const [loading, setLoading] = useState(false)
   const [showLogin, setShowLogin] = useState(false)
 
-  async function handleClick() {
+  const startChat = useCallback(async () => {
     setLoading(true)
     try {
       const supabase = createClient()
@@ -38,13 +38,25 @@ export function StartChatButton({ characterId }: { characterId: string }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [characterId, router])
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('autostart') === 'true') {
+      window.history.replaceState({}, '', window.location.pathname)
+      startChat()
+    }
+  }, [startChat])
 
   return (
     <>
-      <LoginModal open={showLogin} onOpenChange={setShowLogin} />
+      <LoginModal
+        open={showLogin}
+        onOpenChange={setShowLogin}
+        redirectPath={`/characters/${characterId}?autostart=true`}
+      />
       <Button
-        onClick={handleClick}
+        onClick={startChat}
         disabled={loading}
         className="w-full rounded-lg h-11 py-2 px-4 text-base font-semibold"
       >

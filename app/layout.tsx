@@ -21,6 +21,12 @@ export const metadata: Metadata = {
   description: '새로운 캐릭터 챗',
 }
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  interactiveWidget: 'resizes-visual',
+}
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
@@ -31,7 +37,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body className='overflow-hidden'>
         <ThemeProvider>
           <Header />
-          <main className='flex h-[calc(100vh-56px)] justify-center overflow-y-auto'>
+          <main className='flex h-[calc(100dvh-56px)] justify-center overflow-y-auto'>
             {children}
           </main>
         </ThemeProvider>

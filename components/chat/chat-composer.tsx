@@ -28,7 +28,7 @@ export function ChatComposer({ value, onChange, onSubmit, disabled = false }: Ch
     <div className="shrink-0 bg-background px-3 pb-4 pt-3">
       <div className="flex items-end gap-2">
         <textarea
-          className="flex min-h-[44px] min-w-0 flex-1 resize-none rounded-xl border border-border bg-card px-4 py-2.5 text-[15px] text-foreground placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex min-h-[44px] min-w-0 flex-1 resize-none rounded-xl border border-border bg-card px-4 py-2.5 text-base text-foreground placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
           value={value}
           onChange={(ev) => onChange(ev.target.value)}
           onKeyDown={handleKeyDown}
