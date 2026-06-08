@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+@theme {
+  --breakpoint-sm: 780px;
+}
+
 /* ─── 라이트 테마 (zinc 스케일 기반) ─── */
 :root {
   --background: 0 0% 100%;

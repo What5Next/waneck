@@ -28,13 +28,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       className={`${geistSans.variable} ${geistMono.variable}`}
       suppressHydrationWarning
     >
-      <body>
+      <body className='overflow-hidden'>
         <ThemeProvider>
           <Header />
-          <main className='flex justify-center'>
-            <div className='w-full max-w-[720px] min-w-[300px]'>
-              {children}
-            </div>
+          <main className='flex h-[calc(100vh-56px)] justify-center overflow-y-auto'>
+            {children}
           </main>
         </ThemeProvider>
       </body>

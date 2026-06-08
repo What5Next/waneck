@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 
 import { supabase } from '@/lib/supabase'
 import { CharacterDetail } from '@/components/character-detail'
+import { MobileShell } from '@/components/mobile-shell'
 
 export default async function CharacterPage({
   params,
@@ -18,6 +19,8 @@ export default async function CharacterPage({
   if (!character) notFound()
 
   return (
-    <CharacterDetail character={character} />
+    <MobileShell>
+      <CharacterDetail character={character} />
+    </MobileShell>
   )
 }

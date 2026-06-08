@@ -1,12 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { ChevronLeft, MoreVertical } from 'lucide-react'
 
 import type { Character } from '@/lib/types'
 import type { Message } from '@/lib/types'
-import { Button } from '@/components/ui/button'
 import { ChatThread } from '@/components/chat/chat-thread'
 import { ChatComposer } from '@/components/chat/chat-composer'
 import { LoginModal } from '@/components/auth/login-modal'
@@ -18,12 +15,10 @@ function getTime() {
 
 export default function ChatWindow({
   character,
-  seed,
   conversationId: initialConversationId = null,
   initialMessages = [],
 }: {
   character: Character
-  seed: string
   conversationId?: string | null
   initialMessages?: Message[]
 }) {
@@ -90,37 +85,7 @@ export default function ChatWindow({
     <>
       <LoginModal open={showLoginModal} onOpenChange={setShowLoginModal} />
 
-      <div className="flex h-screen flex-col overflow-hidden">
-
-        {/* 헤더 */}
-        <header className="flex shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-1 py-2">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            asChild
-            aria-label="뒤로가기"
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <Link href={`/characters/${character.id}`}>
-              <ChevronLeft className="h-5 w-5" />
-            </Link>
-          </Button>
-          <h1 className="line-clamp-1 flex-1 text-center text-sm font-medium text-foreground">
-            {character.name}
-          </h1>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            aria-label="메뉴 (준비 중)"
-            disabled
-            className="text-muted-foreground"
-          >
-            <MoreVertical className="h-5 w-5" />
-          </Button>
-        </header>
-
+      <div className="flex h-[calc(100vh-112px)] flex-col overflow-hidden">
         {/* 채팅 본문 */}
         <div className="flex min-h-0 flex-1 flex-col">
           <ChatThread messages={messages} isLoading={isLoading} character={character} />
