@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Chat AI',
-  description: 'AI 캐릭터와 대화하세요',
+  title: 'Waneck',
+  description: '새로운 캐릭터 챗',
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {
