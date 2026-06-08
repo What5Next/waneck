@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { ChevronRight, Volume2, X } from 'lucide-react'
 
@@ -15,11 +15,12 @@ const CATEGORIES = [
 ]
 
 export default function Home() {
-  const [activeCategory, setActiveCategory] = useState('추천')  
+  const router = useRouter()
+  const [activeCategory, setActiveCategory] = useState('추천')
   const [showNotice, setShowNotice] = useState(true)
-  const [featuredIdx, setFeaturedIdx] = useState(0)
   const [characters, setCharacters] = useState<Character[]>([])
   const [loading, setLoading] = useState(true)
+
   useEffect(() => {
     fetch('/api/characters')
       .then((r) => r.json())
@@ -27,12 +28,10 @@ export default function Home() {
       .finally(() => setLoading(false))
   }, [])
 
-  const featured = characters[featuredIdx]
-
   return (
     <MobileShell>
       <div className="flex h-full overflow-hidden flex-col bg-background">
-        <h1 className="sr-only">Chat AI 홈</h1>
+        <h1 className="sr-only">와넥 홈</h1>
         
         {/* ── 카테고리 칩 ── */}
         <nav
@@ -60,61 +59,55 @@ export default function Home() {
           {/* ── 피처드 배너 ── */}
           {loading ? (
             <div className="px-4">
-              <div className="aspect-1/2 w-full animate-pulse rounded-2xl bg-muted" />
+              <div className="h-[220px] w-full rounded-2xl bg-muted" />
             </div>
-          ) : featured && (
-            <div className="px-4">
-              <Link
-                href={`/characters/${featured.id}`}
-                className="relative block overflow-hidden rounded-2xl"
+          ) : characters.length > 0 && (() => {
+            const c = characters[characters.length - 1]
+            return (
+              <div
+                className="mx-4 h-[220px] cursor-pointer overflow-hidden rounded-2xl"
+                onClick={() => router.push(`/characters/${c.id}`)}
               >
-                {/* 배경 */}
-                <div className="flex aspect-4/3 w-full items-center justify-end bg-linear-to-br from-card via-card to-muted pr-6 pt-4">
-                  {featured.profile_image_url
-                    ? <img src={featured.profile_image_url} alt={featured.name} className="h-[110px] w-[110px] rounded-full object-cover opacity-90" />
-                    : <span className="text-[110px] leading-none opacity-90">{featured.name[0]}</span>}
-                </div>
-                {/* 오버레이 */}
-                <div className="absolute inset-0 bg-linear-to-r from-black/80 via-black/30 to-transparent" />
-                {/* 페이지 인디케이터 */}
-                <div className="absolute right-3 top-3 rounded-full bg-black/50 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
-                  {featuredIdx + 1} / {characters.length}
-                </div>
-                {/* 우측 캐릭터 썸네일 클릭 영역 */}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    setFeaturedIdx((i) => (i + 1) % characters.length)
-                  }}
-                  className="absolute right-0 top-0 h-full w-1/3"
-                  aria-label="다음 캐릭터"
-                />
-                {/* 본문 */}
-                <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <span className="inline-block rounded-sm bg-red-500 px-2 py-0.5 text-[10px] font-bold tracking-wide text-white">
-                    캐릭터 추천
-                  </span>
-                  <h2 className="mt-2 text-lg font-bold leading-snug text-white">{featured.name}</h2>
-                  <p className="mt-0.5 text-xs text-white/70">{featured.short_intro}</p>
-                  <div className="mt-1.5 flex flex-wrap gap-1.5">
-                    {(featured.suggestions as string[] | null)?.slice(0, 2).map((s, i) => (
-                      <span key={i} className="text-[11px] text-white/50">
-                        #{s.replace(/\s+/g, '').slice(0, 6)}
+                <div
+                  className="relative h-full w-full bg-cover bg-center"
+                  style={{ backgroundImage: c.profile_image_url ? `url(${c.profile_image_url})` : undefined, backgroundColor: '#1a1a2e' }}
+                >
+                  <div className="absolute inset-0 bg-black/60 backdrop-blur-[10px]" />
+                  <div className="absolute inset-0 flex gap-3 p-4">
+                    {/* 좌측 텍스트 */}
+                    <div className="flex h-full flex-1 flex-col justify-end gap-1.5 overflow-hidden">
+                      <span className="inline-block w-fit rounded-sm bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white">
+                        NEW 캐릭터
                       </span>
-                    ))}
-                    {featured.tag && <span className="text-[11px] text-white/50">#{featured.tag}</span>}
+                      <h2 className="line-clamp-1 text-base font-bold leading-snug text-white">{c.name}</h2>
+                      <p className="line-clamp-1 text-[11px] text-white/60">{c.short_intro}</p>
+                      <div className="flex flex-wrap gap-1">
+                        {(c.suggestions as string[] | null)?.slice(0, 2).map((s, i) => (
+                          <span key={i} className="text-[10px] text-white/40">
+                            #{s.replace(/\s+/g, '').slice(0, 6)}
+                          </span>
+                        ))}
+                        {c.tag && <span className="text-[10px] text-white/40">#{c.tag}</span>}
+                      </div>
+                      <button
+                        type="button"
+                        className="mt-1 w-fit rounded-lg border border-white/30 px-3 py-1 text-[11px] text-white hover:bg-white/10"
+                      >
+                        자세히보기
+                      </button>
+                    </div>
+                    {/* 우측: 포트레이트 */}
+                    <div className="relative mt-auto aspect-square h-full shrink-0">
+                      {c.profile_image_url
+                        // eslint-disable-next-line @next/next/no-img-element
+                        ? <img src={c.profile_image_url} alt={c.name} className="h-full w-full rounded-xl object-cover shadow-lg" />
+                        : <div className="flex h-full w-full items-center justify-center rounded-xl bg-muted/30 text-3xl">{c.name[0]}</div>}
+                    </div>
                   </div>
-                  <button
-                    type="button"
-                    className="mt-3 rounded-md border border-white/40 bg-black/30 px-3 py-1 text-xs text-white backdrop-blur-sm hover:bg-black/50"
-                  >
-                    자세히보기
-                  </button>
                 </div>
-              </Link>
-            </div>
-          )}
+              </div>
+            )
+          })()}
 
           {/* ── 2컬럼 프로모 카드 ── */}
           <div className="mt-3 grid grid-cols-2 gap-2.5 px-4">
