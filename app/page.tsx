@@ -139,7 +139,7 @@ export default function Home() {
             <div className="flex items-center gap-3">
               <span className="text-3xl">🎁</span>
               <div>
-                <p className="text-[13px] font-bold leading-snug text-foreground">
+                <p className="text-[13px] font-bold leading-snug text-black">
                   신규 사용자에게만 드리는 대박 혜택
                 </p>
                 <p className="mt-0.5 text-[11px] text-muted-foreground">

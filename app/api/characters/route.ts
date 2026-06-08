@@ -64,17 +64,23 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // 인트로 대화 저장
+  // 인트로 메시지 저장
   const introTurns = body.introTurns?.filter((t) => t.text.trim()) ?? []
   if (introTurns.length > 0) {
-    await supabaseAdmin.from('character_example_dialogues').insert(
-      introTurns.map((t, i) => ({
-        character_id: character.id,
-        role: t.role,
-        content: t.text.trim(),
-        sort_order: i,
-      })),
-    )
+    const { error: introError } = await supabaseAdmin
+      .from('character_intro_messages')
+      .insert(
+        introTurns.map((t, i) => ({
+          character_id: character.id,
+          role: t.role,
+          content: t.text.trim(),
+          sort_order: i,
+        })),
+      )
+    if (introError) {
+      console.error('[/api/characters] intro_messages insert error:', introError)
+      return NextResponse.json({ error: '인트로 메시지 저장 실패: ' + introError.message }, { status: 500 })
+    }
   }
 
   return NextResponse.json(character, { status: 201 })

@@ -16,7 +16,7 @@ const TABS: { id: TabId; label: string; required?: boolean }[] = [
   { id: 'settings', label: '캐릭터 설정', required: true },
   { id: 'intro',    label: '인트로',     required: true },
   { id: 'prompt',   label: '프롬프트',   required: true },
-  { id: 'advanced', label: '고급 기능' },
+  // { id: 'advanced', label: '고급 기능' },
   { id: 'detail',   label: '캐릭터 상세' },
 ]
 

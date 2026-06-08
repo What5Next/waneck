@@ -49,6 +49,41 @@ export type Database = {
           },
         ]
       }
+      character_intro_messages: {
+        Row: {
+          character_id: string
+          content: string
+          created_at: string
+          id: string
+          role: string
+          sort_order: number
+        }
+        Insert: {
+          character_id: string
+          content: string
+          created_at?: string
+          id?: string
+          role?: string
+          sort_order?: number
+        }
+        Update: {
+          character_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "character_intro_messages_character_id_fkey"
+            columns: ["character_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       character_situation_images: {
         Row: {
           character_id: string
@@ -92,7 +127,6 @@ export type Database = {
           detail_description: string | null
           genres: string[]
           id: string
-          intro_message: string | null
           is_public: boolean
           mood: string | null
           name: string
@@ -111,7 +145,6 @@ export type Database = {
           detail_description?: string | null
           genres?: string[]
           id?: string
-          intro_message?: string | null
           is_public?: boolean
           mood?: string | null
           name: string
@@ -130,7 +163,6 @@ export type Database = {
           detail_description?: string | null
           genres?: string[]
           id?: string
-          intro_message?: string | null
           is_public?: boolean
           mood?: string | null
           name?: string

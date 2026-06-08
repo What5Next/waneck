@@ -35,6 +35,27 @@ export async function POST(req: NextRequest) {
 
     if (error) throw new Error(error.message)
 
+    // 인트로 메시지를 초기 메시지로 삽입
+    const { data: introDialogues, error: introFetchError } = await supabaseAdmin
+      .from('character_intro_messages')
+      .select('role, content, sort_order')
+      .eq('character_id', characterId)
+      .order('sort_order', { ascending: true })
+
+    if (introFetchError) console.error('[/api/conversations] intro fetch error:', introFetchError)
+    console.log('[/api/conversations] introDialogues:', introDialogues)
+
+    if (introDialogues && introDialogues.length > 0) {
+      const { error: msgInsertError } = await supabaseAdmin.from('messages').insert(
+        introDialogues.map((d) => ({
+          conversation_id: data.id,
+          role: d.role,
+          content: d.content,
+        })),
+      )
+      if (msgInsertError) console.error('[/api/conversations] messages insert error:', msgInsertError)
+    }
+
     return NextResponse.json({ conversationId: data.id })
   } catch (err) {
     console.error('[/api/conversations]', err)
