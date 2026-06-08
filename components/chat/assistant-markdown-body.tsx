@@ -5,7 +5,9 @@ import rehypeSanitize from 'rehype-sanitize'
 const markdownComponents: Components = {
   p: ({ children }) => <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>,
   strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
-  em: ({ children }) => <em className="text-muted-foreground/90 not-italic">*{children}*</em>,
+  em: ({ children }) => (
+    <span className="italic text-muted-foreground/60">*{children}*</span>
+  ),
   ul: ({ children }) => <ul className="mb-2 list-disc pl-4 last:mb-0">{children}</ul>,
   ol: ({ children }) => <ol className="mb-2 list-decimal pl-4 last:mb-0">{children}</ol>,
   li: ({ children }) => <li className="mb-0.5">{children}</li>,

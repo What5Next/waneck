@@ -47,11 +47,14 @@ export async function POST(req: NextRequest) {
       parts: [{ text: m.content }],
     }))
 
+    const systemInstruction = character.system_prompt +
+      '\n\n행동이나 상황을 묘사할 때는 *행동 내용* 형식으로 별표 하나로 감싸서 표현하세요. 예: *조용히 미소 지으며* 안녕하세요.'
+
     const res = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents,
       config: {
-        systemInstruction: character.system_prompt,
+        systemInstruction,
         maxOutputTokens: 1000,
       },
     })

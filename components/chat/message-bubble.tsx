@@ -1,6 +1,17 @@
 import type { ReactNode } from 'react'
 
 import { cn } from '@/lib/utils'
+
+function renderActions(text: string, actionClassName: string): ReactNode {
+  const parts = text.split(/(\*[^*]+\*)/g)
+  return parts.map((part, i) => {
+    const match = part.match(/^\*([^*]+)\*$/)
+    if (match) {
+      return <span key={i} className={actionClassName}>*{match[1]}*</span>
+    }
+    return part
+  })
+}
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { AssistantMarkdownBody } from './assistant-markdown-body'
 import type { Character } from '@/lib/types'
@@ -24,7 +35,7 @@ export function MessageBubble({
     return (
       <div className="flex w-full flex-col items-end gap-1">
         <div className="bg-primary text-primary-foreground max-w-[80%] rounded-2xl rounded-br-sm px-4 py-2.5 text-[15px] leading-relaxed shadow-sm">
-          {content}
+          {renderActions(content, 'italic text-primary-foreground/60')}
         </div>
       </div>
     )
