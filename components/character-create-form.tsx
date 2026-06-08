@@ -45,7 +45,6 @@ const DEFAULT_FORM: FormState = {
   name: '',
   tagline: '',
   introTurns: [
-    { role: 'user',  text: '' },
     { role: 'model', text: '' },
   ],
   system: '',
@@ -197,7 +196,7 @@ function IntroTab({
       ...f,
       introTurns: [
         ...f.introTurns,
-        { role: f.introTurns.length % 2 === 0 ? 'user' : 'model', text: '' },
+        { role: f.introTurns.length % 1 === 0 ? 'model' : 'user', text: '' },
       ],
     }))
   }
@@ -228,7 +227,7 @@ function IntroTab({
                   <option value="user">사용자</option>
                   <option value="model">캐릭터</option>
                 </select>
-                {form.introTurns.length > 2 && (
+                {form.introTurns.length > 1 && (
                   <button
                     type="button"
                     onClick={() => removeTurn(idx)}
