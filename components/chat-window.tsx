@@ -19,6 +19,7 @@ export default function ChatWindow({ character, seed }: { character: Character; 
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [draft, setDraft] = useState('')
+  const [conversationId, setConversationId] = useState<string | null>(null)
 
   async function sendMessage() {
     const trimmed = draft.trim()
@@ -37,12 +38,14 @@ export default function ChatWindow({ character, seed }: { character: Character; 
         body: JSON.stringify({
           characterId: character.id,
           messages: next.map((m) => ({ role: m.role, content: m.content })),
+          conversationId,
         }),
       })
 
       if (!res.ok) throw new Error(`API error: ${res.status}`)
       const data = await res.json()
       const reply = data.reply ?? '...'
+      if (data.conversationId) setConversationId(data.conversationId)
 
       setMessages((prev) => [...prev, { role: 'model', content: reply, time: getTime() }])
     } catch {

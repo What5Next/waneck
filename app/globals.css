@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 /* ─── 라이트 테마 (zinc 스케일 기반) ─── */
 :root {

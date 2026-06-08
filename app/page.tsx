@@ -7,6 +7,7 @@ import { ChevronRight, Plus, Search, Volume2, X } from 'lucide-react'
 import type { Character } from '@/lib/types'
 import { MobileShell } from '@/components/ui/mobile-shell'
 import { ThemeToggle } from '@/components/chat/theme-toggle'
+import { UserButton } from '@/components/auth/user-button'
 import { cn } from '@/lib/utils'
 
 const CATEGORIES = [
@@ -54,6 +55,7 @@ export default function Home() {
               <Search className="h-5 w-5 text-muted-foreground" />
             </button>
             <ThemeToggle />
+            <UserButton />
           </div>
         </header>
 
