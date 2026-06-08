@@ -5,7 +5,7 @@ import { Divider } from './divider'
 export function CharacterDetail({ character }: { character: Character }) {
   return (
     <div className="relative flex h-full flex-col gap-8 bg-background px-[20px] pt-[40px] pb-[100px]">
-      <div className='flex flex-col items-center gap-8 sm:flex-row sm:items-start'>
+      <div className='flex flex-col items-center gap-8 sm:flex-row sm:items-stretch'>
         {/* 히어로 영역 */}
         <div className="relative w-[300px] aspect-square rounded-2xl border border-gray-200 overflow-hidden">
           <div className="flex h-full w-full items-center justify-center bg-card">
@@ -15,7 +15,7 @@ export function CharacterDetail({ character }: { character: Character }) {
           </div>
         </div>
 
-        <div className='flex-1 flex flex-col w-full items-start gap-4'>
+        <div className='flex-1 flex flex-col w-full items-start justify-between gap-4'>
           <div className='flex flex-col w-full gap-4'>
             <h1 className="text-2xl font-bold dark:text-white">{character.name}</h1>
 
