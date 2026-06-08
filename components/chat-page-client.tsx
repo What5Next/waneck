@@ -35,14 +35,16 @@ export function ChatPageClient({
         <Divider />
       </div>
 
-      <MobileShell>
-        <ChatWindow
-          character={character}
-          conversationId={conversationId}
-          initialMessages={initialMessages}
-          model={model}
-        />
-      </MobileShell>
+      <div className="flex flex-1 min-h-0 w-full justify-center">
+        <MobileShell>
+          <ChatWindow
+            character={character}
+            conversationId={conversationId}
+            initialMessages={initialMessages}
+            model={model}
+          />
+        </MobileShell>
+      </div>
     </div>
   )
 }

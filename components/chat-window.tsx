@@ -88,7 +88,7 @@ export default function ChatWindow({
     <>
       <LoginModal open={showLoginModal} onOpenChange={setShowLoginModal} />
 
-      <div className="flex h-[calc(100vh-112px)] flex-col overflow-hidden">
+      <div className="flex h-full flex-col overflow-hidden">
         {/* 채팅 본문 */}
         <div className="flex min-h-0 flex-1 flex-col">
           <ChatThread messages={messages} isLoading={isLoading} character={character} />
