@@ -18,10 +18,12 @@ export default function ChatWindow({
   character,
   conversationId: initialConversationId = null,
   initialMessages = [],
+  model = 'gemini-2.5-flash',
 }: {
   character: Character
   conversationId?: string | null
   initialMessages?: Message[]
+  model?: string
 }) {
   const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [isLoading, setIsLoading] = useState(false)
@@ -63,6 +65,7 @@ export default function ChatWindow({
           characterId: character.id,
           messages: next.map((m) => ({ role: m.role, content: m.content })),
           conversationId,
+          model,
         }),
       })
 

@@ -26,10 +26,11 @@ async function getOrCreateConversation(characterId: string, userId: string, conv
 
 export async function POST(req: NextRequest) {
   try {
-    const { characterId, messages, conversationId: existingConvId } = await req.json() as {
+    const { characterId, messages, conversationId: existingConvId, model = 'gemini-2.5-flash' } = await req.json() as {
       characterId: string
       messages: Message[]
       conversationId?: string
+      model?: string
     }
 
     const { data: character } = await supabase
@@ -51,7 +52,7 @@ export async function POST(req: NextRequest) {
       '\n\n행동이나 상황을 묘사할 때는 *행동 내용* 형식으로 별표 하나로 감싸서 표현하세요. 예: *조용히 미소 지으며* 안녕하세요.'
 
     const res = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model,
       contents,
       config: {
         systemInstruction,
