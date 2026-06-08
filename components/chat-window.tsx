@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, MoreVertical } from 'lucide-react'
 
@@ -10,20 +10,49 @@ import { Button } from '@/components/ui/button'
 import { MobileShell } from '@/components/ui/mobile-shell'
 import { ChatThread } from '@/components/chat/chat-thread'
 import { ChatComposer } from '@/components/chat/chat-composer'
+import { LoginModal } from '@/components/auth/login-modal'
+import { createClient } from '@/lib/supabase/browser'
 
 function getTime() {
   return new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
 }
 
-export default function ChatWindow({ character, seed }: { character: Character; seed: string }) {
-  const [messages, setMessages] = useState<Message[]>([])
+export default function ChatWindow({
+  character,
+  seed,
+  conversationId: initialConversationId = null,
+  initialMessages = [],
+}: {
+  character: Character
+  seed: string
+  conversationId?: string | null
+  initialMessages?: Message[]
+}) {
+  const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [isLoading, setIsLoading] = useState(false)
   const [draft, setDraft] = useState('')
-  const [conversationId, setConversationId] = useState<string | null>(null)
+  const [conversationId, setConversationId] = useState<string | null>(initialConversationId)
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null)
+  const [showLoginModal, setShowLoginModal] = useState(false)
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data }) => setIsLoggedIn(!!data.user))
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      setIsLoggedIn(!!session?.user)
+      if (session?.user) setShowLoginModal(false)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
 
   async function sendMessage() {
     const trimmed = draft.trim()
     if (!trimmed || isLoading) return
+
+    if (!isLoggedIn) {
+      setShowLoginModal(true)
+      return
+    }
 
     const userMsg: Message = { role: 'user', content: trimmed, time: getTime() }
     const next = [...messages, userMsg]
@@ -59,6 +88,8 @@ export default function ChatWindow({ character, seed }: { character: Character; 
   }
 
   return (
+    <>
+    <LoginModal open={showLoginModal} onOpenChange={setShowLoginModal} />
     <MobileShell>
       <div className="flex h-screen flex-col overflow-hidden">
 
@@ -103,5 +134,6 @@ export default function ChatWindow({ character, seed }: { character: Character; 
         </div>
       </div>
     </MobileShell>
+    </>
   )
 }
