@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 import { Geist, Geist_Mono } from 'next/font/google'
 
+import { Toaster } from 'sonner'
+
 import { ThemeProvider } from '@/app/providers/theme-provider'
 import { Header } from '@/components/layout/header'
 import './globals.css'
@@ -36,6 +38,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     >
       <body className='overflow-hidden'>
         <ThemeProvider>
+          <Toaster position="top-center" />
           <Header />
           <main className='flex h-[calc(100dvh-56px)] justify-center overflow-y-auto'>
             {children}

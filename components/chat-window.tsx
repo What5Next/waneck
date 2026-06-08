@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 
 import type { Character } from '@/lib/types'
 import type { Message } from '@/lib/types'
@@ -72,10 +73,9 @@ export default function ChatWindow({
 
       setMessages((prev) => [...prev, { role: 'model', content: reply, time: getTime() }])
     } catch {
-      setMessages((prev) => [
-        ...prev,
-        { role: 'model', content: '잠깐 연결이 끊겼어. 다시 얘기해줄래?', time: getTime() },
-      ])
+      setMessages(next.slice(0, -1))
+      setDraft(trimmed)
+      toast.error('전송에 실패했어요. 다시 전송해주세요.')
     } finally {
       setIsLoading(false)
     }
