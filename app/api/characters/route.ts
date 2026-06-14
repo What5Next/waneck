@@ -28,10 +28,12 @@ type CreateCharacterBody = {
 }
 
 function toSlug(name: string): string {
-  return (
-    name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') ||
-    'character'
-  ) + '-' + Date.now().toString(36)
+  const slug = name
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/^-+|-+$/g, '')
+  return (slug || 'character') + '-' + Date.now().toString(36)
 }
 
 export async function POST(req: NextRequest) {
