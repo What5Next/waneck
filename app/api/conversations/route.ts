@@ -3,6 +3,50 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase.server'
 
+export async function GET() {
+  try {
+    const authClient = await createClient()
+    const {
+      data: { user },
+    } = await authClient.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('conversations')
+      .select(
+        'id, character_id, last_message_at, characters(name, profile_image_url)',
+      )
+      .eq('user_id', user.id)
+      .order('last_message_at', { ascending: false, nullsFirst: false })
+      .limit(30)
+
+    if (error) throw new Error(error.message)
+
+    const recentChats = (data ?? []).map((row) => {
+      const character = row.characters as {
+        name: string
+        profile_image_url: string | null
+      } | null
+
+      return {
+        id: row.id,
+        character_id: row.character_id,
+        character_name: character?.name ?? '알 수 없음',
+        character_image_url: character?.profile_image_url ?? null,
+        last_message_at: row.last_message_at,
+      }
+    })
+
+    return NextResponse.json(recentChats)
+  } catch (err) {
+    console.error('[/api/conversations GET]', err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { characterId } = await req.json() as { characterId: string }
