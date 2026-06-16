@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Suspense } from 'react'
 
 export const metadata = {
   title: '캐릭터 | 와넥',
@@ -6,5 +7,5 @@ export const metadata = {
 }
 
 export default function CharactersLayout({ children }: { children: ReactNode }) {
-  return children
+  return <Suspense>{children}</Suspense>
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 
 import type { Character } from '@/lib/types'
 import { getCharacterChatCountValue } from '@/lib/character-display'
@@ -43,7 +44,21 @@ function filterByGenre(characters: Character[], genre: string): Character[] {
   )
 }
 
+function filterBySearch(characters: Character[], search: string): Character[] {
+  const keyword = search.trim().toLowerCase()
+  if (!keyword) return characters
+
+  return characters.filter(
+    (character) =>
+      character.name.toLowerCase().includes(keyword) ||
+      character.short_intro?.toLowerCase().includes(keyword) ||
+      character.tag?.toLowerCase().includes(keyword),
+  )
+}
+
 export default function CharactersPage() {
+  const searchParams = useSearchParams()
+  const searchQuery = searchParams.get('search') ?? ''
   const [characters, setCharacters] = useState<Character[]>([])
   const [loading, setLoading] = useState(true)
   const [activeGenre, setActiveGenre] = useState<string>('전체')
@@ -58,10 +73,10 @@ export default function CharactersPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  const filteredCharacters = useMemo(
-    () => filterByGenre(characters, activeGenre),
-    [characters, activeGenre],
-  )
+  const filteredCharacters = useMemo(() => {
+    const byGenre = filterByGenre(characters, activeGenre)
+    return filterBySearch(byGenre, searchQuery)
+  }, [characters, activeGenre, searchQuery])
 
   const risingCreators = useMemo(
     () =>
