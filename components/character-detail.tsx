@@ -15,8 +15,8 @@ export function CharacterDetail({ character }: { character: CharacterWithDetail 
   const creatorName = character.creator?.display_name?.trim() || null
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col bg-background">
-      <div className="scroll-hide flex min-h-0 flex-1 flex-col overflow-y-auto pb-28">
+    <div className="flex h-full min-h-0 flex-col bg-background">
+      <div className="scroll-hide flex min-h-0 flex-1 flex-col overflow-y-auto">
         {/* 상단 배너 */}
         <div className="mx-[-20px] h-[220px] shrink-0 overflow-hidden bg-muted">
           {character.profile_image_url ? (
@@ -79,11 +79,9 @@ export function CharacterDetail({ character }: { character: CharacterWithDetail 
         </div>
       </div>
 
-      {/* 하단 고정 CTA */}
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background/95 backdrop-blur-sm">
-        <div className="mx-auto w-full max-w-[720px] px-5 py-4">
-          <StartChatButton characterId={character.id} />
-        </div>
+      {/* 하단 고정 CTA — 메인 콘텐츠 영역 안에서만 고정 (사이드바 침범 방지) */}
+      <div className="shrink-0 rounded-t-2xl border border-b-0 border-border bg-background/95 px-5 py-4 backdrop-blur-sm">
+        <StartChatButton characterId={character.id} />
       </div>
     </div>
   )
