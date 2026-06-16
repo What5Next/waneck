@@ -7,6 +7,15 @@ export type User = Tables<'users'>
 export type ConvSummary = Tables<'conv_summaries'>
 export type CharacterExampleDialogue = Tables<'character_example_dialogues'>
 export type CharacterSituationImage = Tables<'character_situation_images'>
+export type CharacterIntroMessage = Pick<
+  Tables<'character_intro_messages'>,
+  'role' | 'content' | 'created_at' | 'sort_order'
+>
+
+export type CharacterWithDetail = Character & {
+  creator: { display_name: string | null } | null
+  intro_messages: CharacterIntroMessage[]
+}
 
 // UI 채팅 상태용 타입 (DB에 직접 저장하지 않음)
 export type Message = {
