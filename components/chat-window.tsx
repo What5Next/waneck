@@ -11,6 +11,11 @@ import { MODELS, type ModelId } from '@/components/chat/model-selector'
 import { LoginModal } from '@/components/auth/login-modal'
 import { createClient } from '@/lib/supabase/browser'
 
+function parseCharacterSuggestions(raw: Character['suggestions']): string[] {
+  if (!Array.isArray(raw)) return []
+  return raw.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+}
+
 function getTime() {
   return new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
 }
@@ -99,6 +104,7 @@ export default function ChatWindow({
             disabled={isLoading}
             model={model}
             onModelChange={setModel}
+            suggestions={parseCharacterSuggestions(character.suggestions)}
           />
         </div>
       </div>
