@@ -5,9 +5,9 @@ import { useState, useEffect } from 'react'
 import { ChevronRight, Volume2, X } from 'lucide-react'
 
 import type { Character } from '@/lib/types'
-import { cn } from '@/lib/utils'
 import { MobileShell } from '@/components/mobile-shell'
 import { CharacterRow } from '@/components/character-row'
+import { Chip } from '@/components/ui/chip'
 
 const CATEGORIES = [
   '추천', '신규 랭킹', '전체 랭킹', '오늘 신작',
@@ -30,32 +30,26 @@ export default function Home() {
 
   return (
     <MobileShell>
-      <div className="flex h-full overflow-hidden flex-col bg-background">
+      <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background">
         <h1 className="sr-only">와넥 홈</h1>
         
         {/* ── 카테고리 칩 ── */}
         <nav
           aria-label="카테고리"
-          className="z-10 flex min-h-14 gap-2 overflow-x-auto px-4 py-3 scrollbar-none bg-background"
+          className="scroll-hide z-10 flex min-h-14 gap-2 overflow-x-auto bg-background px-4 py-3"
         >
           {CATEGORIES.map((cat) => (
-            <button
+            <Chip
               key={cat}
-              type="button"
+              selected={activeCategory === cat}
               onClick={() => setActiveCategory(cat)}
-              className={cn(
-                'shrink-0 rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors',
-                activeCategory === cat
-                  ? 'border-transparent bg-red-500 text-white'
-                  : 'border-border bg-background text-foreground hover:border-red-300',
-              )}
             >
               {cat}
-            </button>
+            </Chip>
           ))}
         </nav>
         
-        <div className='h-full overflow-y-scroll'>
+        <div className="scroll-hide min-h-0 flex-1 overflow-y-auto">
           {/* ── 피처드 배너 ── */}
           {loading ? (
             <div className="px-4">
@@ -76,7 +70,7 @@ export default function Home() {
                   <div className="absolute inset-0 flex gap-3 p-4">
                     {/* 좌측 텍스트 */}
                     <div className="flex h-full flex-1 flex-col justify-end gap-1.5 overflow-hidden">
-                      <span className="inline-block w-fit rounded-sm bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white">
+                      <span className="inline-block w-fit rounded-sm bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
                         NEW 캐릭터
                       </span>
                       <h2 className="line-clamp-1 text-base font-bold leading-snug text-white">{c.name}</h2>
@@ -114,14 +108,14 @@ export default function Home() {
             <div className="flex items-center justify-between overflow-hidden rounded-xl border border-border bg-card px-3 py-3">
               <div>
                 <p className="text-[11px] leading-tight text-muted-foreground">함께 즐기면,{'\n'}더 재미있는</p>
-                <p className="mt-0.5 text-sm font-bold text-red-500">파티챗</p>
+                <p className="mt-0.5 text-sm font-bold text-primary">파티챗</p>
               </div>
               <span className="text-3xl">💬</span>
             </div>
             <div className="flex items-center justify-between overflow-hidden rounded-xl border border-border bg-card px-3 py-3">
               <div>
                 <p className="text-[11px] leading-tight text-muted-foreground">오리지널{'\n'}A-RPG</p>
-                <p className="mt-0.5 text-sm font-bold text-red-500">이세계 모험</p>
+                <p className="mt-0.5 text-sm font-bold text-primary">이세계 모험</p>
               </div>
               <span className="text-3xl">⚔️</span>
             </div>
@@ -137,7 +131,7 @@ export default function Home() {
                 </p>
                 <p className="mt-0.5 text-[11px] text-muted-foreground">
                   미션 완료 시{' '}
-                  <span className="font-semibold text-red-500">포인트 1000</span> 증정
+                  <span className="font-semibold text-primary">포인트 1000</span> 증정
                 </p>
               </div>
             </div>
@@ -148,7 +142,7 @@ export default function Home() {
           {showNotice && (
             <div className="mx-4 mt-2.5 flex items-center justify-between rounded-xl border border-border bg-card px-4 py-2.5">
               <div className="flex items-center gap-2">
-                <Volume2 className="h-4 w-4 shrink-0 text-red-500" />
+                <Volume2 className="h-4 w-4 shrink-0 text-primary" />
                 <p className="text-[13px] text-foreground">[업데이트] 내 취향 설정 기능 추가</p>
               </div>
               <button

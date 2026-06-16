@@ -71,7 +71,7 @@ export function CharacterRow({ title, characters, loading = false, moreHref = '/
         <div
           ref={sliderRef}
           onScroll={updateScrollState}
-          className="flex gap-2 overflow-x-auto scroll-smooth px-4 pb-1 scrollbar-none"
+          className="scroll-hide flex gap-2 overflow-x-auto scroll-smooth px-4 pb-1"
         >
           {loading
             ? Array.from({ length: 3 }).map((_, i) => (

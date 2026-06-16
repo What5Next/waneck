@@ -482,7 +482,7 @@ export function CharacterCreateForm() {
   })()
 
   return (
-    <div className="flex w-full flex-col">
+    <div className="flex h-full min-h-0 w-full flex-col">
 
       {/* 헤더 */}
       <header className="flex shrink-0 items-center justify-between border-b border-border bg-background px-2 py-3">
@@ -501,7 +501,7 @@ export function CharacterCreateForm() {
 
       {/* 탭 바 */}
       <nav
-        className="flex shrink-0 gap-0 overflow-x-auto border-b border-border bg-background [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="scroll-hide flex shrink-0 gap-0 overflow-x-auto border-b border-border bg-background"
         aria-label="단계"
       >
         {TABS.map((tab) => (
@@ -525,7 +525,7 @@ export function CharacterCreateForm() {
       </nav>
 
       {/* 탭 콘텐츠 */}
-      <div className="flex-1 overflow-y-auto px-4 py-6">
+      <div className="scroll-hide min-h-0 flex-1 overflow-y-auto px-4 py-6">
         {activeTab === 'settings' && <SettingsTab form={form} setForm={setForm} onFileChange={setImageFile} />}
         {activeTab === 'intro'    && <IntroTab    form={form} setForm={setForm} />}
         {activeTab === 'prompt'   && <PromptTab   form={form} setForm={setForm} />}
