@@ -1,15 +1,10 @@
 'use client'
 
-import { useState } from 'react'
-import { ChevronRight } from 'lucide-react'
-
 import type { Character } from '@/lib/types'
 import type { Message } from '@/lib/types'
+import { ChatHeader } from '@/components/chat/chat-header'
 import { MobileShell } from '@/components/mobile-shell'
-import { Divider } from '@/components/divider'
 import ChatWindow from '@/components/chat-window'
-import { ModelSelector, MODELS } from '@/components/chat/model-selector'
-import type { ModelId } from '@/components/chat/model-selector'
 
 export function ChatPageClient({
   character,
@@ -20,28 +15,16 @@ export function ChatPageClient({
   conversationId: string
   initialMessages: Message[]
 }) {
-  const [model, setModel] = useState<ModelId>(MODELS[0].id)
-
   return (
-    <div className="flex-1 flex h-full flex-col items-center">
-      <div className="w-full h-14">
-        <div className="flex h-[calc(100%-1px)] items-center justify-between px-[20px]">
-          <div className="flex items-center gap-1 text-[15px] font-medium">
-            {character.name}
-            <ChevronRight className="h-4 w-4 text-muted-foreground" strokeWidth={1} />
-          </div>
-          <ModelSelector value={model} onChange={setModel} />
-        </div>
-        <Divider />
-      </div>
+    <div className="flex h-full w-full flex-col">
+      <ChatHeader characterId={character.id} characterName={character.name} />
 
-      <div className="flex flex-1 min-h-0 w-full justify-center">
+      <div className="flex min-h-0 flex-1 w-full justify-center">
         <MobileShell>
           <ChatWindow
             character={character}
             conversationId={conversationId}
             initialMessages={initialMessages}
-            model={model}
           />
         </MobileShell>
       </div>

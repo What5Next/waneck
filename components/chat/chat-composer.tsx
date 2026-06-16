@@ -6,15 +6,25 @@ import { SendHorizonal, Asterisk } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { ModelSelector, type ModelId } from '@/components/chat/model-selector'
 
 export type ChatComposerProps = {
   value: string
   onChange: (next: string) => void
   onSubmit: () => void
   disabled?: boolean
+  model: ModelId
+  onModelChange: (model: ModelId) => void
 }
 
-export function ChatComposer({ value, onChange, onSubmit, disabled = false }: ChatComposerProps) {
+export function ChatComposer({
+  value,
+  onChange,
+  onSubmit,
+  disabled = false,
+  model,
+  onModelChange,
+}: ChatComposerProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
@@ -65,7 +75,7 @@ export function ChatComposer({ value, onChange, onSubmit, disabled = false }: Ch
       <div className="rounded-2xl border border-border bg-card">
         <textarea
           ref={textareaRef}
-          className="max-h-[120px] w-full resize-none overflow-y-auto bg-transparent px-4 pt-3 text-base text-foreground placeholder:text-muted-foreground/60 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          className="scroll-hide max-h-[120px] w-full resize-none overflow-y-auto bg-transparent px-4 pt-3 text-base text-foreground placeholder:text-muted-foreground/60 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
           value={value}
           onChange={(ev) => onChange(ev.target.value)}
           onKeyDown={handleKeyDown}
@@ -74,15 +84,18 @@ export function ChatComposer({ value, onChange, onSubmit, disabled = false }: Ch
           rows={1}
         />
         <div className="flex items-center justify-between p-2">
-          <button
-            type="button"
-            onClick={insertActionMarkers}
-            disabled={disabled}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40 border"
-            aria-label="행동 묘사 삽입"
-          >
-            <Asterisk className="h-6 w-6" strokeWidth={1} />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={insertActionMarkers}
+              disabled={disabled}
+              className="flex h-8 w-8 items-center justify-center rounded-full border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40"
+              aria-label="행동 묘사 삽입"
+            >
+              <Asterisk className="h-6 w-6" strokeWidth={1} />
+            </button>
+            <ModelSelector value={model} onChange={onModelChange} compact />
+          </div>
           <Button
             type="button"
             size="icon"

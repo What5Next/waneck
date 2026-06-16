@@ -7,6 +7,7 @@ import type { Character } from '@/lib/types'
 import type { Message } from '@/lib/types'
 import { ChatThread } from '@/components/chat/chat-thread'
 import { ChatComposer } from '@/components/chat/chat-composer'
+import { MODELS, type ModelId } from '@/components/chat/model-selector'
 import { LoginModal } from '@/components/auth/login-modal'
 import { createClient } from '@/lib/supabase/browser'
 
@@ -18,16 +19,15 @@ export default function ChatWindow({
   character,
   conversationId: initialConversationId = null,
   initialMessages = [],
-  model = 'gemini-2.5-flash',
 }: {
   character: Character
   conversationId?: string | null
   initialMessages?: Message[]
-  model?: string
 }) {
   const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [isLoading, setIsLoading] = useState(false)
   const [draft, setDraft] = useState('')
+  const [model, setModel] = useState<ModelId>(MODELS[0].id)
   const [conversationId, setConversationId] = useState<string | null>(initialConversationId)
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null)
   const [showLoginModal, setShowLoginModal] = useState(false)
@@ -97,6 +97,8 @@ export default function ChatWindow({
             onChange={setDraft}
             onSubmit={sendMessage}
             disabled={isLoading}
+            model={model}
+            onModelChange={setModel}
           />
         </div>
       </div>
