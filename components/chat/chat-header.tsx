@@ -1,59 +1,171 @@
 'use client'
 
-import Link from 'next/link'
-import { useEffect, useRef, useState } from 'react'
-import { ChevronLeft, MoreVertical } from 'lucide-react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import {
+  Copy,
+  Gem,
+  Scan,
+  Search,
+  SlidersHorizontal,
+} from 'lucide-react'
+import { toast } from 'sonner'
+
+import { ChatSettingsPanel } from '@/components/chat/chat-settings-panel'
+import { useFocusMode } from '@/components/layout/focus-mode-context'
+import { useSidebar } from '@/components/layout/sidebar-context'
+import { cn } from '@/lib/utils'
 
 interface ChatHeaderProps {
   characterId: string
   characterName: string
+  conversationId?: string | null
 }
 
-export function ChatHeader({ characterId, characterName }: ChatHeaderProps) {
-  const [menuOpen, setMenuOpen] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
+function HeaderIconButton({
+  label,
+  onClick,
+  className,
+  children,
+}: {
+  label: string
+  onClick?: () => void
+  className?: string
+  children: ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className={cn(
+        'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground',
+        className,
+      )}
+    >
+      {children}
+    </button>
+  )
+}
 
+export function ChatHeader({
+  characterId,
+  characterName,
+  conversationId,
+}: ChatHeaderProps) {
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const settingsRef = useRef<HTMLDivElement>(null)
+  const { focusMode, toggleFocusMode } = useFocusMode()
+  const { closeMobileSidebar } = useSidebar()
+
+  async function handleCopyTitle() {
+    const chatPath = conversationId
+      ? `/chat/${characterId}/${conversationId}`
+      : `/characters/${characterId}`
+    const shareUrl =
+      typeof window !== 'undefined'
+        ? `${window.location.origin}${chatPath}`
+        : chatPath
+
+    try {
+      await navigator.clipboard.writeText(shareUrl)
+      toast.success('링크를 복사했어요.')
+    } catch {
+      toast.error('복사에 실패했어요.')
+    }
+  }
+
+  function handleFocusMode() {
+    if (!focusMode) closeMobileSidebar()
+    toggleFocusMode()
+  }
+
+  function handleSearch() {
+    toast.message('대화 검색은 준비 중이에요.')
+  }
+
+  // 바깥 클릭·ESC로 메뉴 닫기
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setMenuOpen(false)
+      if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
+        setSettingsOpen(false)
       }
     }
 
-    if (menuOpen) document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [menuOpen])
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') setSettingsOpen(false)
+    }
+
+    if (settingsOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      document.addEventListener('keydown', handleKeyDown)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [settingsOpen])
 
   return (
-    <header className="relative sticky top-0 z-20 flex h-14 shrink-0 items-center border-b border-border bg-background/95 px-[20px]">
-      <Link
-        href={`/characters/${characterId}`}
-        className="relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full hover:bg-muted"
-        aria-label="캐릭터 상세로 돌아가기"
-      >
-        <ChevronLeft className="h-5 w-5 text-foreground" />
-      </Link>
+    <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between border-b border-border bg-background/95 px-5 backdrop-blur-sm">
+      {/* 좌측: 캐릭터명 + 유틸 */}
+      <div className="flex min-w-0 items-center gap-0.5">
+        <h1 className="truncate pr-1 text-[15px] font-semibold text-foreground">
+          {characterName}
+        </h1>
+        <HeaderIconButton label="대화 링크 복사" onClick={handleCopyTitle}>
+          <Copy className="h-4 w-4" />
+        </HeaderIconButton>
+        <HeaderIconButton
+          label={focusMode ? '집중 모드 끄기' : '집중 모드'}
+          onClick={handleFocusMode}
+          className={
+            focusMode
+              ? 'bg-primary text-primary-foreground hover:text-primary-foreground'
+              : undefined
+          }
+        >
+          <Scan className="h-4 w-4" />
+        </HeaderIconButton>
+      </div>
 
-      <h1 className="pointer-events-none absolute left-1/2 max-w-[calc(100%-96px)] -translate-x-1/2 truncate text-center text-[15px] font-medium text-foreground">
-        {characterName}
-      </h1>
+      {/* 우측: 검색 · Orb · 설정 */}
+      <div className="flex shrink-0 items-center gap-1">
+        <HeaderIconButton label="대화 검색" onClick={handleSearch}>
+          <Search className="h-4 w-4" />
+        </HeaderIconButton>
 
-      <div ref={menuRef} className="relative z-10 ml-auto shrink-0">
         <button
           type="button"
-          onClick={() => setMenuOpen((prev) => !prev)}
-          className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-muted"
-          aria-label="더보기"
-          aria-expanded={menuOpen}
+          className="flex h-8 items-center gap-1.5 rounded-lg px-1.5 text-foreground transition-colors hover:bg-muted"
+          aria-label="Orb 잔액"
         >
-          <MoreVertical className="h-5 w-5 text-muted-foreground" />
+          <Gem className="h-4 w-4 text-primary" aria-hidden />
+          <span className="text-sm font-medium tabular-nums">0</span>
         </button>
 
-        {menuOpen ? (
-          <div className="absolute right-0 top-full z-50 mt-1 w-48 overflow-hidden rounded-xl border border-border bg-card shadow-lg">
-            <p className="px-4 py-3 text-[13px] text-muted-foreground">메뉴 준비 중</p>
-          </div>
-        ) : null}
+        <div ref={settingsRef} className="relative">
+          <HeaderIconButton
+            label="채팅 설정"
+            onClick={() => setSettingsOpen((prev) => !prev)}
+            className={
+              settingsOpen
+                ? 'bg-primary text-primary-foreground hover:text-primary-foreground'
+                : undefined
+            }
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+          </HeaderIconButton>
+
+          {settingsOpen ? (
+            <ChatSettingsPanel
+              characterId={characterId}
+              characterName={characterName}
+              conversationId={conversationId}
+              onClose={() => setSettingsOpen(false)}
+            />
+          ) : null}
+        </div>
       </div>
     </header>
   )
