@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Compass, Home, MessageSquare, Plus } from 'lucide-react'
 
 import { useSidebar } from '@/components/layout/sidebar-context'
@@ -35,9 +35,14 @@ const NAV_ITEMS = [
   },
 ] as const
 
-export function AppSidebar() {
+function SidebarNav({
+  collapsed,
+  onNavigate,
+}: {
+  collapsed: boolean
+  onNavigate?: () => void
+}) {
   const pathname = usePathname()
-  const { collapsed } = useSidebar()
   const [recentChats, setRecentChats] = useState<RecentConversation[]>([])
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
@@ -77,13 +82,7 @@ export function AppSidebar() {
   }, [loadRecentChats])
 
   return (
-    <aside
-      className={cn(
-        'hidden h-full shrink-0 flex-col border-r border-border bg-card pt-3 transition-[width] duration-200 ease-in-out sm:flex',
-        collapsed ? 'w-20' : 'w-[260px]',
-      )}
-    >
-      {/* 주요 네비게이션 */}
+    <>
       <nav
         aria-label="주요 메뉴"
         className={cn('flex shrink-0 flex-col gap-0.5', collapsed ? 'px-2' : 'px-3')}
@@ -96,6 +95,7 @@ export function AppSidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onNavigate}
               title={collapsed ? item.label : undefined}
               className={cn(
                 'flex items-center rounded-xl py-2.5 text-sm font-medium transition-colors',
@@ -112,7 +112,6 @@ export function AppSidebar() {
         })}
       </nav>
 
-      {/* 최근 대화 */}
       <div
         className={cn(
           'mt-5 flex min-h-0 flex-1 flex-col',
@@ -150,6 +149,7 @@ export function AppSidebar() {
                   <li key={chat.id}>
                     <Link
                       href={chatPath}
+                      onClick={onNavigate}
                       title={collapsed ? chat.character_name : undefined}
                       className={cn(
                         'flex items-center rounded-xl transition-colors',
@@ -182,6 +182,53 @@ export function AppSidebar() {
           )}
         </div>
       </div>
-    </aside>
+    </>
+  )
+}
+
+export function AppSidebar() {
+  const pathname = usePathname()
+  const { collapsed, mobileOpen, closeMobileSidebar } = useSidebar()
+  const previousPathnameRef = useRef(pathname)
+
+  // 모바일 드로어: 라우트 이동 시에만 닫기
+  useEffect(() => {
+    if (previousPathnameRef.current === pathname) return
+    previousPathnameRef.current = pathname
+    closeMobileSidebar()
+  }, [pathname, closeMobileSidebar])
+
+  return (
+    <>
+      {/* 데스크톱 사이드바 */}
+      <aside
+        className={cn(
+          'hidden h-full shrink-0 flex-col border-r border-border bg-card pt-3 transition-[width] duration-200 ease-in-out sm:flex',
+          collapsed ? 'w-20' : 'w-[260px]',
+        )}
+      >
+        <SidebarNav collapsed={collapsed} />
+      </aside>
+
+      {/* 모바일: 화면 왼쪽 절반만 덮는 사이드바 */}
+      {mobileOpen ? (
+        <>
+          <button
+            type="button"
+            className="fixed inset-y-0 right-0 z-40 w-1/2 bg-transparent sm:hidden"
+            aria-label="사이드바 닫기"
+            onClick={closeMobileSidebar}
+          />
+          <aside
+            className={cn(
+              'fixed inset-y-0 left-0 z-50 flex w-1/2 max-w-[300px] flex-col border-r border-border bg-card pt-3 sm:hidden',
+              'animate-in slide-in-from-left duration-200',
+            )}
+          >
+            <SidebarNav collapsed={false} onNavigate={closeMobileSidebar} />
+          </aside>
+        </>
+      ) : null}
+    </>
   )
 }

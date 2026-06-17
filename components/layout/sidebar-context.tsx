@@ -2,46 +2,82 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
-  useEffect,
+  useMemo,
   useState,
+  useSyncExternalStore,
   type ReactNode,
 } from 'react'
 
 const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed'
+const collapseListeners = new Set<() => void>()
+
+function subscribeCollapsed(onStoreChange: () => void) {
+  collapseListeners.add(onStoreChange)
+  return () => {
+    collapseListeners.delete(onStoreChange)
+  }
+}
+
+function emitCollapsedChange() {
+  collapseListeners.forEach((listener) => listener())
+}
+
+function getCollapsedSnapshot() {
+  return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true'
+}
+
+function getCollapsedServerSnapshot() {
+  return false
+}
 
 type SidebarContextValue = {
   collapsed: boolean
+  mobileOpen: boolean
   toggleSidebar: () => void
+  toggleMobileSidebar: () => void
+  closeMobileSidebar: () => void
 }
 
 const SidebarContext = createContext<SidebarContextValue | null>(null)
 
 export function SidebarProvider({ children }: { children: ReactNode }) {
-  const [isCollapsed, setIsCollapsed] = useState(false)
-  const [isHydrated, setIsHydrated] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
 
-  useEffect(() => {
-    const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY)
-    if (stored === 'true') setIsCollapsed(true)
-    setIsHydrated(true)
+  // SSR·하이드레이션 시 서버 스냅샷(false)과 맞춤
+  const collapsed = useSyncExternalStore(
+    subscribeCollapsed,
+    getCollapsedSnapshot,
+    getCollapsedServerSnapshot,
+  )
+
+  const toggleSidebar = useCallback(() => {
+    const nextCollapsed = !getCollapsedSnapshot()
+    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(nextCollapsed))
+    emitCollapsedChange()
   }, [])
 
-  function toggleSidebar() {
-    setIsCollapsed((prev) => {
-      const next = !prev
-      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(next))
-      return next
-    })
-  }
+  const toggleMobileSidebar = useCallback(() => {
+    setMobileOpen((prev) => !prev)
+  }, [])
 
-  return (
-    <SidebarContext.Provider
-      value={{ collapsed: isHydrated && isCollapsed, toggleSidebar }}
-    >
-      {children}
-    </SidebarContext.Provider>
+  const closeMobileSidebar = useCallback(() => {
+    setMobileOpen(false)
+  }, [])
+
+  const value = useMemo(
+    () => ({
+      collapsed,
+      mobileOpen,
+      toggleSidebar,
+      toggleMobileSidebar,
+      closeMobileSidebar,
+    }),
+    [collapsed, mobileOpen, toggleSidebar, toggleMobileSidebar, closeMobileSidebar],
   )
+
+  return <SidebarContext.Provider value={value}>{children}</SidebarContext.Provider>
 }
 
 export function useSidebar() {
