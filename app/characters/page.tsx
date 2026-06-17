@@ -4,56 +4,31 @@ import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 
 import type { Character } from '@/lib/types'
-import { getCharacterChatCountValue } from '@/lib/character-display'
+import {
+  type BrowseSortTab,
+  filterBySearch,
+  sortBrowseCharacters,
+} from '@/lib/character-browse'
+import { CharacterGridCard } from '@/components/character-grid-card'
+import {
+  CharacterBrowseToolbar,
+  type BrowseViewMode,
+} from '@/components/characters/character-browse-toolbar'
+import { CharacterListCard } from '@/components/characters/character-list-card'
 import { MobileShell } from '@/components/mobile-shell'
-import { CharacterSection } from '@/components/character-section'
-import { Chip } from '@/components/ui/chip'
 
-const GENRE_FILTERS = ['전체', '로맨스', '판타지', '시뮬레이션', 'GL', 'BL'] as const
-const SORT_OPTIONS = [
-  { id: 'popular', label: '대화 많이 나눈 순' },
-  { id: 'latest', label: '최신순' },
-  { id: 'name', label: '이름순' },
-] as const
+const BROWSE_VIEW_STORAGE_KEY = 'waneck-browse-view'
+const AI_SEARCH_STORAGE_KEY = 'waneck-ai-search'
 
-type SortId = (typeof SORT_OPTIONS)[number]['id']
-
-function sortCharacters(characters: Character[], sortId: SortId): Character[] {
-  const sorted = [...characters]
-
-  if (sortId === 'latest') {
-    return sorted.sort(
-      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-    )
-  }
-
-  if (sortId === 'name') {
-    return sorted.sort((a, b) => a.name.localeCompare(b.name, 'ko'))
-  }
-
-  return sorted.sort(
-    (a, b) => getCharacterChatCountValue(b.id) - getCharacterChatCountValue(a.id),
-  )
+function readStoredViewMode(): BrowseViewMode {
+  if (typeof window === 'undefined') return 'list'
+  const stored = window.localStorage.getItem(BROWSE_VIEW_STORAGE_KEY)
+  return stored === 'grid' ? 'grid' : 'list'
 }
 
-function filterByGenre(characters: Character[], genre: string): Character[] {
-  if (genre === '전체') return characters
-
-  return characters.filter((character) =>
-    character.genres.some((item) => item.toLowerCase() === genre.toLowerCase()),
-  )
-}
-
-function filterBySearch(characters: Character[], search: string): Character[] {
-  const keyword = search.trim().toLowerCase()
-  if (!keyword) return characters
-
-  return characters.filter(
-    (character) =>
-      character.name.toLowerCase().includes(keyword) ||
-      character.short_intro?.toLowerCase().includes(keyword) ||
-      character.tag?.toLowerCase().includes(keyword),
-  )
+function readStoredAiSearch(): boolean {
+  if (typeof window === 'undefined') return false
+  return window.localStorage.getItem(AI_SEARCH_STORAGE_KEY) === 'true'
 }
 
 export default function CharactersPage() {
@@ -61,8 +36,14 @@ export default function CharactersPage() {
   const searchQuery = searchParams.get('search') ?? ''
   const [characters, setCharacters] = useState<Character[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeGenre, setActiveGenre] = useState<string>('전체')
-  const [activeSort, setActiveSort] = useState<SortId>('popular')
+  const [sortTab, setSortTab] = useState<BrowseSortTab>('relevance')
+  const [viewMode, setViewMode] = useState<BrowseViewMode>('list')
+  const [aiSearchEnabled, setAiSearchEnabled] = useState(false)
+
+  useEffect(() => {
+    setViewMode(readStoredViewMode())
+    setAiSearchEnabled(readStoredAiSearch())
+  }, [])
 
   useEffect(() => {
     fetch('/api/characters')
@@ -73,98 +54,81 @@ export default function CharactersPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  const filteredCharacters = useMemo(() => {
-    const byGenre = filterByGenre(characters, activeGenre)
-    return filterBySearch(byGenre, searchQuery)
-  }, [characters, activeGenre, searchQuery])
-
-  const risingCreators = useMemo(
-    () =>
-      sortCharacters(filteredCharacters, 'latest').slice(0, 12),
-    [filteredCharacters],
+  const filteredCharacters = useMemo(
+    () => filterBySearch(characters, searchQuery),
+    [characters, searchQuery],
   )
 
-  const trendingCharacters = useMemo(
-    () => sortCharacters(filteredCharacters, 'popular').slice(0, 10),
-    [filteredCharacters],
+  const sortedCharacters = useMemo(
+    () => sortBrowseCharacters(filteredCharacters, sortTab, searchQuery),
+    [filteredCharacters, sortTab, searchQuery],
   )
 
-  const allCharacters = useMemo(
-    () => sortCharacters(filteredCharacters, activeSort),
-    [filteredCharacters, activeSort],
-  )
+  const emptyMessage = searchQuery
+    ? '검색 결과가 없습니다.'
+    : '등록된 캐릭터가 없습니다.'
+
+  const handleViewModeChange = (mode: BrowseViewMode) => {
+    setViewMode(mode)
+    window.localStorage.setItem(BROWSE_VIEW_STORAGE_KEY, mode)
+  }
+
+  const handleAiSearchChange = (enabled: boolean) => {
+    setAiSearchEnabled(enabled)
+    window.localStorage.setItem(AI_SEARCH_STORAGE_KEY, String(enabled))
+  }
 
   return (
     <MobileShell>
       <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background">
-        <h1 className="sr-only">캐릭터</h1>
+        <h1 className="sr-only">캐릭터 탐색</h1>
 
-        {/* 장르 필터 */}
-        <nav
-          aria-label="장르 필터"
-          className="scroll-hide z-10 flex min-h-14 shrink-0 gap-2 overflow-x-auto bg-background px-4 py-3"
-        >
-          {GENRE_FILTERS.map((genre) => (
-            <Chip
-              key={genre}
-              selected={activeGenre === genre}
-              onClick={() => setActiveGenre(genre)}
-            >
-              {genre}
-            </Chip>
-          ))}
-        </nav>
-
-        <div className="scroll-hide min-h-0 flex-1 overflow-y-auto pb-8">
-          <CharacterSection
-            title="떠오르는 신예 창작자들"
-            characters={risingCreators}
-            loading={loading}
-            horizontal
+        <div className="scroll-hide min-h-0 flex-1 overflow-y-auto">
+          <div className="mx-auto my-2 w-full space-y-1 px-3 sm:px-4">
+          <CharacterBrowseToolbar
+            aiSearchEnabled={aiSearchEnabled}
+            onAiSearchChange={handleAiSearchChange}
+            sortTab={sortTab}
+            onSortTabChange={setSortTab}
+            viewMode={viewMode}
+            onViewModeChange={handleViewModeChange}
           />
 
-          <CharacterSection
-            title="요즘 트렌드"
-            characters={trendingCharacters}
-            loading={loading}
-            showRank
-            horizontal
-          />
-
-          <section className="mt-8">
-            <div className="mb-3 px-4">
-              <h2 className="text-[15px] font-bold text-foreground">캐릭터 모아보기</h2>
-            </div>
-
-            <div
-              aria-label="정렬"
-              className="scroll-hide mb-4 flex gap-2 overflow-x-auto px-4 pb-1"
-            >
-              {SORT_OPTIONS.map((option) => (
-                <Chip
-                  key={option.id}
-                  selected={activeSort === option.id}
-                  onClick={() => setActiveSort(option.id)}
-                >
-                  {option.label}
-                </Chip>
+          {loading ? (
+            <div className="grid grid-cols-1 gap-4 xs:grid-cols-2">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="h-36 min-w-0 animate-pulse rounded-lg bg-muted"
+                />
               ))}
             </div>
+          ) : sortedCharacters.length === 0 ? (
+            <p className="py-12 text-center text-sm text-muted-foreground">
+              {emptyMessage}
+            </p>
+          ) : viewMode === 'list' ? (
+            <div className="grid grid-cols-1 gap-4 xs:grid-cols-2">
+              {sortedCharacters.map((character) => (
+                <div key={character.id} className="min-w-0">
+                  <CharacterListCard character={character} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-x-2 gap-y-4 xs:grid-cols-3">
+              {sortedCharacters.map((character) => (
+                <div key={character.id} className="min-w-0">
+                  <CharacterGridCard character={character} />
+                </div>
+              ))}
+            </div>
+          )}
 
-            <CharacterSection
-              title=""
-              characters={allCharacters}
-              loading={loading}
-              className="mt-0"
-              emptyMessage={
-                activeGenre === '전체'
-                  ? '등록된 캐릭터가 없습니다.'
-                  : `${activeGenre} 장르의 캐릭터가 없습니다.`
-              }
-            />
-          </section>
+          <div className="h-10" />
         </div>
       </div>
+    </div>
     </MobileShell>
   )
 }

@@ -16,9 +16,9 @@ export function CharacterGridCard({ character, rank, className }: CharacterGridC
   return (
     <Link
       href={`/characters/${character.id}`}
-      className={cn('group flex flex-col', className)}
+      className={cn('group flex w-full min-w-0 flex-col', className)}
     >
-      <div className="relative aspect-3/4 overflow-hidden rounded-xl bg-muted">
+      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-muted">
         {character.profile_image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
