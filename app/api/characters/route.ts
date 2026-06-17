@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase.server'
 
 export async function GET() {
@@ -44,6 +45,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '시스템 프롬프트는 필수입니다' }, { status: 400 })
   }
 
+  const authClient = await createClient()
+  const {
+    data: { user },
+  } = await authClient.auth.getUser()
+
   const { data: character, error } = await supabaseAdmin
     .from('characters')
     .insert({
@@ -58,6 +64,7 @@ export async function POST(req: NextRequest) {
       profile_image_url: body.profile_image_url ?? null,
       is_public: true,
       genres: [],
+      created_by: user?.id ?? null,
     })
     .select()
     .single()
