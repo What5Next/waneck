@@ -5,16 +5,45 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { FormEvent, useEffect, useState } from 'react'
 import { PanelLeft, PanelLeftClose, Search } from 'lucide-react'
 
+import { NotificationButton } from '@/components/layout/notification-button'
 import { UserButton } from '@/components/auth/user-button'
-import { ThemeToggle } from '@/components/chat/theme-toggle'
 import { useSidebar } from '@/components/layout/sidebar-context'
 import { cn } from '@/lib/utils'
+
+function SidebarToggleButton({
+  collapsed,
+  onClick,
+  className,
+}: {
+  collapsed: boolean
+  onClick: () => void
+  className?: string
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground',
+        className,
+      )}
+      aria-label={collapsed ? '사이드바 펼치기' : '사이드바 접기'}
+      aria-expanded={!collapsed}
+    >
+      {collapsed ? (
+        <PanelLeft className="h-[18px] w-[18px]" />
+      ) : (
+        <PanelLeftClose className="h-[18px] w-[18px]" />
+      )}
+    </button>
+  )
+}
 
 export function Header({ className }: { className?: string }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [query, setQuery] = useState('')
-  const { collapsed, toggleSidebar } = useSidebar()
+  const { collapsed, mobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar()
 
   // 탐색 페이지에서 URL 검색어와 입력창 동기화
   useEffect(() => {
@@ -30,41 +59,48 @@ export function Header({ className }: { className?: string }) {
     router.push(queryString ? `/characters?${queryString}` : '/characters')
   }
 
+  function handleMobileSearch() {
+    router.push('/characters')
+  }
+
   return (
     <header
       className={cn(
-        'sticky top-0 z-20 flex h-14 shrink-0 items-center gap-3 border-b border-border bg-background/95 px-4 sm:px-5',
+        'sticky top-0 z-50 flex h-14 shrink-0 items-center gap-3 border-b border-border bg-background/95 px-4 sm:px-5',
         className,
       )}
     >
-      {/* 데스크톱: 펼치기 버튼 + 타이틀 */}
-      <div className="hidden shrink-0 items-center gap-2 sm:flex">
-        <button
-          type="button"
+      {/* 좌측: 사이드바 + 로고 */}
+      <div className="flex shrink-0 items-center gap-2">
+        <SidebarToggleButton
+          collapsed={collapsed}
           onClick={toggleSidebar}
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
-          aria-label={collapsed ? '사이드바 펼치기' : '사이드바 접기'}
-          aria-expanded={!collapsed}
-        >
-          {collapsed ? (
-            <PanelLeft className="h-[18px] w-[18px]" />
-          ) : (
-            <PanelLeftClose className="h-[18px] w-[18px]" />
-          )}
-        </button>
+          className="hidden sm:flex"
+        />
+        <SidebarToggleButton
+          collapsed={!mobileOpen}
+          onClick={toggleMobileSidebar}
+          className="sm:hidden"
+        />
         <Link href="/" className="text-lg font-bold tracking-tight text-foreground">
           와넥
         </Link>
       </div>
 
-      {/* 모바일: 사이드바 없을 때 로고 */}
-      <Link href="/" className="shrink-0 sm:hidden">
-        <span className="text-lg font-bold tracking-tight text-foreground">와넥</span>
-      </Link>
-
       <div className="ml-auto flex min-w-0 items-center gap-2 sm:gap-3">
-        {/* 검색창 */}
-        <form onSubmit={handleSearch} className="min-w-0">
+        {/* 모바일: 검색 + 알림 */}
+        <button
+          type="button"
+          onClick={handleMobileSearch}
+          className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground sm:hidden"
+          aria-label="캐릭터 검색"
+        >
+          <Search className="h-5 w-5" />
+        </button>
+        <NotificationButton className="sm:hidden" />
+
+        {/* 데스크톱: 검색창 + 알림 + 프로필 */}
+        <form onSubmit={handleSearch} className="hidden min-w-0 sm:block">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
@@ -73,14 +109,14 @@ export function Header({ className }: { className?: string }) {
               onChange={(event) => setQuery(event.target.value)}
               placeholder="캐릭터 검색"
               aria-label="캐릭터 검색"
-              className="h-9 w-[140px] rounded-full border border-border bg-muted/50 pl-9 pr-3 text-sm text-foreground outline-none transition-[width] placeholder:text-muted-foreground focus:w-[200px] focus:border-primary focus:ring-1 focus:ring-primary xs:w-[180px] xs:focus:w-[240px] sm:w-[240px] sm:focus:w-[280px]"
+              className="h-9 w-[240px] rounded-full border border-border bg-muted/50 pl-9 pr-3 text-sm text-foreground outline-none transition-[width] placeholder:text-muted-foreground focus:w-[280px] focus:border-primary focus:ring-1 focus:ring-primary"
             />
           </div>
         </form>
 
-        {/* 프로필 · 테마 (모바일과 동일 동작) */}
-        <div className="flex shrink-0 items-center gap-0.5">
-          <ThemeToggle />
+        <NotificationButton className="hidden sm:block" />
+
+        <div className="hidden shrink-0 items-center gap-0.5 sm:flex">
           <UserButton />
         </div>
       </div>
