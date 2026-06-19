@@ -23,6 +23,7 @@ import {
   PopoverMenuItem,
   PopoverMenuPanel,
 } from '@/components/ui/popover-menu'
+import { useChatRoomName } from '@/hooks/use-user-settings'
 import { cn } from '@/lib/utils'
 
 type SettingsTab = 'memory' | 'persona' | 'notes' | 'output' | 'settings'
@@ -42,8 +43,6 @@ const SETTINGS_TABS: {
     icon: <SlidersHorizontal className="h-3 w-3" />,
   },
 ]
-
-const CHAT_ROOM_NAME_KEY_PREFIX = 'waneck-chat-room-name:'
 
 type ChatSettingsPanelProps = {
   characterId: string
@@ -83,24 +82,28 @@ export function ChatSettingsPanel({
 }: ChatSettingsPanelProps) {
   const { resolvedTheme, setTheme } = useTheme()
   const [activeTab, setActiveTab] = useState<SettingsTab>('settings')
-  const [roomName, setRoomName] = useState(characterName)
   const [isEditingName, setIsEditingName] = useState(false)
-  const [themeMounted, setThemeMounted] = useState(false)
+  const [draftName, setDraftName] = useState(characterName)
 
-  const storageKey = conversationId
-    ? `${CHAT_ROOM_NAME_KEY_PREFIX}${conversationId}`
-    : `${CHAT_ROOM_NAME_KEY_PREFIX}${characterId}`
+  const { value: roomName, setValue: setRoomName } = useChatRoomName(
+    characterId,
+    characterName,
+    conversationId,
+  )
 
   const isDark = resolvedTheme === 'dark'
+  const isThemeReady = resolvedTheme !== undefined
 
   useEffect(() => {
-    setThemeMounted(true)
-  }, [])
+    if (!isEditingName) {
+      setDraftName(roomName)
+    }
+  }, [roomName, isEditingName])
 
-  useEffect(() => {
-    const storedName = localStorage.getItem(storageKey)
-    setRoomName(storedName?.trim() || characterName)
-  }, [storageKey, characterName])
+  function handleStartEdit() {
+    setDraftName(roomName)
+    setIsEditingName(true)
+  }
 
   function handleSaveRoomName(nextName: string) {
     const trimmedName = nextName.trim()
@@ -110,7 +113,11 @@ export function ChatSettingsPanel({
     }
 
     setRoomName(trimmedName)
-    localStorage.setItem(storageKey, trimmedName)
+    setIsEditingName(false)
+  }
+
+  function handleCancelEdit() {
+    setDraftName(roomName)
     setIsEditingName(false)
   }
 
@@ -160,17 +167,12 @@ export function ChatSettingsPanel({
                   {isEditingName ? (
                     <input
                       autoFocus
-                      value={roomName}
-                      onChange={(event) => setRoomName(event.target.value)}
-                      onBlur={() => handleSaveRoomName(roomName)}
+                      value={draftName}
+                      onChange={(event) => setDraftName(event.target.value)}
+                      onBlur={() => handleSaveRoomName(draftName)}
                       onKeyDown={(event) => {
-                        if (event.key === 'Enter') handleSaveRoomName(roomName)
-                        if (event.key === 'Escape') {
-                          setIsEditingName(false)
-                          setRoomName(
-                            localStorage.getItem(storageKey)?.trim() || characterName,
-                          )
-                        }
+                        if (event.key === 'Enter') handleSaveRoomName(draftName)
+                        if (event.key === 'Escape') handleCancelEdit()
                       }}
                       className="min-w-0 flex-1 bg-transparent text-[13px] text-foreground outline-none"
                       aria-label="채팅방 이름 수정"
@@ -182,7 +184,7 @@ export function ChatSettingsPanel({
                   )}
                   <button
                     type="button"
-                    onClick={() => setIsEditingName(true)}
+                    onClick={handleStartEdit}
                     className="ml-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                     aria-label="채팅방 이름 편집"
                   >
@@ -196,7 +198,7 @@ export function ChatSettingsPanel({
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted/25 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
                   aria-label="테마 전환"
                 >
-                  {themeMounted ? (
+                  {isThemeReady ? (
                     isDark ? (
                       <Moon className="h-3.5 w-3.5" />
                     ) : (

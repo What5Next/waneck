@@ -7,9 +7,9 @@ import type { Character } from '@/lib/types'
 import type { Message } from '@/lib/types'
 import { ChatThread } from '@/components/chat/chat-thread'
 import { ChatComposer } from '@/components/chat/chat-composer'
-import { MODELS, type ModelId } from '@/components/chat/model-selector'
 import { LoginModal } from '@/components/auth/login-modal'
 import { useAuth } from '@/hooks/use-auth'
+import { useDefaultModel } from '@/hooks/use-user-settings'
 
 function parseCharacterSuggestions(raw: Character['suggestions']): string[] {
   if (!Array.isArray(raw)) return []
@@ -32,7 +32,8 @@ export default function ChatWindow({
   const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [isLoading, setIsLoading] = useState(false)
   const [draft, setDraft] = useState('')
-  const [model, setModel] = useState<ModelId>(MODELS[0].id)
+  // P5: mypage 모델 설정과 storage 연동
+  const { modelId: model, setModelId: setModel } = useDefaultModel()
   const [conversationId, setConversationId] = useState<string | null>(initialConversationId)
   // P1: 채팅 전송 전 로그인 여부 확인용
   const { isAuthenticated } = useAuth()

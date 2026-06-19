@@ -10,22 +10,15 @@ import {
   type ReactNode,
 } from 'react'
 
-const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed'
-const collapseListeners = new Set<() => void>()
-
-function subscribeCollapsed(onStoreChange: () => void) {
-  collapseListeners.add(onStoreChange)
-  return () => {
-    collapseListeners.delete(onStoreChange)
-  }
-}
-
-function emitCollapsedChange() {
-  collapseListeners.forEach((listener) => listener())
-}
+import {
+  getStorageItem,
+  setStorageItem,
+  subscribeStorageKey,
+} from '@/lib/stores/local-storage-store'
+import { SIDEBAR_COLLAPSED_KEY } from '@/lib/user-settings'
 
 function getCollapsedSnapshot() {
-  return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true'
+  return getStorageItem(SIDEBAR_COLLAPSED_KEY) === 'true'
 }
 
 function getCollapsedServerSnapshot() {
@@ -53,7 +46,7 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
   )
 
   const storedCollapsed = useSyncExternalStore(
-    subscribeCollapsed,
+    (onStoreChange) => subscribeStorageKey(SIDEBAR_COLLAPSED_KEY, onStoreChange),
     getCollapsedSnapshot,
     getCollapsedServerSnapshot,
   )
@@ -62,8 +55,7 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
 
   const toggleSidebar = useCallback(() => {
     const nextCollapsed = !getCollapsedSnapshot()
-    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(nextCollapsed))
-    emitCollapsedChange()
+    setStorageItem(SIDEBAR_COLLAPSED_KEY, String(nextCollapsed))
   }, [])
 
   const toggleMobileSidebar = useCallback(() => {
