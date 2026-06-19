@@ -7,6 +7,7 @@ import { ChevronLeft, Plus, Upload, User, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Field, TextInput, TextArea } from '@/components/ui/form-field'
+import { useCreateCharacter } from '@/hooks/mutations/use-create-character'
 
 // ─── 탭 정의 ───────────────────────────────────────────────────────────────
 
@@ -407,6 +408,7 @@ function DetailTab({
 
 export function CharacterCreateForm() {
   const router = useRouter()
+  const createCharacterMutation = useCreateCharacter()
   const [activeTab, setActiveTab] = useState<TabId>('settings')
   const [form, setForm] = useState<FormState>(DEFAULT_FORM)
   const [imageFile, setImageFile] = useState<File | null>(null)
@@ -441,23 +443,17 @@ export function CharacterCreateForm() {
         profileImageUrl = await uploadImage(imageFile)
       }
 
-      const res = await fetch('/api/characters', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: form.name,
-          short_intro: form.tagline,
-          system_prompt: form.system,
-          tag: form.tag,
-          mood: form.mood,
-          description: form.desc,
-          suggestions: form.suggestions.filter(Boolean),
-          introTurns: form.introTurns,
-          profile_image_url: profileImageUrl,
-        }),
+      const data = await createCharacterMutation.mutateAsync({
+        name: form.name,
+        short_intro: form.tagline,
+        system_prompt: form.system,
+        tag: form.tag,
+        mood: form.mood,
+        description: form.desc,
+        suggestions: form.suggestions.filter(Boolean),
+        introTurns: form.introTurns,
+        profile_image_url: profileImageUrl,
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? '저장에 실패했어요')
       router.push(`/characters/${data.id}`)
     } catch (e) {
       setError(e instanceof Error ? e.message : '저장에 실패했어요')
