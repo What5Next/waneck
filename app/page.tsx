@@ -13,7 +13,7 @@ import {
   filterBySearch,
   sortCharacters,
 } from "@/lib/character-browse";
-import { MobileShell } from "@/components/mobile-shell";
+import { ExplorePageLayout } from "@/components/layout/explore-page-layout";
 import { CharacterSection } from "@/components/character-section";
 import { Chip } from "@/components/ui/chip";
 import { FadeEdge } from "@/components/ui/fade-edge";
@@ -81,33 +81,36 @@ function HomePage() {
   );
 
   return (
-    <MobileShell>
-      <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background">
-        <h1 className="sr-only">와넥 홈</h1>
+    <ExplorePageLayout
+      scrollClassName="pb-2 pt-2"
+      header={
+        <>
+          <h1 className="sr-only">와넥 홈</h1>
 
-        <FadeEdge
-          bottom
-          size={CHIP_FADE_SIZE}
-          fadeColor="background"
-          className="z-10 shrink-0 bg-background"
-        >
-          <nav
-            aria-label="카테고리"
-            className="scroll-hide flex min-h-14 gap-2 overflow-x-auto px-4 py-3"
+          <FadeEdge
+            bottom
+            size={CHIP_FADE_SIZE}
+            fadeColor="background"
+            className="z-10 shrink-0 bg-background"
           >
-            {CATEGORIES.map((category) => (
-              <Chip
-                key={category}
-                selected={activeCategory === category}
-                onClick={() => setActiveCategory(category)}
-              >
-                {category}
-              </Chip>
-            ))}
-          </nav>
-        </FadeEdge>
-
-        <div className="scroll-hide min-h-0 flex-1 overflow-y-auto pb-8 pt-2">
+            <nav
+              aria-label="카테고리"
+              className="scroll-hide flex min-h-14 gap-2 overflow-x-auto px-4 py-3"
+            >
+              {CATEGORIES.map((category) => (
+                <Chip
+                  key={category}
+                  selected={activeCategory === category}
+                  onClick={() => setActiveCategory(category)}
+                >
+                  {category}
+                </Chip>
+              ))}
+            </nav>
+          </FadeEdge>
+        </>
+      }
+    >
           {loading ? (
             <div className="px-4">
               <div className="h-[220px] w-full rounded-2xl bg-muted" />
@@ -295,8 +298,6 @@ function HomePage() {
               emptyMessage="등록된 캐릭터가 없습니다."
             />
           </section>
-        </div>
-      </div>
-    </MobileShell>
+    </ExplorePageLayout>
   );
 }

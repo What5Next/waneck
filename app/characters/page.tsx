@@ -16,7 +16,7 @@ import {
 } from '@/components/characters/character-browse-toolbar'
 import { CharacterListCard } from '@/components/characters/character-list-card'
 import { EmptyState } from '@/components/ui/empty-state'
-import { MobileShell } from '@/components/mobile-shell'
+import { ExplorePageLayout } from '@/components/layout/explore-page-layout'
 
 const BROWSE_VIEW_STORAGE_KEY = 'waneck-browse-view'
 
@@ -67,12 +67,10 @@ export default function CharactersPage() {
   }
 
   return (
-    <MobileShell>
-      <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background">
-        <h1 className="sr-only">캐릭터 탐색</h1>
+    <ExplorePageLayout>
+      <h1 className="sr-only">캐릭터 탐색</h1>
 
-        <div className="scroll-hide min-h-0 flex-1 overflow-y-auto">
-          <div className="mx-auto my-2 w-full space-y-1 px-3 sm:px-4">
+      <div className="mx-auto my-2 w-full space-y-1 px-3 sm:px-4">
           <CharacterBrowseToolbar
             sortTab={sortTab}
             onSortTabChange={setSortTab}
@@ -112,11 +110,7 @@ export default function CharactersPage() {
               ))}
             </div>
           )}
-
-          <div className="h-10" />
-        </div>
       </div>
-    </div>
-    </MobileShell>
+    </ExplorePageLayout>
   )
 }
