@@ -15,7 +15,7 @@ import {
   Sun,
   UserRound,
 } from 'lucide-react'
-import { useTheme } from 'next-themes'
+import { useThemeReady } from '@/hooks/use-theme-ready'
 import { toast } from 'sonner'
 
 import {
@@ -80,7 +80,7 @@ export function ChatSettingsPanel({
   onClose,
   className,
 }: ChatSettingsPanelProps) {
-  const { resolvedTheme, setTheme } = useTheme()
+  const { isReady: isThemeReady, isDark, toggleTheme } = useThemeReady()
   const [activeTab, setActiveTab] = useState<SettingsTab>('settings')
   const [isEditingName, setIsEditingName] = useState(false)
   const [draftName, setDraftName] = useState(characterName)
@@ -90,9 +90,6 @@ export function ChatSettingsPanel({
     characterName,
     conversationId,
   )
-
-  const isDark = resolvedTheme === 'dark'
-  const isThemeReady = resolvedTheme !== undefined
 
   useEffect(() => {
     if (!isEditingName) {
@@ -122,7 +119,7 @@ export function ChatSettingsPanel({
   }
 
   function handleThemeToggle() {
-    setTheme(isDark ? 'light' : 'dark')
+    toggleTheme()
   }
 
   function handleExport() {

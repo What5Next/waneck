@@ -21,8 +21,7 @@ import {
   Settings,
   Shield,
 } from "lucide-react";
-import { useTheme } from "next-themes";
-
+import { useThemeReady } from "@/hooks/use-theme-ready";
 import { MODELS } from "@/components/chat/model-selector";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { IconButton } from "@/components/ui/icon-button";
@@ -44,7 +43,7 @@ import { useSafetyFilter, useDefaultModel } from "@/hooks/use-user-settings";
 export function MyPageView() {
   const router = useRouter();
   const signOutMutation = useSignOut();
-  const { resolvedTheme, setTheme } = useTheme();
+  const { themeLabel, toggleTheme } = useThemeReady();
   // P3: profile-view와 동일 Query 캐시 공유
   const { data: profile, isPending: loading } = useProfileQuery();
   // P5: localStorage 설정 — user-menu·chat-window와 실시간 동기화
@@ -52,8 +51,6 @@ export function MyPageView() {
     useSafetyFilter();
   const { modelId: defaultModelId } = useDefaultModel();
 
-  const isDark = resolvedTheme === "dark";
-  const isThemeReady = resolvedTheme !== undefined;
   const defaultModel =
     MODELS.find((model) => model.id === defaultModelId) ?? MODELS[0];
 
@@ -62,7 +59,7 @@ export function MyPageView() {
   }
 
   function handleThemeToggle() {
-    setTheme(isDark ? "light" : "dark");
+    toggleTheme();
   }
 
   async function handleSignOut() {
@@ -240,7 +237,7 @@ export function MyPageView() {
             <Row
               icon={<Settings className="h-4 w-4" />}
               label="테마"
-              value={isThemeReady ? (isDark ? "다크" : "라이트") : "…"}
+              value={themeLabel}
               onClick={handleThemeToggle}
               showChevron={false}
             />

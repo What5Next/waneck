@@ -1,22 +1,14 @@
 'use client'
 
 import { Moon, Sun } from 'lucide-react'
-import { useTheme } from 'next-themes'
-import { startTransition, useEffect, useState } from 'react'
 
 import { IconButton, headerIconClass } from '@/components/ui/icon-button'
+import { useThemeReady } from '@/hooks/use-theme-ready'
 
 export function ThemeToggle() {
-  const { resolvedTheme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
+  const { isReady, isDark, toggleTheme } = useThemeReady()
 
-  useEffect(() => {
-    startTransition(() => {
-      setMounted(true)
-    })
-  }, [])
-
-  if (!mounted) {
+  if (!isReady) {
     return (
       <IconButton disabled aria-label="테마">
         <span className={headerIconClass} aria-hidden />
@@ -24,13 +16,8 @@ export function ThemeToggle() {
     )
   }
 
-  const isDark = resolvedTheme === 'dark'
-
   return (
-    <IconButton
-      aria-label="테마 전환"
-      onClick={() => setTheme(isDark ? 'light' : 'dark')}
-    >
+    <IconButton aria-label="테마 전환" onClick={toggleTheme}>
       {isDark ? (
         <Sun className={headerIconClass} aria-hidden />
       ) : (

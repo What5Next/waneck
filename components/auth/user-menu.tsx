@@ -10,7 +10,7 @@ import {
   ShieldCheck,
   Sun,
 } from 'lucide-react'
-import { useTheme } from 'next-themes'
+import { useThemeReady } from '@/hooks/use-theme-ready'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -37,8 +37,9 @@ type UserMenuProps = {
 }
 
 export function UserMenu({ user, onClose }: UserMenuProps) {
-  const { resolvedTheme, setTheme } = useTheme()
   const signOutMutation = useSignOut()
+  const { isReady: isThemeReady, isDark, toggleTheme, themeLabel } =
+    useThemeReady()
   // P5: mypage와 실시간 동기화
   const { enabled: safetyFilterEnabled, setEnabled: setSafetyFilterEnabled } =
     useSafetyFilter()
@@ -53,15 +54,13 @@ export function UserMenu({ user, onClose }: UserMenuProps) {
   const avatarUrl =
     profile?.avatar_url ??
     (user.user_metadata?.avatar_url as string | undefined)
-  const isDark = resolvedTheme === 'dark'
-  const isThemeReady = resolvedTheme !== undefined
 
   function handleSafetyFilterChange(enabled: boolean) {
     setSafetyFilterEnabled(enabled)
   }
 
   function handleThemeToggle() {
-    setTheme(isDark ? 'light' : 'dark')
+    toggleTheme()
   }
 
   async function handleSignOut() {
@@ -161,7 +160,7 @@ export function UserMenu({ user, onClose }: UserMenuProps) {
             )
           }
           label="테마"
-          trailing={isThemeReady ? (isDark ? '다크' : '라이트') : '…'}
+          trailing={themeLabel}
           onClick={handleThemeToggle}
         />
       </div>
