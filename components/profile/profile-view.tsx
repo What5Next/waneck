@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ChevronDown, ChevronLeft, Pencil, Share2 } from "lucide-react";
 
 import { CharacterGridCard } from "@/components/character-grid-card";
@@ -22,6 +22,7 @@ import type { Character } from "@/lib/types";
 import type { ProfileSummary, ProfileTab } from "@/lib/user-profile";
 import { getProfileInitials } from "@/lib/user-profile";
 import { cn } from "@/lib/utils";
+import { useProfileQuery } from "@/hooks/queries/use-profile-query";
 
 const PROFILE_TABS = [
   { value: "characters" as const, label: "캐릭터" },
@@ -62,30 +63,11 @@ function sortProfileCharacters(
 
 export function ProfileView() {
   const router = useRouter();
-  const [profile, setProfile] = useState<ProfileSummary | null>(null);
-  const [loading, setLoading] = useState(true);
+  // P3: useEffect fetch 대신 TanStack Query (mypage·user-menu와 캐시 공유)
+  const { data: profile, isPending: loading } = useProfileQuery();
   const [activeTab, setActiveTab] = useState<ProfileTab>("characters");
   const [characterSort, setCharacterSort] = useState<CharacterSortId>("newest");
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
-
-  useEffect(() => {
-    fetch("/api/profile")
-      .then(async (response) => {
-        if (response.status === 401) {
-          router.replace("/");
-          return null;
-        }
-        if (!response.ok) throw new Error("profile fetch failed");
-        return response.json() as Promise<ProfileSummary>;
-      })
-      .then((data) => {
-        if (data) setProfile(data);
-      })
-      .catch(() => {
-        router.replace("/");
-      })
-      .finally(() => setLoading(false));
-  }, [router]);
 
   const sortedCharacters = useMemo(() => {
     if (!profile) return [];

@@ -1,8 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
 import {
   Gem,
   LayoutGrid,
@@ -23,8 +21,10 @@ import {
 } from '@/components/ui/popover-menu'
 import { Row } from '@/components/ui/row'
 import { Switch } from '@/components/ui/switch'
-import { createClient } from '@/lib/supabase/browser'
-import { DISCORD_URL, SAFETY_FILTER_KEY } from '@/lib/user-settings'
+import { useProfileQuery } from '@/hooks/queries/use-profile-query'
+import { useSignOut } from '@/hooks/mutations/use-sign-out'
+import { useSafetyFilter } from '@/hooks/use-user-settings'
+import { DISCORD_URL } from '@/lib/user-settings'
 import {
   getProfileHandle,
   getProfileInitials,
@@ -37,48 +37,27 @@ type UserMenuProps = {
 }
 
 export function UserMenu({ user, onClose }: UserMenuProps) {
-  const router = useRouter()
   const { resolvedTheme, setTheme } = useTheme()
-  const [displayName, setDisplayName] = useState<string | null>(null)
-  const [safetyFilterEnabled, setSafetyFilterEnabled] = useState(true)
-  const [themeMounted, setThemeMounted] = useState(false)
+  const signOutMutation = useSignOut()
+  // P5: mypage와 실시간 동기화
+  const { enabled: safetyFilterEnabled, setEnabled: setSafetyFilterEnabled } =
+    useSafetyFilter()
 
-  const profileName = getProfileName(user, displayName)
-  const profileHandle = getProfileHandle(user, displayName)
-  const avatarUrl = user.user_metadata?.avatar_url as string | undefined
+  // P3: Supabase 직접 조회 제거 — /api/profile 캐시와 공유
+  const { data: profile } = useProfileQuery({ enabled: !!user })
+
+  const profileName =
+    profile?.display_name ?? getProfileName(user, null)
+  const profileHandle =
+    profile?.handle ?? getProfileHandle(user, profile?.display_name)
+  const avatarUrl =
+    profile?.avatar_url ??
+    (user.user_metadata?.avatar_url as string | undefined)
   const isDark = resolvedTheme === 'dark'
-
-  useEffect(() => {
-    setThemeMounted(true)
-  }, [])
-
-  useEffect(() => {
-    const storedSafetyFilter = localStorage.getItem(SAFETY_FILTER_KEY)
-    if (storedSafetyFilter !== null) {
-      setSafetyFilterEnabled(storedSafetyFilter === 'true')
-    }
-
-    const supabase = createClient()
-    async function loadProfile() {
-      try {
-        const { data } = await supabase
-          .from('users')
-          .select('display_name')
-          .eq('id', user.id)
-          .maybeSingle()
-
-        if (data?.display_name) setDisplayName(data.display_name)
-      } catch {
-        // 프로필 조회 실패 시 메타데이터/이메일 fallback 유지
-      }
-    }
-
-    void loadProfile()
-  }, [user.id])
+  const isThemeReady = resolvedTheme !== undefined
 
   function handleSafetyFilterChange(enabled: boolean) {
     setSafetyFilterEnabled(enabled)
-    localStorage.setItem(SAFETY_FILTER_KEY, String(enabled))
   }
 
   function handleThemeToggle() {
@@ -86,10 +65,13 @@ export function UserMenu({ user, onClose }: UserMenuProps) {
   }
 
   async function handleSignOut() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    onClose()
-    router.refresh()
+    try {
+      await signOutMutation.mutateAsync()
+      onClose()
+    } catch {
+      // signOut 실패 시 메뉴만 닫음
+      onClose()
+    }
   }
 
   return (
@@ -168,7 +150,7 @@ export function UserMenu({ user, onClose }: UserMenuProps) {
 
         <PopoverMenuItem
           icon={
-            themeMounted ? (
+            isThemeReady ? (
               isDark ? (
                 <Moon className="h-4 w-4" />
               ) : (
@@ -179,7 +161,7 @@ export function UserMenu({ user, onClose }: UserMenuProps) {
             )
           }
           label="테마"
-          trailing={themeMounted ? (isDark ? '다크' : '라이트') : '…'}
+          trailing={isThemeReady ? (isDark ? '다크' : '라이트') : '…'}
           onClick={handleThemeToggle}
         />
       </div>

@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import {
   Ban,
   Bot,
@@ -24,7 +23,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 
-import { MODELS, type ModelId } from "@/components/chat/model-selector";
+import { MODELS } from "@/components/chat/model-selector";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { IconButton } from "@/components/ui/icon-button";
 import { PageLoading } from "@/components/ui/page-loading";
@@ -32,70 +31,34 @@ import { PageNavBar } from "@/components/ui/page-nav-bar";
 import { List, RowPanel } from "@/components/ui/list";
 import { Row, RowLink } from "@/components/ui/row";
 import { Switch } from "@/components/ui/switch";
-import { createClient } from "@/lib/supabase/browser";
 import {
-  DEFAULT_MODEL_KEY,
   DISCORD_URL,
-  SAFETY_FILTER_KEY,
   SUPPORT_EMAIL,
 } from "@/lib/user-settings";
-import type { ProfileSummary } from "@/lib/user-profile";
 import { getProfileInitials } from "@/lib/user-profile";
 import { cn } from "@/lib/utils";
-
-// 클라이언트 localStorage 초기값 (SSR과 분리해 effect 없이 읽음)
-function readSafetyFilterFromStorage(): boolean {
-  if (typeof window === "undefined") return true;
-  const stored = localStorage.getItem(SAFETY_FILTER_KEY);
-  return stored !== null ? stored === "true" : true;
-}
-
-function readDefaultModelFromStorage(): ModelId {
-  if (typeof window === "undefined") return MODELS[0].id;
-  const stored = localStorage.getItem(DEFAULT_MODEL_KEY) as ModelId | null;
-  if (stored && MODELS.some((model) => model.id === stored)) {
-    return stored;
-  }
-  return MODELS[0].id;
-}
+import { useProfileQuery } from "@/hooks/queries/use-profile-query";
+import { useSignOut } from "@/hooks/mutations/use-sign-out";
+import { useSafetyFilter, useDefaultModel } from "@/hooks/use-user-settings";
 
 export function MyPageView() {
   const router = useRouter();
+  const signOutMutation = useSignOut();
   const { resolvedTheme, setTheme } = useTheme();
-  const [profile, setProfile] = useState<ProfileSummary | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [safetyFilterEnabled, setSafetyFilterEnabled] = useState(
-    readSafetyFilterFromStorage,
-  );
-  const [defaultModelId] = useState<ModelId>(readDefaultModelFromStorage);
+  // P3: profile-view와 동일 Query 캐시 공유
+  const { data: profile, isPending: loading } = useProfileQuery();
+  // P5: localStorage 설정 — user-menu·chat-window와 실시간 동기화
+  const { enabled: safetyFilterEnabled, setEnabled: setSafetyFilterEnabled } =
+    useSafetyFilter();
+  const { modelId: defaultModelId } = useDefaultModel();
 
   const isDark = resolvedTheme === "dark";
   const isThemeReady = resolvedTheme !== undefined;
   const defaultModel =
     MODELS.find((model) => model.id === defaultModelId) ?? MODELS[0];
 
-  useEffect(() => {
-    fetch("/api/profile")
-      .then(async (response) => {
-        if (response.status === 401) {
-          router.replace("/");
-          return null;
-        }
-        if (!response.ok) throw new Error("profile fetch failed");
-        return response.json() as Promise<ProfileSummary>;
-      })
-      .then((data) => {
-        if (data) setProfile(data);
-      })
-      .catch(() => {
-        router.replace("/");
-      })
-      .finally(() => setLoading(false));
-  }, [router]);
-
   function handleSafetyFilterChange(enabled: boolean) {
     setSafetyFilterEnabled(enabled);
-    localStorage.setItem(SAFETY_FILTER_KEY, String(enabled));
   }
 
   function handleThemeToggle() {
@@ -103,10 +66,7 @@ export function MyPageView() {
   }
 
   async function handleSignOut() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.refresh();
-    router.replace("/");
+    await signOutMutation.mutateAsync();
   }
 
   if (loading || !profile) {
