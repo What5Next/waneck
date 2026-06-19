@@ -1,44 +1,41 @@
-import { notFound } from "next/navigation";
+'use client'
 
-import { supabase } from "@/lib/supabase";
-import type { CharacterIntroMessage, CharacterWithDetail } from "@/lib/types";
-import { CharacterDetail } from "@/components/character-detail";
-import { MobileShell } from "@/components/mobile-shell";
+import { notFound } from 'next/navigation'
+import { use } from 'react'
 
-export default async function CharacterPage({
+import { CharacterDetail } from '@/components/character-detail'
+import { MobileShell } from '@/components/mobile-shell'
+import { PageLoading } from '@/components/ui/page-loading'
+import { useCharacterQuery } from '@/hooks/queries/use-character-query'
+import { ApiError } from '@/lib/api/client'
+
+export default function CharacterPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string }>
 }) {
-  const { id } = await params;
+  const { id } = use(params)
+  const { data: character, isPending, error } = useCharacterQuery(id)
 
-  const { data, error } = await supabase
-    .from("characters")
-    .select(
-      `
-      *,
-      creator:users!characters_created_by_fkey(display_name),
-      intro_messages:character_intro_messages(role, content, created_at, sort_order)
-    `,
+  if (isPending && !character) {
+    return (
+      <MobileShell>
+        <PageLoading />
+      </MobileShell>
     )
-    .eq("id", id)
-    .order("sort_order", {
-      referencedTable: "character_intro_messages",
-      ascending: true,
-    })
-    .single();
+  }
 
-  if (error || !data) notFound();
+  if (error instanceof ApiError && error.status === 404) {
+    notFound()
+  }
 
-  const character: CharacterWithDetail = {
-    ...data,
-    creator: data.creator,
-    intro_messages: (data.intro_messages ?? []) as CharacterIntroMessage[],
-  };
+  if (error || !character) {
+    notFound()
+  }
 
   return (
     <MobileShell>
       <CharacterDetail character={character} />
     </MobileShell>
-  );
+  )
 }

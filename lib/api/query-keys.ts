@@ -10,6 +10,9 @@ export const queryKeys = {
   characters: {
     all: ['characters'] as const,
     list: () => [...queryKeys.characters.all, 'list'] as const,
+    /** 캐릭터 상세 (creator, intro_messages 포함) */
+    detail: (id: string) =>
+      [...queryKeys.characters.all, 'detail', id] as const,
   },
   profile: {
     all: ['profile'] as const,

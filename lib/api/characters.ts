@@ -1,5 +1,5 @@
 import { apiFetch } from '@/lib/api/client'
-import type { Character } from '@/lib/types'
+import type { Character, CharacterWithDetail } from '@/lib/types'
 
 /** GET /api/characters — 공개 캐릭터 전체 목록 */
 export async function getCharacters(): Promise<Character[]> {
@@ -10,6 +10,25 @@ export async function getCharacters(): Promise<Character[]> {
   }
 
   return data
+}
+
+/** GET /api/characters/[id] — 캐릭터 상세 */
+export async function getCharacterDetail(
+  characterId: string,
+): Promise<CharacterWithDetail> {
+  const data = await apiFetch<CharacterWithDetail>(
+    `/api/characters/${characterId}`,
+  )
+
+  if (!data?.id) {
+    throw new Error('Invalid character detail response')
+  }
+
+  return {
+    ...data,
+    creator: data.creator ?? null,
+    intro_messages: data.intro_messages ?? [],
+  }
 }
 
 type IntroTurn = { role: string; text: string }
