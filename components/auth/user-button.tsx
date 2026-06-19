@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import type { User } from '@supabase/supabase-js'
 import { LogIn } from 'lucide-react'
 
 import { LoginModal } from '@/components/auth/login-modal'
@@ -9,25 +8,20 @@ import { UserMenu } from '@/components/auth/user-menu'
 import { ThemeToggle } from '@/components/chat/theme-toggle'
 import { IconButton, headerIconClass } from '@/components/ui/icon-button'
 import { PopoverMenu, PopoverMenuTrigger } from '@/components/ui/popover-menu'
-import { createClient } from '@/lib/supabase/browser'
+import { useAuth } from '@/hooks/use-auth'
 
 export function UserButton() {
-  const [user, setUser] = useState<User | null>(null)
+  // P1: 개별 Supabase 구독 대신 중앙 AuthProvider 사용
+  const { user, isAuthenticated } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
   const [loginOpen, setLoginOpen] = useState(false)
 
+  // OAuth 로그인 완료 시 열려 있던 로그인 모달 닫기
   useEffect(() => {
-    const supabase = createClient()
-    supabase.auth.getUser().then(({ data }) => setUser(data.user))
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-      if (session?.user) setLoginOpen(false)
-    })
-    return () => subscription.unsubscribe()
-  }, [])
+    if (isAuthenticated) {
+      setLoginOpen(false)
+    }
+  }, [isAuthenticated])
 
   if (!user) {
     return (

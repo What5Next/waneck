@@ -6,8 +6,8 @@ import { useEffect, useRef, useState } from "react";
 import { Compass, Home, MessageSquare, Plus } from "lucide-react";
 
 import { useSidebar } from "@/components/layout/sidebar-context";
+import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/browser";
 
 type RecentConversation = {
   id: string;
@@ -44,52 +44,37 @@ function SidebarNav({
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
+  // P1: auth 구독은 AuthProvider로 이전. conversations fetch는 P4에서 Query로 교체 예정
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const [recentChats, setRecentChats] = useState<RecentConversation[]>([]);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
-    const supabase = createClient();
-
-    // setState는 외부 시스템(Supabase/fetch) 콜백 안에서만 호출
-    function applyRecentChatsForUser(isAuthenticated: boolean) {
-      if (cancelled) return;
-
-      setIsLoggedIn(isAuthenticated);
-      if (!isAuthenticated) {
-        setRecentChats([]);
-        return;
-      }
-
-      fetch("/api/conversations")
-        .then((response) => {
-          if (cancelled || !response.ok) return null;
-          return response.json() as Promise<RecentConversation[]>;
-        })
-        .then((data) => {
-          if (cancelled) return;
-          setRecentChats(Array.isArray(data) ? data : []);
-        })
-        .catch(() => {
-          if (!cancelled) setRecentChats([]);
-        });
+    if (!isAuthenticated) {
+      return;
     }
 
-    supabase.auth
-      .getUser()
-      .then(({ data }) => applyRecentChatsForUser(!!data.user));
+    let cancelled = false;
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      applyRecentChatsForUser(!!session?.user);
-    });
+    fetch("/api/conversations")
+      .then((response) => {
+        if (cancelled || !response.ok) return null;
+        return response.json() as Promise<RecentConversation[]>;
+      })
+      .then((data) => {
+        if (cancelled) return;
+        setRecentChats(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        if (!cancelled) setRecentChats([]);
+      });
 
     return () => {
       cancelled = true;
-      subscription.unsubscribe();
     };
-  }, []);
+  }, [isAuthenticated]);
+
+  // 로그아웃 시 stale state가 UI에 노출되지 않도록 표시용 배열만 분리
+  const visibleRecentChats = isAuthenticated ? recentChats : [];
 
   return (
     <>
@@ -146,17 +131,17 @@ function SidebarNav({
         </div>
 
         <div className="scroll-hide min-h-0 flex-1 overflow-y-auto">
-          {!collapsed && !isLoggedIn ? (
+          {!collapsed && !isAuthLoading && !isAuthenticated ? (
             <p className="px-3 py-2 text-xs leading-relaxed text-muted-foreground">
               로그인하면 최근 대화가 여기에 표시됩니다.
             </p>
-          ) : !collapsed && recentChats.length === 0 ? (
+          ) : !collapsed && visibleRecentChats.length === 0 ? (
             <p className="px-3 py-2 text-xs leading-relaxed text-muted-foreground">
               아직 대화한 캐릭터가 없습니다.
             </p>
           ) : (
             <ul className="flex flex-col gap-0.5">
-              {recentChats.map((chat) => {
+              {visibleRecentChats.map((chat) => {
                 const chatPath = `/chat/${chat.character_id}/${chat.id}`;
                 const isActive = pathname === chatPath;
 

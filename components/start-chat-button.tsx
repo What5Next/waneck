@@ -5,20 +5,19 @@ import { useRouter } from 'next/navigation'
 
 import { Button } from '@/components/ui/button'
 import { LoginModal } from '@/components/auth/login-modal'
-import { createClient } from '@/lib/supabase/browser'
+import { useAuth } from '@/hooks/use-auth'
 
 export function StartChatButton({ characterId }: { characterId: string }) {
   const router = useRouter()
+  // P1: 매번 getUser() 호출 대신 중앙 세션 사용
+  const { isAuthenticated } = useAuth()
   const [loading, setLoading] = useState(false)
   const [showLogin, setShowLogin] = useState(false)
 
   const startChat = useCallback(async () => {
     setLoading(true)
     try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-
-      if (!user) {
+      if (!isAuthenticated) {
         setShowLogin(true)
         return
       }
@@ -38,9 +37,10 @@ export function StartChatButton({ characterId }: { characterId: string }) {
     } finally {
       setLoading(false)
     }
-  }, [characterId, router])
+  }, [characterId, router, isAuthenticated])
 
   useEffect(() => {
+    // OAuth 리다이렉트 후 ?autostart=true 로 돌아오면 자동 대화 시작
     const params = new URLSearchParams(window.location.search)
     if (params.get('autostart') === 'true') {
       window.history.replaceState({}, '', window.location.pathname)
