@@ -8,17 +8,15 @@ import { useThemeReady } from '@/hooks/use-theme-ready'
 export function ThemeToggle() {
   const { isReady, isDark, toggleTheme } = useThemeReady()
 
-  if (!isReady) {
-    return (
-      <IconButton disabled aria-label="테마">
-        <span className={headerIconClass} aria-hidden />
-      </IconButton>
-    )
-  }
-
   return (
-    <IconButton aria-label="테마 전환" onClick={toggleTheme}>
-      {isDark ? (
+    <IconButton
+      aria-label={isReady ? '테마 전환' : '테마'}
+      disabled={!isReady}
+      onClick={isReady ? toggleTheme : undefined}
+    >
+      {!isReady ? (
+        <span className={headerIconClass} aria-hidden />
+      ) : isDark ? (
         <Sun className={headerIconClass} aria-hidden />
       ) : (
         <Moon className={headerIconClass} aria-hidden />

@@ -1,23 +1,36 @@
 'use client'
 
 import { useTheme } from 'next-themes'
-import { useCallback } from 'react'
+import { useCallback, useEffect, useState, startTransition } from 'react'
 
 /**
  * next-themes 하이드레이션 가드 + 토글 유틸.
- * resolvedTheme이 undefined인 동안은 라벨/아이콘을 플레이스홀더로 표시한다.
+ * mounted 전에는 서버·클라 첫 렌더를 동일하게 유지한다.
+ * (resolvedTheme만으로 가드하면 next-themes 스크립트가 클라 첫 페인트에 값을 채워 mismatch 발생)
  */
 export function useThemeReady() {
   const { resolvedTheme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
 
-  const isReady = resolvedTheme !== undefined
+  useEffect(() => {
+    startTransition(() => {
+      setMounted(true)
+    })
+  }, [])
+
+  const isReady = mounted
   const isDark = resolvedTheme === 'dark'
 
   const toggleTheme = useCallback(() => {
     setTheme(isDark ? 'light' : 'dark')
   }, [isDark, setTheme])
 
-  const themeLabel = isReady ? (isDark ? '다크' : '라이트') : '…'
+  const themeLabel =
+    !mounted || resolvedTheme === undefined
+      ? '…'
+      : isDark
+        ? '다크'
+        : '라이트'
 
   return {
     isReady,
