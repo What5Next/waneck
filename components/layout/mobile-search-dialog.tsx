@@ -1,11 +1,15 @@
 'use client'
 
-import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { FormEvent, useEffect, useRef } from 'react'
-import { Search } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-import { cn } from '@/lib/utils'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { SearchInput } from '@/components/ui/search-input'
 
 interface MobileSearchDialogProps {
   open: boolean
@@ -48,54 +52,31 @@ export function MobileSearchDialog({
   }
 
   return (
-    <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
-      <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay
-          className={cn(
-            'fixed inset-0 z-50 bg-black/60',
-            'data-[state=open]:animate-in data-[state=closed]:animate-out',
-            'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-          )}
-        />
-        <DialogPrimitive.Content
-          className={cn(
-            'fixed inset-x-0 top-0 z-50 border-b border-border bg-background px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]',
-            'data-[state=open]:animate-in data-[state=closed]:animate-out',
-            'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-            'data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top',
-          )}
-          aria-describedby={undefined}
-        >
-          <DialogPrimitive.Title className="sr-only">
-            캐릭터 검색
-          </DialogPrimitive.Title>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent variant="sheet-top" aria-describedby={undefined}>
+        <DialogTitle className="sr-only">캐릭터 검색</DialogTitle>
 
-          <form onSubmit={handleSubmit} className="flex items-center gap-2">
-            <div className="relative min-w-0 flex-1">
-              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                ref={searchInputRef}
-                type="search"
-                defaultValue=""
-                onChange={(event) => {
-                  queryRef.current = event.target.value
-                }}
-                placeholder="캐릭터 검색"
-                aria-label="캐릭터 검색"
-                enterKeyHint="search"
-                className="h-11 w-full rounded-full bg-muted/50 pl-10 pr-4 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-primary"
-              />
-            </div>
+        <form onSubmit={handleSubmit} className="flex items-center gap-2">
+          <SearchInput
+            ref={searchInputRef}
+            size="md"
+            defaultValue=""
+            onChange={(event) => {
+              queryRef.current = event.target.value
+            }}
+            enterKeyHint="search"
+            containerClassName="flex-1"
+            aria-label="캐릭터 검색"
+          />
 
-            <DialogPrimitive.Close
-              type="button"
-              className="flex h-11 shrink-0 items-center justify-center rounded-full px-3 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-            >
-              취소
-            </DialogPrimitive.Close>
-          </form>
-        </DialogPrimitive.Content>
-      </DialogPrimitive.Portal>
-    </DialogPrimitive.Root>
+          <DialogClose
+            type="button"
+            className="flex h-11 shrink-0 items-center justify-center rounded-full px-3 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            취소
+          </DialogClose>
+        </form>
+      </DialogContent>
+    </Dialog>
   )
 }

@@ -6,13 +6,11 @@ import { FormEvent, useEffect, useState } from 'react'
 import { PanelLeft, PanelLeftClose, Search, Gem } from 'lucide-react'
 
 import { MobileSearchDialog } from '@/components/layout/mobile-search-dialog'
-import {
-  HeaderIconButton,
-  headerIconClass,
-} from '@/components/layout/header-icon-button'
 import { NotificationButton } from '@/components/layout/notification-button'
 import { UserButton } from '@/components/auth/user-button'
 import { useSidebar } from '@/components/layout/sidebar-context'
+import { IconButton, headerIconClass } from '@/components/ui/icon-button'
+import { SearchInput } from '@/components/ui/search-input'
 import { cn } from '@/lib/utils'
 
 function SidebarToggleButton({
@@ -25,7 +23,7 @@ function SidebarToggleButton({
   className?: string
 }) {
   return (
-    <HeaderIconButton
+    <IconButton
       onClick={onClick}
       className={className}
       aria-label={collapsed ? '사이드바 펼치기' : '사이드바 접기'}
@@ -36,7 +34,7 @@ function SidebarToggleButton({
       ) : (
         <PanelLeftClose className={headerIconClass} />
       )}
-    </HeaderIconButton>
+    </IconButton>
   )
 }
 
@@ -87,13 +85,13 @@ export function Header({ className }: { className?: string }) {
 
       <div className="ml-auto flex min-w-0 items-center gap-1">
         {/* 모바일: 검색 + 알림 */}
-        <HeaderIconButton
+        <IconButton
           onClick={() => setMobileSearchOpen(true)}
           className="sm:hidden"
           aria-label="캐릭터 검색"
         >
           <Search className={headerIconClass} />
-        </HeaderIconButton>
+        </IconButton>
         <MobileSearchDialog
           open={mobileSearchOpen}
           onOpenChange={setMobileSearchOpen}
@@ -111,17 +109,12 @@ export function Header({ className }: { className?: string }) {
 
         {/* 데스크톱: 검색창 + 알림 + 프로필 */}
         <form onSubmit={handleSearch} className="mr-1 hidden min-w-0 sm:block">
-          <div className="relative">
-            <Search className={cn('pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground', headerIconClass)} />
-            <input
-              type="search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="캐릭터 검색"
-              aria-label="캐릭터 검색"
-              className="h-9 w-[240px] rounded-full bg-muted/50 pl-10 pr-3 text-sm text-foreground outline-none transition-[width] placeholder:text-muted-foreground focus:w-[280px] focus:ring-1 focus:ring-primary"
-            />
-          </div>
+          <SearchInput
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            expandOnFocus
+            aria-label="캐릭터 검색"
+          />
         </form>
 
         <NotificationButton className="hidden sm:block" />

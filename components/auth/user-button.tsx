@@ -1,23 +1,20 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { LogIn } from 'lucide-react'
 
 import { LoginModal } from '@/components/auth/login-modal'
 import { UserMenu } from '@/components/auth/user-menu'
 import { ThemeToggle } from '@/components/chat/theme-toggle'
-import {
-  HeaderIconButton,
-  headerIconClass,
-} from '@/components/layout/header-icon-button'
+import { IconButton, headerIconClass } from '@/components/ui/icon-button'
+import { PopoverMenu, PopoverMenuTrigger } from '@/components/ui/popover-menu'
 import { createClient } from '@/lib/supabase/browser'
 
 export function UserButton() {
   const [user, setUser] = useState<User | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [loginOpen, setLoginOpen] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const supabase = createClient()
@@ -32,30 +29,18 @@ export function UserButton() {
     return () => subscription.unsubscribe()
   }, [])
 
-  // 메뉴 바깥 클릭 시 닫기
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setMenuOpen(false)
-      }
-    }
-
-    if (menuOpen) document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [menuOpen])
-
   if (!user) {
     return (
       <>
         <div className="flex items-center gap-1">
           <ThemeToggle />
-          <HeaderIconButton
+          <IconButton
             onClick={() => setLoginOpen(true)}
             active={loginOpen}
             aria-label="로그인"
           >
             <LogIn className={headerIconClass} />
-          </HeaderIconButton>
+          </IconButton>
         </div>
         <LoginModal open={loginOpen} onOpenChange={setLoginOpen} />
       </>
@@ -73,28 +58,30 @@ export function UserButton() {
     '?'
 
   return (
-    <div ref={menuRef} className="relative z-[100]">
-      <button
-        type="button"
-        onClick={() => setMenuOpen((isOpen) => !isOpen)}
-        className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-muted text-sm font-bold text-foreground"
-        aria-expanded={menuOpen}
-        aria-haspopup="menu"
-        aria-label="프로필 메뉴"
-      >
-        {user.user_metadata?.avatar_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={user.user_metadata.avatar_url as string}
-            alt=""
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          initials
-        )}
-      </button>
+    <PopoverMenu open={menuOpen} onOpenChange={setMenuOpen} className="z-[100]">
+      <PopoverMenuTrigger asChild>
+        <button
+          type="button"
+          className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-muted text-sm font-bold text-foreground"
+          aria-haspopup="menu"
+          aria-label="프로필 메뉴"
+        >
+          {user.user_metadata?.avatar_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={user.user_metadata.avatar_url as string}
+              alt=""
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            initials
+          )}
+        </button>
+      </PopoverMenuTrigger>
 
-      {menuOpen ? <UserMenu user={user} onClose={() => setMenuOpen(false)} /> : null}
-    </div>
+      {menuOpen ? (
+        <UserMenu user={user} onClose={() => setMenuOpen(false)} />
+      ) : null}
+    </PopoverMenu>
   )
 }

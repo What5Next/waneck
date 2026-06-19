@@ -1,54 +1,45 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { Bell } from 'lucide-react'
 
+import { NotificationsPanelContent } from '@/components/layout/notifications-panel'
+import { IconButton, headerIconClass } from '@/components/ui/icon-button'
 import {
-  HeaderIconButton,
-  headerIconClass,
-} from '@/components/layout/header-icon-button'
-import { NotificationsPanel } from '@/components/layout/notifications-panel'
+  PopoverMenu,
+  PopoverMenuContent,
+  PopoverMenuTrigger,
+} from '@/components/ui/popover-menu'
 import { cn } from '@/lib/utils'
 
 export function NotificationButton({ className }: { className?: string }) {
   const [isOpen, setIsOpen] = useState(false)
-  const containerRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
-      }
-    }
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') setIsOpen(false)
-    }
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
-      document.addEventListener('keydown', handleKeyDown)
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-      document.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [isOpen])
 
   return (
-    <div ref={containerRef} className={cn('relative z-[100]', className)}>
-      <HeaderIconButton
-        onClick={() => setIsOpen((prev) => !prev)}
-        active={isOpen}
-        aria-label="알림"
-        aria-expanded={isOpen}
-        aria-haspopup="dialog"
-      >
-        <Bell className={headerIconClass} />
-      </HeaderIconButton>
+    <PopoverMenu
+      open={isOpen}
+      onOpenChange={setIsOpen}
+      className={cn('z-[100]', className)}
+    >
+      <PopoverMenuTrigger asChild>
+        <IconButton
+          active={isOpen}
+          aria-label="알림"
+          aria-haspopup="dialog"
+        >
+          <Bell className={headerIconClass} />
+        </IconButton>
+      </PopoverMenuTrigger>
 
-      {isOpen ? <NotificationsPanel /> : null}
-    </div>
+      <PopoverMenuContent
+        side="bottom"
+        align="end"
+        width="xl"
+        gap="md"
+        className="z-[100]"
+      >
+        <NotificationsPanelContent />
+      </PopoverMenuContent>
+    </PopoverMenu>
   )
 }

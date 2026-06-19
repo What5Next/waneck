@@ -4,10 +4,7 @@ import { Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { startTransition, useEffect, useState } from 'react'
 
-import {
-  HeaderIconButton,
-  headerIconClass,
-} from '@/components/layout/header-icon-button'
+import { IconButton, headerIconClass } from '@/components/ui/icon-button'
 
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme()
@@ -21,16 +18,16 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <HeaderIconButton disabled aria-label="테마">
+      <IconButton disabled aria-label="테마">
         <span className={headerIconClass} aria-hidden />
-      </HeaderIconButton>
+      </IconButton>
     )
   }
 
   const isDark = resolvedTheme === 'dark'
 
   return (
-    <HeaderIconButton
+    <IconButton
       aria-label="테마 전환"
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
     >
@@ -39,6 +36,6 @@ export function ThemeToggle() {
       ) : (
         <Moon className={headerIconClass} aria-hidden />
       )}
-    </HeaderIconButton>
+    </IconButton>
   )
 }

@@ -3,7 +3,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import {
   BookOpen,
-  ChevronRight,
   Cpu,
   Download,
   FlaskConical,
@@ -19,6 +18,11 @@ import {
 import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
 
+import {
+  PopoverMenuGroup,
+  PopoverMenuItem,
+  PopoverMenuPanel,
+} from '@/components/ui/popover-menu'
 import { cn } from '@/lib/utils'
 
 type SettingsTab = 'memory' | 'persona' | 'notes' | 'output' | 'settings'
@@ -61,19 +65,12 @@ function SettingsMenuRow({
   onClick?: () => void
 }) {
   return (
-    <button
-      type="button"
+    <PopoverMenuItem
+      icon={icon}
+      label={label}
+      showChevron={showChevron}
       onClick={onClick}
-      className="flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-muted/40"
-    >
-      <div className="flex min-w-0 items-center gap-2">
-        <span className="shrink-0 text-muted-foreground">{icon}</span>
-        <span className="truncate text-[13px] font-medium text-foreground/90">{label}</span>
-      </div>
-      {showChevron ? (
-        <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
-      ) : null}
-    </button>
+    />
   )
 }
 
@@ -127,13 +124,7 @@ export function ChatSettingsPanel({
   }
 
   return (
-    <div
-      className={cn(
-        'absolute right-0 top-full z-50 mt-1.5 inline-flex w-max max-w-[calc(100vw-1.5rem)] flex-col overflow-hidden rounded-2xl bg-card shadow-lg',
-        className,
-      )}
-    >
-      <div className="p-3">
+    <PopoverMenuPanel side="bottom" align="end" className={className}>
         {/* 상단 탭 — 이 행 너비가 패널 가로 길이를 결정 */}
         <div className="mb-3 flex w-max max-w-full flex-nowrap gap-1">
           {SETTINGS_TABS.map((tab) => {
@@ -219,7 +210,7 @@ export function ChatSettingsPanel({
             </div>
 
             {/* 설정 메뉴 */}
-            <div className="rounded-xl bg-muted/15 p-1.5">
+            <PopoverMenuGroup>
               <SettingsMenuRow
                 icon={<History className="h-3.5 w-3.5" />}
                 label="채팅방 목록"
@@ -241,7 +232,7 @@ export function ChatSettingsPanel({
                 showChevron={false}
                 onClick={handleExport}
               />
-            </div>
+            </PopoverMenuGroup>
           </div>
           ) : (
             <div className="rounded-xl bg-muted/15 py-8 text-center">
@@ -249,7 +240,6 @@ export function ChatSettingsPanel({
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </PopoverMenuPanel>
   )
 }
