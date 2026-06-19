@@ -28,6 +28,11 @@
   --input: 240 5.9% 84.7%; /* zinc-300 */
   --ring: 262 83% 58%; /* violet-600 #7C3AED */
   --radius: 0.5rem;
+  /* non-active UI (chip, 필터 등) */
+  --inactive: 240 5.9% 90.2% / 0.7; /* muted @ 70% */
+  --inactive-foreground: 240 3.7% 46.1% / 0.6; /* muted-foreground @ 60% */
+  --inactive-hover: 240 5.9% 90.2%; /* muted */
+  --inactive-hover-foreground: 240 3.7% 46.1% / 0.8; /* muted-foreground @ 80% */
 }
 
 /* ─── 다크 테마 (zinc 스케일 기반) ─── */
@@ -51,6 +56,11 @@
   --border: 240 3.7% 16.5%; /* zinc-800 */
   --input: 240 3.7% 16.5%; /* zinc-800 */
   --ring: 262 83% 58%; /* violet-600 #7C3AED */
+  /* non-active UI (chip, 필터 등) */
+  --inactive: 240 3.7% 16.5% / 0.7; /* muted @ 70% */
+  --inactive-foreground: 240 3.7% 65.9% / 0.6; /* muted-foreground @ 60% */
+  --inactive-hover: 240 3.7% 16.5%; /* muted */
+  --inactive-hover-foreground: 240 3.7% 65.9% / 0.8; /* muted-foreground @ 80% */
 }
 
 @theme inline {
@@ -71,6 +81,10 @@
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
+  --color-inactive: hsl(var(--inactive));
+  --color-inactive-foreground: hsl(var(--inactive-foreground));
+  --color-inactive-hover: hsl(var(--inactive-hover));
+  --color-inactive-hover-foreground: hsl(var(--inactive-hover-foreground));
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
