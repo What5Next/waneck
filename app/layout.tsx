@@ -4,7 +4,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 
 import { Toaster } from 'sonner'
 
-import { ThemeProvider } from '@/app/providers/theme-provider'
+import { AppProviders } from '@/app/providers/app-providers'
 import { ConditionalShell } from '@/components/layout/conditional-shell'
 import './globals.css'
 
@@ -37,10 +37,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       suppressHydrationWarning
     >
       <body className='overflow-hidden'>
-        <ThemeProvider>
+        {/* P0: Theme + Query + Auth Provider (app/providers/app-providers.tsx) */}
+        <AppProviders>
           <Toaster position="top-center" />
           <ConditionalShell>{children}</ConditionalShell>
-        </ThemeProvider>
+        </AppProviders>
       </body>
     </html>
   )
