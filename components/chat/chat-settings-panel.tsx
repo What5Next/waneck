@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import {
   BookOpen,
   Cpu,
@@ -83,19 +83,14 @@ export function ChatSettingsPanel({
   const { isReady: isThemeReady, isDark, toggleTheme } = useThemeReady()
   const [activeTab, setActiveTab] = useState<SettingsTab>('settings')
   const [isEditingName, setIsEditingName] = useState(false)
-  const [draftName, setDraftName] = useState(characterName)
+  // 편집 중에만 사용 — 진입/취소 시 roomName으로 초기화
+  const [draftName, setDraftName] = useState('')
 
   const { value: roomName, setValue: setRoomName } = useChatRoomName(
     characterId,
     characterName,
     conversationId,
   )
-
-  useEffect(() => {
-    if (!isEditingName) {
-      setDraftName(roomName)
-    }
-  }, [roomName, isEditingName])
 
   function handleStartEdit() {
     setDraftName(roomName)
