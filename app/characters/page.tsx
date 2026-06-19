@@ -15,20 +15,15 @@ import {
   type BrowseViewMode,
 } from '@/components/characters/character-browse-toolbar'
 import { CharacterListCard } from '@/components/characters/character-list-card'
+import { EmptyState } from '@/components/ui/empty-state'
 import { MobileShell } from '@/components/mobile-shell'
 
 const BROWSE_VIEW_STORAGE_KEY = 'waneck-browse-view'
-const AI_SEARCH_STORAGE_KEY = 'waneck-ai-search'
 
 function readStoredViewMode(): BrowseViewMode {
   if (typeof window === 'undefined') return 'list'
   const stored = window.localStorage.getItem(BROWSE_VIEW_STORAGE_KEY)
   return stored === 'grid' ? 'grid' : 'list'
-}
-
-function readStoredAiSearch(): boolean {
-  if (typeof window === 'undefined') return false
-  return window.localStorage.getItem(AI_SEARCH_STORAGE_KEY) === 'true'
 }
 
 export default function CharactersPage() {
@@ -38,11 +33,9 @@ export default function CharactersPage() {
   const [loading, setLoading] = useState(true)
   const [sortTab, setSortTab] = useState<BrowseSortTab>('relevance')
   const [viewMode, setViewMode] = useState<BrowseViewMode>('list')
-  const [aiSearchEnabled, setAiSearchEnabled] = useState(false)
 
   useEffect(() => {
     setViewMode(readStoredViewMode())
-    setAiSearchEnabled(readStoredAiSearch())
   }, [])
 
   useEffect(() => {
@@ -73,11 +66,6 @@ export default function CharactersPage() {
     window.localStorage.setItem(BROWSE_VIEW_STORAGE_KEY, mode)
   }
 
-  const handleAiSearchChange = (enabled: boolean) => {
-    setAiSearchEnabled(enabled)
-    window.localStorage.setItem(AI_SEARCH_STORAGE_KEY, String(enabled))
-  }
-
   return (
     <MobileShell>
       <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background">
@@ -86,8 +74,6 @@ export default function CharactersPage() {
         <div className="scroll-hide min-h-0 flex-1 overflow-y-auto">
           <div className="mx-auto my-2 w-full space-y-1 px-3 sm:px-4">
           <CharacterBrowseToolbar
-            aiSearchEnabled={aiSearchEnabled}
-            onAiSearchChange={handleAiSearchChange}
             sortTab={sortTab}
             onSortTabChange={setSortTab}
             viewMode={viewMode}
@@ -104,9 +90,11 @@ export default function CharactersPage() {
               ))}
             </div>
           ) : sortedCharacters.length === 0 ? (
-            <p className="py-12 text-center text-sm text-muted-foreground">
-              {emptyMessage}
-            </p>
+            <EmptyState
+              message={emptyMessage}
+              className="min-h-[240px] py-12"
+              messageClassName="text-sm"
+            />
           ) : viewMode === 'list' ? (
             <div className="grid grid-cols-1 gap-4 xs:grid-cols-2">
               {sortedCharacters.map((character) => (

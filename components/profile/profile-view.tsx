@@ -1,104 +1,107 @@
-'use client'
+"use client";
 
-import { useRouter } from 'next/navigation'
-import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   Pencil,
   Share2,
-} from 'lucide-react'
+} from "lucide-react";
 
-import { CharacterGridCard } from '@/components/character-grid-card'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import type { Character } from '@/lib/types'
-import type { ProfileSummary, ProfileTab } from '@/lib/user-profile'
-import { getProfileInitials } from '@/lib/user-profile'
-import { cn } from '@/lib/utils'
+import { CharacterGridCard } from "@/components/character-grid-card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { EmptyState } from "@/components/ui/empty-state";
+import type { Character } from "@/lib/types";
+import type { ProfileSummary, ProfileTab } from "@/lib/user-profile";
+import { getProfileInitials } from "@/lib/user-profile";
+import { cn } from "@/lib/utils";
 
 const PROFILE_TABS: { id: ProfileTab; label: string }[] = [
-  { id: 'characters', label: '캐릭터' },
-  { id: 'followers', label: '팔로워' },
-  { id: 'following', label: '팔로잉' },
-]
+  { id: "characters", label: "캐릭터" },
+  { id: "followers", label: "팔로워" },
+  { id: "following", label: "팔로잉" },
+];
 
 const CHARACTER_SORT_OPTIONS = [
-  { id: 'newest', label: '최신순' },
-  { id: 'oldest', label: '오래된순' },
-  { id: 'name', label: '이름순' },
-] as const
+  { id: "newest", label: "최신순" },
+  { id: "oldest", label: "오래된순" },
+  { id: "name", label: "이름순" },
+] as const;
 
-type CharacterSortId = (typeof CHARACTER_SORT_OPTIONS)[number]['id']
+type CharacterSortId = (typeof CHARACTER_SORT_OPTIONS)[number]["id"];
 
 function sortProfileCharacters(
-  characters: ProfileSummary['characters'],
+  characters: ProfileSummary["characters"],
   sortId: CharacterSortId,
 ) {
-  const sorted = [...characters]
+  const sorted = [...characters];
 
-  if (sortId === 'oldest') {
+  if (sortId === "oldest") {
     return sorted.sort(
-      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
-    )
+      (a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+    );
   }
 
-  if (sortId === 'name') {
-    return sorted.sort((a, b) => a.name.localeCompare(b.name, 'ko'))
+  if (sortId === "name") {
+    return sorted.sort((a, b) => a.name.localeCompare(b.name, "ko"));
   }
 
   return sorted.sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-  )
+    (a, b) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  );
 }
 
 export function ProfileView() {
-  const router = useRouter()
-  const [profile, setProfile] = useState<ProfileSummary | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<ProfileTab>('characters')
-  const [characterSort, setCharacterSort] = useState<CharacterSortId>('newest')
-  const [sortMenuOpen, setSortMenuOpen] = useState(false)
+  const router = useRouter();
+  const [profile, setProfile] = useState<ProfileSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<ProfileTab>("characters");
+  const [characterSort, setCharacterSort] = useState<CharacterSortId>("newest");
+  const [sortMenuOpen, setSortMenuOpen] = useState(false);
 
   useEffect(() => {
-    fetch('/api/profile')
+    fetch("/api/profile")
       .then(async (response) => {
         if (response.status === 401) {
-          router.replace('/')
-          return null
+          router.replace("/");
+          return null;
         }
-        if (!response.ok) throw new Error('profile fetch failed')
-        return response.json() as Promise<ProfileSummary>
+        if (!response.ok) throw new Error("profile fetch failed");
+        return response.json() as Promise<ProfileSummary>;
       })
       .then((data) => {
-        if (data) setProfile(data)
+        if (data) setProfile(data);
       })
       .catch(() => {
-        router.replace('/')
+        router.replace("/");
       })
-      .finally(() => setLoading(false))
-  }, [router])
+      .finally(() => setLoading(false));
+  }, [router]);
 
   const sortedCharacters = useMemo(() => {
-    if (!profile) return []
-    return sortProfileCharacters(profile.characters, characterSort)
-  }, [profile, characterSort])
+    if (!profile) return [];
+    return sortProfileCharacters(profile.characters, characterSort);
+  }, [profile, characterSort]);
 
   async function handleShare() {
-    if (!profile || typeof window === 'undefined') return
+    if (!profile || typeof window === "undefined") return;
 
-    const shareUrl = `${window.location.origin}/profile`
+    const shareUrl = `${window.location.origin}/profile`;
 
     try {
       if (navigator.share) {
         await navigator.share({
           title: `${profile.display_name} | 와넥`,
           url: shareUrl,
-        })
-        return
+        });
+        return;
       }
 
-      await navigator.clipboard.writeText(shareUrl)
+      await navigator.clipboard.writeText(shareUrl);
     } catch {
       // 공유 취소·권한 거부는 무시
     }
@@ -112,7 +115,7 @@ export function ProfileView() {
           <p className="text-sm text-muted-foreground">불러오는 중…</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -135,7 +138,9 @@ export function ProfileView() {
         <div className="px-5 pb-4 pt-5">
           <div className="flex items-start gap-4">
             <Avatar className="h-16 w-16">
-              {profile.avatar_url ? <AvatarImage src={profile.avatar_url} alt="" /> : null}
+              {profile.avatar_url ? (
+                <AvatarImage src={profile.avatar_url} alt="" />
+              ) : null}
               <AvatarFallback className="text-lg font-semibold">
                 {getProfileInitials(profile.display_name)}
               </AvatarFallback>
@@ -182,10 +187,10 @@ export function ProfileView() {
             <span className="text-base" aria-hidden>
               🔮
             </span>
-            <span className="text-sm text-foreground">최근 30일 받은 Orb</span>
+            <span className="text-sm text-foreground">최근 30일 받은 won</span>
           </div>
           <span className="flex items-center gap-1 text-sm text-muted-foreground">
-            {profile.orbs_received_30d}
+            {profile.wons_received_30d}
             <ChevronRight className="h-4 w-4" />
           </span>
         </button>
@@ -199,10 +204,10 @@ export function ProfileView() {
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  'relative pb-3 text-sm font-medium transition-colors',
+                  "relative pb-3 text-sm font-medium transition-colors",
                   activeTab === tab.id
-                    ? 'text-foreground'
-                    : 'text-muted-foreground hover:text-foreground',
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 {tab.label}
@@ -216,7 +221,7 @@ export function ProfileView() {
 
         {/* 탭 콘텐츠 */}
         <div className="px-5 py-4">
-          {activeTab === 'characters' ? (
+          {activeTab === "characters" ? (
             <>
               <div className="mb-4 flex items-center justify-between gap-3">
                 <p className="text-xs text-muted-foreground">
@@ -231,7 +236,11 @@ export function ProfileView() {
                     onClick={() => setSortMenuOpen((open) => !open)}
                     className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
                   >
-                    {CHARACTER_SORT_OPTIONS.find((option) => option.id === characterSort)?.label}
+                    {
+                      CHARACTER_SORT_OPTIONS.find(
+                        (option) => option.id === characterSort,
+                      )?.label
+                    }
                     <ChevronDown className="h-3.5 w-3.5" />
                   </button>
 
@@ -249,14 +258,14 @@ export function ProfileView() {
                             key={option.id}
                             type="button"
                             onClick={() => {
-                              setCharacterSort(option.id)
-                              setSortMenuOpen(false)
+                              setCharacterSort(option.id);
+                              setSortMenuOpen(false);
                             }}
                             className={cn(
-                              'block w-full px-3 py-2 text-left text-xs hover:bg-muted',
+                              "block w-full px-3 py-2 text-left text-xs hover:bg-muted",
                               characterSort === option.id
-                                ? 'font-medium text-foreground'
-                                : 'text-muted-foreground',
+                                ? "font-medium text-foreground"
+                                : "text-muted-foreground",
                             )}
                           >
                             {option.label}
@@ -269,9 +278,11 @@ export function ProfileView() {
               </div>
 
               {sortedCharacters.length === 0 ? (
-                <p className="py-16 text-center text-sm text-muted-foreground">
-                  결과가 없습니다.
-                </p>
+                <EmptyState
+                  message="결과가 없습니다."
+                  className="min-h-[200px] py-16"
+                  messageClassName="text-sm"
+                />
               ) : (
                 <div className="grid grid-cols-2 gap-3 xs:grid-cols-3">
                   {sortedCharacters.map((character) => (
@@ -284,20 +295,18 @@ export function ProfileView() {
               )}
             </>
           ) : (
-            <ProfileUserListEmpty
+            <EmptyState
               message={
-                activeTab === 'followers'
-                  ? '아직 팔로워가 없습니다.'
-                  : '아직 팔로잉하는 사용자가 없습니다.'
+                activeTab === "followers"
+                  ? "아직 팔로워가 없습니다."
+                  : "아직 팔로잉하는 사용자가 없습니다."
               }
+              className="min-h-[200px] py-16"
+              messageClassName="text-sm"
             />
           )}
         </div>
       </div>
     </div>
-  )
-}
-
-function ProfileUserListEmpty({ message }: { message: string }) {
-  return <p className="py-16 text-center text-sm text-muted-foreground">{message}</p>
+  );
 }

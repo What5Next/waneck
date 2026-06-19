@@ -2,7 +2,6 @@
 
 import {
   Clock,
-  FlaskConical,
   LayoutGrid,
   List,
   MessageSquare,
@@ -11,7 +10,6 @@ import {
 
 import type { BrowseSortTab } from '@/lib/character-browse'
 import { BROWSE_SORT_TABS } from '@/lib/character-browse'
-import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
 
 export type BrowseViewMode = 'grid' | 'list'
@@ -23,8 +21,6 @@ const SORT_TAB_ICONS = {
 } as const
 
 interface CharacterBrowseToolbarProps {
-  aiSearchEnabled: boolean
-  onAiSearchChange: (enabled: boolean) => void
   sortTab: BrowseSortTab
   onSortTabChange: (tab: BrowseSortTab) => void
   viewMode: BrowseViewMode
@@ -32,8 +28,6 @@ interface CharacterBrowseToolbarProps {
 }
 
 export function CharacterBrowseToolbar({
-  aiSearchEnabled,
-  onAiSearchChange,
   sortTab,
   onSortTabChange,
   viewMode,
@@ -41,18 +35,6 @@ export function CharacterBrowseToolbar({
 }: CharacterBrowseToolbarProps) {
   return (
     <div className="mb-4 flex flex-wrap items-center justify-end gap-2">
-      <label className="flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs text-foreground/80">
-        <span className="flex items-center gap-1.5">
-          <FlaskConical className="size-3.5" aria-hidden />
-          <span>AI Search</span>
-        </span>
-        <Switch
-          checked={aiSearchEnabled}
-          onCheckedChange={onAiSearchChange}
-          aria-label="AI Search"
-        />
-      </label>
-
       <div
         role="tablist"
         aria-label="정렬"

@@ -2,10 +2,11 @@
 
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
-import { ChevronLeft, ChevronRight, Ghost } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 import type { Character } from '@/lib/types'
 import { CharacterGridCard } from '@/components/character-grid-card'
+import { EmptyState } from '@/components/ui/empty-state'
 import { cn } from '@/lib/utils'
 
 interface CharacterSectionProps {
@@ -23,28 +24,6 @@ interface CharacterSectionProps {
 }
 
 const CHARACTER_CARD_WIDTH_CLASS = 'w-[calc(50%-4px)] shrink-0 xs:w-[calc(33.333%-6px)]'
-
-function CharacterSectionEmpty({
-  message,
-  className,
-}: {
-  message: string
-  className?: string
-}) {
-  return (
-    <div
-      className={cn(
-        'flex aspect-3/4 flex-col items-center justify-center gap-2 rounded-xl',
-        className,
-      )}
-    >
-      <Ghost className="h-8 w-8 text-muted-foreground/50" aria-hidden />
-      <p className="px-3 text-center text-[12px] leading-tight text-muted-foreground">
-        {message}
-      </p>
-    </div>
-  )
-}
 
 function CharacterCardSkeleton({ className }: { className?: string }) {
   return (
@@ -100,9 +79,9 @@ function HorizontalSlider({
   if (!loading && characters.length === 0) {
     return (
       <div className="flex justify-center px-4 pb-1">
-        <CharacterSectionEmpty
+        <EmptyState
           message={emptyMessage}
-          className={CHARACTER_CARD_WIDTH_CLASS}
+          className={cn('aspect-3/4 rounded-xl', CHARACTER_CARD_WIDTH_CLASS)}
         />
       </div>
     )
@@ -198,9 +177,9 @@ export function CharacterSection({
         </div>
       ) : characters.length === 0 ? (
         <div className="flex justify-center px-4">
-          <CharacterSectionEmpty
+          <EmptyState
             message={emptyMessage}
-            className={CHARACTER_CARD_WIDTH_CLASS}
+            className={cn('aspect-3/4 rounded-xl', CHARACTER_CARD_WIDTH_CLASS)}
           />
         </div>
       ) : (
