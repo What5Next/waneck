@@ -16,6 +16,10 @@ import {
 import { MobileShell } from "@/components/mobile-shell";
 import { CharacterSection } from "@/components/character-section";
 import { Chip } from "@/components/ui/chip";
+import { FadeEdge } from "@/components/ui/fade-edge";
+
+/** 카테고리 chip 하단 fade 높이 */
+const CHIP_FADE_SIZE = 16;
 
 const CATEGORIES = [
   "추천",
@@ -81,22 +85,29 @@ function HomePage() {
       <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background">
         <h1 className="sr-only">와넥 홈</h1>
 
-        <nav
-          aria-label="카테고리"
-          className="scroll-hide z-10 flex min-h-14 shrink-0 gap-2 overflow-x-auto bg-background px-4 py-3"
+        <FadeEdge
+          bottom
+          size={CHIP_FADE_SIZE}
+          fadeColor="background"
+          className="z-10 shrink-0 bg-background"
         >
-          {CATEGORIES.map((category) => (
-            <Chip
-              key={category}
-              selected={activeCategory === category}
-              onClick={() => setActiveCategory(category)}
-            >
-              {category}
-            </Chip>
-          ))}
-        </nav>
+          <nav
+            aria-label="카테고리"
+            className="scroll-hide  flex min-h-14 gap-2 overflow-x-auto px-4 py-3"
+          >
+            {CATEGORIES.map((category) => (
+              <Chip
+                key={category}
+                selected={activeCategory === category}
+                onClick={() => setActiveCategory(category)}
+              >
+                {category}
+              </Chip>
+            ))}
+          </nav>
+        </FadeEdge>
 
-        <div className="scroll-hide min-h-0 flex-1 overflow-y-auto pb-8">
+        <div className="scroll-hide min-h-0 flex-1 overflow-y-auto pb-8 pt-2">
           {loading ? (
             <div className="px-4">
               <div className="h-[220px] w-full rounded-2xl bg-muted" />

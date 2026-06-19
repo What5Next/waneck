@@ -129,7 +129,7 @@ export function ChatSettingsPanel({
   return (
     <div
       className={cn(
-        'absolute right-0 top-full z-50 mt-1.5 inline-flex w-max max-w-[calc(100vw-1.5rem)] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-lg',
+        'absolute right-0 top-full z-50 mt-1.5 inline-flex w-max max-w-[calc(100vw-1.5rem)] flex-col overflow-hidden rounded-2xl bg-card shadow-lg',
         className,
       )}
     >
