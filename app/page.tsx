@@ -1,11 +1,10 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import { ChevronRight, Volume2, X } from "lucide-react";
 
-import type { Character } from "@/lib/types";
 import {
   SORT_OPTIONS,
   type CharacterSortId,
@@ -20,6 +19,7 @@ import { FadeEdge } from "@/components/ui/fade-edge";
 import { IconButton } from "@/components/ui/icon-button";
 import { SectionHeader } from "@/components/ui/section-header";
 import { HeroBannerSkeleton } from "@/components/ui/skeleton";
+import { useCharactersQuery } from "@/hooks/queries/use-characters-query";
 
 /** 카테고리 chip 하단 fade 높이 */
 const CHIP_FADE_SIZE = 16;
@@ -51,17 +51,8 @@ function HomePage() {
   const [activeCategory, setActiveCategory] = useState("추천");
   const [activeSort, setActiveSort] = useState<CharacterSortId>("popular");
   const [showNotice, setShowNotice] = useState(true);
-  const [characters, setCharacters] = useState<Character[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/characters")
-      .then((response) => response.json())
-      .then((data: Character[]) => {
-        if (Array.isArray(data)) setCharacters(data);
-      })
-      .finally(() => setLoading(false));
-  }, []);
+  // P2: useEffect fetch 대신 TanStack Query 캐시 사용
+  const { data: characters = [], isLoading: loading } = useCharactersQuery();
 
   const filteredCharacters = useMemo(() => {
     const byCategory = filterByHomeCategory(characters, activeCategory);
