@@ -33,14 +33,14 @@ export function EmptyState({
         className={cn('h-8 w-8 shrink-0 text-muted-foreground/50', iconClassName)}
         aria-hidden
       />
-      <p
+      <div
         className={cn(
           'max-w-xs px-3 text-[12px] leading-tight text-muted-foreground',
           messageClassName,
         )}
       >
         {message}
-      </p>
+      </div>
     </div>
   )
 }
