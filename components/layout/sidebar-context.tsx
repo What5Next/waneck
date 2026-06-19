@@ -45,12 +45,20 @@ const SidebarContext = createContext<SidebarContextValue | null>(null)
 export function SidebarProvider({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false)
 
-  // SSR·하이드레이션 시 서버 스냅샷(false)과 맞춤
-  const collapsed = useSyncExternalStore(
+  // 하이드레이션 완료 전까지는 서버와 동일한 UI 유지
+  const isClient = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  )
+
+  const storedCollapsed = useSyncExternalStore(
     subscribeCollapsed,
     getCollapsedSnapshot,
     getCollapsedServerSnapshot,
   )
+
+  const collapsed = isClient ? storedCollapsed : false
 
   const toggleSidebar = useCallback(() => {
     const nextCollapsed = !getCollapsedSnapshot()
