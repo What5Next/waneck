@@ -3,6 +3,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Bell } from 'lucide-react'
 
+import {
+  HeaderIconButton,
+  headerIconClass,
+} from '@/components/layout/header-icon-button'
 import { NotificationsPanel } from '@/components/layout/notifications-panel'
 import { cn } from '@/lib/utils'
 
@@ -34,19 +38,15 @@ export function NotificationButton({ className }: { className?: string }) {
 
   return (
     <div ref={containerRef} className={cn('relative z-[100]', className)}>
-      <button
-        type="button"
+      <HeaderIconButton
         onClick={() => setIsOpen((prev) => !prev)}
-        className={cn(
-          'flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground',
-          isOpen && 'bg-muted text-foreground',
-        )}
+        active={isOpen}
         aria-label="알림"
         aria-expanded={isOpen}
         aria-haspopup="dialog"
       >
-        <Bell className="h-5 w-5" />
-      </button>
+        <Bell className={headerIconClass} />
+      </HeaderIconButton>
 
       {isOpen ? <NotificationsPanel /> : null}
     </div>

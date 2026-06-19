@@ -22,7 +22,7 @@ function ShellLayout({ children }: { children: ReactNode }) {
           !focusMode ? (
             <div
               className={cn(
-                'h-14 shrink-0 border-b border-border',
+                'h-14 shrink-0',
                 isChatRoute && 'hidden sm:block',
               )}
             />

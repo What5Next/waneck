@@ -2,10 +2,15 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
+import { LogIn } from 'lucide-react'
 
 import { LoginModal } from '@/components/auth/login-modal'
 import { UserMenu } from '@/components/auth/user-menu'
 import { ThemeToggle } from '@/components/chat/theme-toggle'
+import {
+  HeaderIconButton,
+  headerIconClass,
+} from '@/components/layout/header-icon-button'
 import { createClient } from '@/lib/supabase/browser'
 
 export function UserButton() {
@@ -42,14 +47,16 @@ export function UserButton() {
   if (!user) {
     return (
       <>
-        <ThemeToggle />
-        <button
-          type="button"
-          onClick={() => setLoginOpen(true)}
-          className="flex h-9 items-center rounded-full border border-border px-3 text-xs font-medium text-muted-foreground hover:bg-muted"
-        >
-          로그인
-        </button>
+        <div className="flex items-center gap-1">
+          <ThemeToggle />
+          <HeaderIconButton
+            onClick={() => setLoginOpen(true)}
+            active={loginOpen}
+            aria-label="로그인"
+          >
+            <LogIn className={headerIconClass} />
+          </HeaderIconButton>
+        </div>
         <LoginModal open={loginOpen} onOpenChange={setLoginOpen} />
       </>
     )
