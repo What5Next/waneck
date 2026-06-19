@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useEffect, useState, type ReactNode } from 'react'
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   Ban,
   Bot,
@@ -21,36 +21,40 @@ import {
   Server,
   Settings,
   Shield,
-} from 'lucide-react'
-import { useTheme } from 'next-themes'
+} from "lucide-react";
+import { useTheme } from "next-themes";
 
-import { MODELS, type ModelId } from '@/components/chat/model-selector'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Switch } from '@/components/ui/switch'
-import { createClient } from '@/lib/supabase/browser'
+import { MODELS, type ModelId } from "@/components/chat/model-selector";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Switch } from "@/components/ui/switch";
+import { createClient } from "@/lib/supabase/browser";
 import {
   DEFAULT_MODEL_KEY,
   DISCORD_URL,
   SAFETY_FILTER_KEY,
   SUPPORT_EMAIL,
-} from '@/lib/user-settings'
-import type { ProfileSummary } from '@/lib/user-profile'
-import { getProfileInitials } from '@/lib/user-profile'
-import { cn } from '@/lib/utils'
+} from "@/lib/user-settings";
+import type { ProfileSummary } from "@/lib/user-profile";
+import { getProfileInitials } from "@/lib/user-profile";
+import { cn } from "@/lib/utils";
 
 function SettingsGroup({
   title,
   children,
 }: {
-  title: string
-  children: ReactNode
+  title: string;
+  children: ReactNode;
 }) {
   return (
     <div className="space-y-2">
-      <h3 className="px-1 text-xs font-medium text-muted-foreground">{title}</h3>
-      <div className="space-y-0.5 rounded-2xl bg-muted/15 p-1.5">{children}</div>
+      <h3 className="px-1 text-xs font-medium text-muted-foreground">
+        {title}
+      </h3>
+      <div className="space-y-0.5 rounded-2xl bg-muted/15 p-1.5">
+        {children}
+      </div>
     </div>
-  )
+  );
 }
 
 function SettingsRowButton({
@@ -61,12 +65,12 @@ function SettingsRowButton({
   trailing,
   showChevron = true,
 }: {
-  icon: ReactNode
-  label: string
-  value?: string
-  onClick?: () => void
-  trailing?: ReactNode
-  showChevron?: boolean
+  icon: ReactNode;
+  label: string;
+  value?: string;
+  onClick?: () => void;
+  trailing?: ReactNode;
+  showChevron?: boolean;
 }) {
   return (
     <button
@@ -90,7 +94,7 @@ function SettingsRowButton({
         ) : null}
       </div>
     </button>
-  )
+  );
 }
 
 function SettingsRowLink({
@@ -100,17 +104,17 @@ function SettingsRowLink({
   value,
   external = false,
 }: {
-  href: string
-  icon: ReactNode
-  label: string
-  value?: string
-  external?: boolean
+  href: string;
+  icon: ReactNode;
+  label: string;
+  value?: string;
+  external?: boolean;
 }) {
   return (
     <Link
       href={href}
-      target={external ? '_blank' : undefined}
-      rel={external ? 'noopener noreferrer' : undefined}
+      target={external ? "_blank" : undefined}
+      rel={external ? "noopener noreferrer" : undefined}
       className="flex min-h-11 w-full items-center justify-between gap-3 rounded-xl px-3 transition-colors hover:bg-muted/30"
     >
       <div className="flex min-w-0 items-center gap-2.5">
@@ -126,69 +130,71 @@ function SettingsRowLink({
         <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40" />
       </div>
     </Link>
-  )
+  );
 }
 
 export function MyPageView() {
-  const router = useRouter()
-  const { resolvedTheme, setTheme } = useTheme()
-  const [profile, setProfile] = useState<ProfileSummary | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [safetyFilterEnabled, setSafetyFilterEnabled] = useState(true)
-  const [defaultModelId, setDefaultModelId] = useState<ModelId>(MODELS[0].id)
-  const [themeMounted, setThemeMounted] = useState(false)
+  const router = useRouter();
+  const { resolvedTheme, setTheme } = useTheme();
+  const [profile, setProfile] = useState<ProfileSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [safetyFilterEnabled, setSafetyFilterEnabled] = useState(true);
+  const [defaultModelId, setDefaultModelId] = useState<ModelId>(MODELS[0].id);
+  const [themeMounted, setThemeMounted] = useState(false);
 
-  const isDark = resolvedTheme === 'dark'
+  const isDark = resolvedTheme === "dark";
   const defaultModel =
-    MODELS.find((model) => model.id === defaultModelId) ?? MODELS[0]
+    MODELS.find((model) => model.id === defaultModelId) ?? MODELS[0];
 
   useEffect(() => {
-    setThemeMounted(true)
+    setThemeMounted(true);
 
-    const storedSafetyFilter = localStorage.getItem(SAFETY_FILTER_KEY)
+    const storedSafetyFilter = localStorage.getItem(SAFETY_FILTER_KEY);
     if (storedSafetyFilter !== null) {
-      setSafetyFilterEnabled(storedSafetyFilter === 'true')
+      setSafetyFilterEnabled(storedSafetyFilter === "true");
     }
 
-    const storedModel = localStorage.getItem(DEFAULT_MODEL_KEY) as ModelId | null
+    const storedModel = localStorage.getItem(
+      DEFAULT_MODEL_KEY,
+    ) as ModelId | null;
     if (storedModel && MODELS.some((model) => model.id === storedModel)) {
-      setDefaultModelId(storedModel)
+      setDefaultModelId(storedModel);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    fetch('/api/profile')
+    fetch("/api/profile")
       .then(async (response) => {
         if (response.status === 401) {
-          router.replace('/')
-          return null
+          router.replace("/");
+          return null;
         }
-        if (!response.ok) throw new Error('profile fetch failed')
-        return response.json() as Promise<ProfileSummary>
+        if (!response.ok) throw new Error("profile fetch failed");
+        return response.json() as Promise<ProfileSummary>;
       })
       .then((data) => {
-        if (data) setProfile(data)
+        if (data) setProfile(data);
       })
       .catch(() => {
-        router.replace('/')
+        router.replace("/");
       })
-      .finally(() => setLoading(false))
-  }, [router])
+      .finally(() => setLoading(false));
+  }, [router]);
 
   function handleSafetyFilterChange(enabled: boolean) {
-    setSafetyFilterEnabled(enabled)
-    localStorage.setItem(SAFETY_FILTER_KEY, String(enabled))
+    setSafetyFilterEnabled(enabled);
+    localStorage.setItem(SAFETY_FILTER_KEY, String(enabled));
   }
 
   function handleThemeToggle() {
-    setTheme(isDark ? 'light' : 'dark')
+    setTheme(isDark ? "light" : "dark");
   }
 
   async function handleSignOut() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.refresh()
-    router.replace('/')
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.refresh();
+    router.replace("/");
   }
 
   if (loading || !profile) {
@@ -199,7 +205,7 @@ export function MyPageView() {
           <p className="text-sm text-muted-foreground">불러오는 중…</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -248,8 +254,12 @@ export function MyPageView() {
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
-              <h2 className="truncate text-sm font-bold">{profile.display_name}</h2>
-              <p className="truncate text-xs text-muted-foreground/70">{profile.handle}</p>
+              <h2 className="truncate text-sm font-bold">
+                {profile.display_name}
+              </h2>
+              <p className="truncate text-xs text-muted-foreground/70">
+                {profile.handle}
+              </p>
               <div className="mt-0.5 flex items-center gap-3 text-xs text-muted-foreground/60">
                 <span>팔로워 {profile.follower_count}</span>
                 <span>팔로잉 {profile.following_count}</span>
@@ -259,7 +269,7 @@ export function MyPageView() {
             <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
           </Link>
 
-          {/* Orb 잔액 */}
+          {/* won 잔액 */}
           <button
             type="button"
             className="group flex w-full items-center justify-between rounded-2xl bg-muted/15 px-4 py-3.5 transition-colors hover:bg-muted/20"
@@ -268,7 +278,7 @@ export function MyPageView() {
               <Gem className="h-5 w-5 text-primary/80" aria-hidden />
               <div className="flex items-baseline gap-1.5">
                 <span className="text-lg font-semibold tabular-nums">0</span>
-                <span className="text-xs text-muted-foreground">Orb</span>
+                <span className="text-xs text-muted-foreground">won</span>
               </div>
             </div>
             <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
@@ -309,7 +319,9 @@ export function MyPageView() {
                 <div className="shrink-0 text-muted-foreground">
                   <Shield className="h-4 w-4" />
                 </div>
-                <p className="text-sm font-medium text-foreground/90">세이프티 필터</p>
+                <p className="text-sm font-medium text-foreground/90">
+                  세이프티 필터
+                </p>
               </div>
               <Switch
                 checked={safetyFilterEnabled}
@@ -322,10 +334,15 @@ export function MyPageView() {
               label="본인 인증"
               showChevron={false}
               trailing={
-                <span className="text-xs font-medium text-green-500">성인 인증됨</span>
+                <span className="text-xs font-medium text-green-500">
+                  성인 인증됨
+                </span>
               }
             />
-            <SettingsRowButton icon={<Ban className="h-4 w-4" />} label="차단 관리" />
+            <SettingsRowButton
+              icon={<Ban className="h-4 w-4" />}
+              label="차단 관리"
+            />
           </SettingsGroup>
 
           {/* 소통 */}
@@ -334,7 +351,10 @@ export function MyPageView() {
               icon={<FileText className="h-4 w-4" />}
               label="개발 현황"
             />
-            <SettingsRowButton icon={<LifeBuoy className="h-4 w-4" />} label="라이브 채팅" />
+            <SettingsRowButton
+              icon={<LifeBuoy className="h-4 w-4" />}
+              label="라이브 채팅"
+            />
             {DISCORD_URL ? (
               <SettingsRowLink
                 href={DISCORD_URL}
@@ -357,12 +377,18 @@ export function MyPageView() {
 
           {/* 설정 */}
           <SettingsGroup title="설정">
-            <SettingsRowButton icon={<Settings className="h-4 w-4" />} label="계정" />
-            <SettingsRowButton icon={<Server className="h-4 w-4" />} label="서버 상태" />
+            <SettingsRowButton
+              icon={<Settings className="h-4 w-4" />}
+              label="계정"
+            />
+            <SettingsRowButton
+              icon={<Server className="h-4 w-4" />}
+              label="서버 상태"
+            />
             <SettingsRowButton
               icon={<Settings className="h-4 w-4" />}
               label="테마"
-              value={themeMounted ? (isDark ? '다크' : '라이트') : '…'}
+              value={themeMounted ? (isDark ? "다크" : "라이트") : "…"}
               onClick={handleThemeToggle}
               showChevron={false}
             />
@@ -374,8 +400,8 @@ export function MyPageView() {
               type="button"
               onClick={handleSignOut}
               className={cn(
-                'flex w-full items-center justify-center gap-2 rounded-2xl py-2.5 text-sm',
-                'text-destructive/70 transition-colors hover:bg-destructive/10 hover:text-destructive',
+                "flex w-full items-center justify-center gap-2 rounded-2xl py-2.5 text-sm",
+                "text-destructive/70 transition-colors hover:bg-destructive/10 hover:text-destructive",
               )}
             >
               <LogOut className="h-4 w-4" />
@@ -385,5 +411,5 @@ export function MyPageView() {
         </section>
       </div>
     </div>
-  )
+  );
 }

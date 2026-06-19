@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useEffect, useState, type ReactNode } from 'react'
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   ChevronRight,
   Gem,
@@ -12,80 +12,80 @@ import {
   Moon,
   ShieldCheck,
   Sun,
-} from 'lucide-react'
-import { useTheme } from 'next-themes'
+} from "lucide-react";
+import { useTheme } from "next-themes";
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Switch } from '@/components/ui/switch'
-import { createClient } from '@/lib/supabase/browser'
-import { DISCORD_URL, SAFETY_FILTER_KEY } from '@/lib/user-settings'
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Switch } from "@/components/ui/switch";
+import { createClient } from "@/lib/supabase/browser";
+import { DISCORD_URL, SAFETY_FILTER_KEY } from "@/lib/user-settings";
 import {
   getProfileHandle,
   getProfileInitials,
   getProfileName,
-} from '@/lib/user-profile'
-import { cn } from '@/lib/utils'
+} from "@/lib/user-profile";
+import { cn } from "@/lib/utils";
 
 type UserMenuProps = {
-  user: import('@supabase/supabase-js').User
-  onClose: () => void
-}
+  user: import("@supabase/supabase-js").User;
+  onClose: () => void;
+};
 
 export function UserMenu({ user, onClose }: UserMenuProps) {
-  const router = useRouter()
-  const { resolvedTheme, setTheme } = useTheme()
-  const [displayName, setDisplayName] = useState<string | null>(null)
-  const [safetyFilterEnabled, setSafetyFilterEnabled] = useState(true)
-  const [themeMounted, setThemeMounted] = useState(false)
+  const router = useRouter();
+  const { resolvedTheme, setTheme } = useTheme();
+  const [displayName, setDisplayName] = useState<string | null>(null);
+  const [safetyFilterEnabled, setSafetyFilterEnabled] = useState(true);
+  const [themeMounted, setThemeMounted] = useState(false);
 
-  const profileName = getProfileName(user, displayName)
-  const profileHandle = getProfileHandle(user, displayName)
-  const avatarUrl = user.user_metadata?.avatar_url as string | undefined
-  const isDark = resolvedTheme === 'dark'
+  const profileName = getProfileName(user, displayName);
+  const profileHandle = getProfileHandle(user, displayName);
+  const avatarUrl = user.user_metadata?.avatar_url as string | undefined;
+  const isDark = resolvedTheme === "dark";
 
   useEffect(() => {
-    setThemeMounted(true)
-  }, [])
+    setThemeMounted(true);
+  }, []);
 
   // DB 프로필 이름 + 로컬 세이프티 필터 설정 로드
   useEffect(() => {
-    const storedSafetyFilter = localStorage.getItem(SAFETY_FILTER_KEY)
+    const storedSafetyFilter = localStorage.getItem(SAFETY_FILTER_KEY);
     if (storedSafetyFilter !== null) {
-      setSafetyFilterEnabled(storedSafetyFilter === 'true')
+      setSafetyFilterEnabled(storedSafetyFilter === "true");
     }
 
-    const supabase = createClient()
+    const supabase = createClient();
     async function loadProfile() {
       try {
         const { data } = await supabase
-          .from('users')
-          .select('display_name')
-          .eq('id', user.id)
-          .maybeSingle()
+          .from("users")
+          .select("display_name")
+          .eq("id", user.id)
+          .maybeSingle();
 
-        if (data?.display_name) setDisplayName(data.display_name)
+        if (data?.display_name) setDisplayName(data.display_name);
       } catch {
         // 프로필 조회 실패 시 메타데이터/이메일 fallback 유지
       }
     }
 
-    void loadProfile()
-  }, [user.id])
+    void loadProfile();
+  }, [user.id]);
 
   function handleSafetyFilterChange(enabled: boolean) {
-    setSafetyFilterEnabled(enabled)
-    localStorage.setItem(SAFETY_FILTER_KEY, String(enabled))
+    setSafetyFilterEnabled(enabled);
+    localStorage.setItem(SAFETY_FILTER_KEY, String(enabled));
   }
 
   function handleThemeToggle() {
-    setTheme(isDark ? 'light' : 'dark')
+    setTheme(isDark ? "light" : "dark");
   }
 
   async function handleSignOut() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    onClose()
-    router.refresh()
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    onClose();
+    router.refresh();
   }
 
   return (
@@ -103,8 +103,12 @@ export function UserMenu({ user, onClose }: UserMenuProps) {
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-foreground">{profileName}</p>
-          <p className="truncate text-xs text-muted-foreground">{profileHandle}</p>
+          <p className="truncate text-sm font-semibold text-foreground">
+            {profileName}
+          </p>
+          <p className="truncate text-xs text-muted-foreground">
+            {profileHandle}
+          </p>
         </div>
         <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
       </Link>
@@ -113,15 +117,15 @@ export function UserMenu({ user, onClose }: UserMenuProps) {
       <div className="flex items-center justify-between border-t border-border px-4 py-3">
         <div className="flex items-center gap-2.5">
           <Gem className="h-4 w-4 text-primary" aria-hidden />
-          <span className="text-sm font-medium text-foreground">0 Orb</span>
+          <span className="text-sm font-medium text-foreground">0 won</span>
         </div>
-        <button
-          type="button"
-          className="text-sm font-medium text-primary hover:underline"
+        <Link
+          href="/won"
           onClick={onClose}
+          className="text-sm font-medium text-primary hover:underline"
         >
           충전
-        </button>
+        </Link>
       </div>
 
       <div className="border-t border-border" />
@@ -149,7 +153,11 @@ export function UserMenu({ user, onClose }: UserMenuProps) {
       <MenuRow
         icon={
           themeMounted ? (
-            isDark ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />
+            isDark ? (
+              <Moon className="h-4 w-4" />
+            ) : (
+              <Sun className="h-4 w-4" />
+            )
           ) : (
             <Moon className="h-4 w-4" />
           )
@@ -157,7 +165,7 @@ export function UserMenu({ user, onClose }: UserMenuProps) {
         label="테마"
         trailing={
           <span className="text-sm text-muted-foreground">
-            {themeMounted ? (isDark ? '다크' : '라이트') : '…'}
+            {themeMounted ? (isDark ? "다크" : "라이트") : "…"}
           </span>
         }
         onClick={handleThemeToggle}
@@ -197,44 +205,50 @@ export function UserMenu({ user, onClose }: UserMenuProps) {
         로그아웃
       </button>
     </div>
-  )
+  );
 }
 
 type MenuRowProps = {
-  icon: ReactNode
-  label: string
-  trailing?: ReactNode
-  onClick?: () => void
-  as?: 'button' | 'a'
-  href?: string
-  target?: string
-  rel?: string
-  showChevron?: boolean
-}
+  icon: ReactNode;
+  label: string;
+  trailing?: ReactNode;
+  onClick?: () => void;
+  as?: "button" | "a";
+  href?: string;
+  target?: string;
+  rel?: string;
+  showChevron?: boolean;
+};
 
 function MenuRow({
   icon,
   label,
   trailing,
   onClick,
-  as = 'button',
+  as = "button",
   href,
   target,
   rel,
   showChevron = true,
 }: MenuRowProps) {
   const className = cn(
-    'flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-foreground transition-colors hover:bg-muted/60',
-  )
+    "flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-foreground transition-colors hover:bg-muted/60",
+  );
 
-  if (as === 'a' && href) {
+  if (as === "a" && href) {
     return (
-      <Link href={href} target={target} rel={rel} className={className} onClick={onClick}>
+      <Link
+        href={href}
+        target={target}
+        rel={rel}
+        className={className}
+        onClick={onClick}
+      >
         <span className="text-muted-foreground">{icon}</span>
         <span className="flex-1">{label}</span>
         {trailing}
       </Link>
-    )
+    );
   }
 
   return (
@@ -246,5 +260,5 @@ function MenuRow({
         <ChevronRight className="h-4 w-4 text-muted-foreground" />
       ) : null}
     </button>
-  )
+  );
 }
