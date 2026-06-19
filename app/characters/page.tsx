@@ -16,6 +16,7 @@ import {
 } from '@/components/characters/character-browse-toolbar'
 import { CharacterListCard } from '@/components/characters/character-list-card'
 import { EmptyState } from '@/components/ui/empty-state'
+import { CharacterListCardSkeleton } from '@/components/ui/skeleton'
 import { ExplorePageLayout } from '@/components/layout/explore-page-layout'
 
 const BROWSE_VIEW_STORAGE_KEY = 'waneck-browse-view'
@@ -81,10 +82,7 @@ export default function CharactersPage() {
           {loading ? (
             <div className="grid grid-cols-1 gap-4 xs:grid-cols-2">
               {Array.from({ length: 6 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="h-36 min-w-0 animate-pulse rounded-lg bg-muted"
-                />
+                <CharacterListCardSkeleton key={index} />
               ))}
             </div>
           ) : sortedCharacters.length === 0 ? (

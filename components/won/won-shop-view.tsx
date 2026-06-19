@@ -1,10 +1,12 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { Gem, Gift, Sparkles } from 'lucide-react'
-import { toast } from 'sonner'
+import { useState } from "react";
+import { Gem, Gift, Sparkles } from "lucide-react";
+import { toast } from "sonner";
 
-import { Button } from '@/components/ui/button'
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 import {
   WON_PACKAGES,
   WON_PAYMENT_METHODS,
@@ -13,33 +15,36 @@ import {
   type WonPackage,
   type WonPaymentMethod,
   type WonPurchaseTab,
-} from '@/lib/won-shop'
-import { cn } from '@/lib/utils'
+} from "@/lib/won-shop";
+import { cn } from "@/lib/utils";
 
 function formatKrw(amount: number) {
-  return `${amount.toLocaleString('ko-KR')}원`
+  return `${amount.toLocaleString("ko-KR")}원`;
 }
 
 export function WonShopView() {
-  const [activeTab, setActiveTab] = useState<WonPurchaseTab>('purchase')
-  const [selectedPackageId, setSelectedPackageId] = useState(WON_PACKAGES[1]?.id ?? '')
-  const [paymentMethod, setPaymentMethod] = useState<WonPaymentMethod>('card')
+  const [activeTab, setActiveTab] = useState<WonPurchaseTab>("purchase");
+  const [selectedPackageId, setSelectedPackageId] = useState(
+    WON_PACKAGES[1]?.id ?? "",
+  );
+  const [paymentMethod, setPaymentMethod] = useState<WonPaymentMethod>("card");
 
   const selectedPackage =
-    WON_PACKAGES.find((item) => item.id === selectedPackageId) ?? WON_PACKAGES[0]
+    WON_PACKAGES.find((item) => item.id === selectedPackageId) ??
+    WON_PACKAGES[0];
 
   function handleCheckout() {
-    if (activeTab === 'free') {
-      toast.message('무료 won 지급은 준비 중이에요.')
-      return
+    if (activeTab === "free") {
+      toast.message("무료 won 지급은 준비 중이에요.");
+      return;
     }
 
     if (!selectedPackage) {
-      toast.error('상품을 선택해주세요.')
-      return
+      toast.error("상품을 선택해주세요.");
+      return;
     }
 
-    toast.message('결제는 준비 중이에요.')
+    toast.message("결제는 준비 중이에요.");
   }
 
   return (
@@ -50,7 +55,9 @@ export function WonShopView() {
           <p className="text-xs font-medium text-muted-foreground">나의 won</p>
           <div className="mt-1 flex items-center gap-2">
             <Gem className="h-5 w-5 text-primary" aria-hidden />
-            <span className="text-2xl font-bold tabular-nums text-foreground">0</span>
+            <span className="text-2xl font-bold tabular-nums text-foreground">
+              0
+            </span>
             <span className="text-sm text-muted-foreground">개</span>
           </div>
         </div>
@@ -75,40 +82,27 @@ export function WonShopView() {
 
       {/* 탭 */}
       <section className="px-4 pt-5">
-        <div
-          role="tablist"
+        <SegmentedControl
+          value={activeTab}
+          onValueChange={setActiveTab}
+          options={WON_PURCHASE_TABS.map((tab) => ({
+            value: tab.id,
+            label: tab.label,
+          }))}
+          size="md"
+          columns={2}
+          className="w-full"
           aria-label="won 충전 방식"
-          className="grid h-9 grid-cols-2 gap-1 rounded-full bg-muted/30 p-1"
-        >
-          {WON_PURCHASE_TABS.map((tab) => {
-            const isActive = activeTab === tab.id
-
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                aria-selected={isActive}
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  'rounded-full text-[13px] font-medium transition-colors',
-                  isActive
-                    ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground',
-                )}
-              >
-                {tab.label}
-              </button>
-            )
-          })}
-        </div>
+        />
       </section>
 
-      {activeTab === 'purchase' ? (
+      {activeTab === "purchase" ? (
         <>
           {/* 상품 */}
           <section className="px-4 pt-5">
-            <h2 className="mb-3 text-sm font-semibold text-foreground">상품 구성</h2>
+            <h2 className="mb-3 text-sm font-semibold text-foreground">
+              상품 구성
+            </h2>
             <div className="grid grid-cols-2 gap-2.5">
               {WON_PACKAGES.map((item) => (
                 <PackageCard
@@ -123,10 +117,12 @@ export function WonShopView() {
 
           {/* 결제 수단 */}
           <section className="px-4 pt-6">
-            <h2 className="mb-3 text-sm font-semibold text-foreground">결제 수단</h2>
+            <h2 className="mb-3 text-sm font-semibold text-foreground">
+              결제 수단
+            </h2>
             <div className="space-y-2">
               {WON_PAYMENT_METHODS.map((method) => {
-                const isSelected = paymentMethod === method.id
+                const isSelected = paymentMethod === method.id;
 
                 return (
                   <button
@@ -134,24 +130,24 @@ export function WonShopView() {
                     type="button"
                     onClick={() => setPaymentMethod(method.id)}
                     className={cn(
-                      'flex w-full items-center justify-between rounded-xl px-4 py-3 text-left transition-colors',
+                      "flex w-full items-center justify-between rounded-xl px-4 py-3 text-left transition-colors",
                       isSelected
-                        ? 'bg-primary/10 text-foreground'
-                        : 'bg-muted/30 text-foreground hover:bg-muted/50',
+                        ? "bg-primary/10 text-foreground"
+                        : "bg-muted/30 text-foreground hover:bg-muted/50",
                     )}
                   >
                     <span className="text-sm font-medium">{method.label}</span>
                     <span
                       className={cn(
-                        'h-4 w-4 rounded-full border-2',
+                        "h-4 w-4 rounded-full border-2",
                         isSelected
-                          ? 'border-primary bg-primary'
-                          : 'border-muted-foreground/30',
+                          ? "border-primary bg-primary"
+                          : "border-muted-foreground/30",
                       )}
                       aria-hidden
                     />
                   </button>
-                )
+                );
               })}
             </div>
           </section>
@@ -165,20 +161,28 @@ export function WonShopView() {
             >
               {selectedPackage
                 ? `${formatKrw(selectedPackage.priceKrw)} 결제하기`
-                : '결제하기'}
+                : "결제하기"}
             </Button>
           </section>
         </>
       ) : (
         <section className="px-4 pt-5">
           <div className="rounded-2xl bg-muted/20 px-4 py-8 text-center">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-              <Gift className="h-6 w-6 text-primary" aria-hidden />
-            </div>
-            <p className="text-sm font-semibold text-foreground">무료 won 받기</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              출석·미션 보상은 곧 제공될 예정이에요.
-            </p>
+            <EmptyState
+              message={
+                <>
+                  <span className="block text-sm font-semibold text-foreground">
+                    무료 won 받기
+                  </span>
+                  <span className="mt-1 block text-xs text-muted-foreground">
+                    출석·미션 보상은 곧 제공될 예정이에요.
+                  </span>
+                </>
+              }
+              icon={Gift}
+              iconClassName="mx-auto mb-3 h-12 w-12 rounded-full bg-primary/10 p-3 text-primary"
+              messageClassName="max-w-none px-0"
+            />
             <Button
               type="button"
               variant="secondary"
@@ -206,7 +210,7 @@ export function WonShopView() {
         </ul>
       </section>
     </div>
-  )
+  );
 }
 
 function PackageCard({
@@ -214,21 +218,21 @@ function PackageCard({
   selected,
   onSelect,
 }: {
-  item: WonPackage
-  selected: boolean
-  onSelect: () => void
+  item: WonPackage;
+  selected: boolean;
+  onSelect: () => void;
 }) {
-  const totalWon = item.wonAmount + (item.bonusWon ?? 0)
+  const totalWon = item.wonAmount + (item.bonusWon ?? 0);
 
   return (
     <button
       type="button"
       onClick={onSelect}
       className={cn(
-        'relative flex flex-col items-start rounded-2xl px-3.5 py-3.5 text-left transition-colors',
+        "relative flex flex-col items-start rounded-2xl px-3.5 py-3.5 text-left transition-colors",
         selected
-          ? 'bg-primary/10 ring-2 ring-primary'
-          : 'bg-muted/30 hover:bg-muted/50',
+          ? "bg-primary/10 ring-2 ring-primary"
+          : "bg-muted/30 hover:bg-muted/50",
       )}
     >
       {item.badge ? (
@@ -240,13 +244,13 @@ function PackageCard({
       <div className="flex items-center gap-1.5">
         <Gem className="h-4 w-4 text-primary" aria-hidden />
         <span className="text-base font-bold tabular-nums text-foreground">
-          {item.wonAmount.toLocaleString('ko-KR')}
+          {item.wonAmount.toLocaleString("ko-KR")}
         </span>
       </div>
 
       {item.bonusWon ? (
         <p className="mt-1 text-[11px] font-medium text-primary">
-          +{item.bonusWon.toLocaleString('ko-KR')} 보너스
+          +{item.bonusWon.toLocaleString("ko-KR")} 보너스
         </p>
       ) : null}
 
@@ -256,9 +260,9 @@ function PackageCard({
 
       {item.bonusWon ? (
         <p className="mt-0.5 text-[10px] text-muted-foreground">
-          총 {totalWon.toLocaleString('ko-KR')} won
+          총 {totalWon.toLocaleString("ko-KR")} won
         </p>
       ) : null}
     </button>
-  )
+  );
 }

@@ -1,12 +1,14 @@
 'use client'
 
-import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 import type { Character } from '@/lib/types'
 import { CharacterGridCard } from '@/components/character-grid-card'
 import { EmptyState } from '@/components/ui/empty-state'
+import { IconButton } from '@/components/ui/icon-button'
+import { SectionHeader } from '@/components/ui/section-header'
+import { CharacterCardSkeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 
 interface CharacterSectionProps {
@@ -24,18 +26,6 @@ interface CharacterSectionProps {
 }
 
 const CHARACTER_CARD_WIDTH_CLASS = 'w-[calc(50%-4px)] shrink-0 xs:w-[calc(33.333%-6px)]'
-
-function CharacterCardSkeleton({ className }: { className?: string }) {
-  return (
-    <div className={cn('flex flex-col', className)}>
-      <div className="aspect-3/4 w-full animate-pulse rounded-xl bg-muted" />
-      <div className="mt-2 space-y-1.5">
-        <div className="h-3 w-3/4 animate-pulse rounded bg-muted" />
-        <div className="h-2.5 w-full animate-pulse rounded bg-muted" />
-      </div>
-    </div>
-  )
-}
 
 function HorizontalSlider({
   characters,
@@ -90,25 +80,29 @@ function HorizontalSlider({
   return (
     <div className="relative">
       {canScrollLeft && (
-        <button
+        <IconButton
           type="button"
+          variant="floating"
+          size="sm"
           onClick={() => slide('left')}
-          className="absolute left-1 top-[40%] z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-background/90 shadow-md"
+          className="absolute left-1 top-[40%] z-10 -translate-y-1/2"
           aria-label="이전"
         >
-          <ChevronLeft className="h-4 w-4 text-foreground" />
-        </button>
+          <ChevronLeft />
+        </IconButton>
       )}
 
       {canScrollRight && (
-        <button
+        <IconButton
           type="button"
+          variant="floating"
+          size="sm"
           onClick={() => slide('right')}
-          className="absolute right-1 top-[40%] z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-background/90 shadow-md"
+          className="absolute right-1 top-[40%] z-10 -translate-y-1/2"
           aria-label="다음"
         >
-          <ChevronRight className="h-4 w-4 text-foreground" />
-        </button>
+          <ChevronRight />
+        </IconButton>
       )}
 
       <div
@@ -149,17 +143,7 @@ export function CharacterSection({
   return (
     <section className={cn('mt-6', className)}>
       {title ? (
-        <div className="mb-3 flex items-center justify-between px-4">
-          <h2 className="text-[15px] font-bold text-foreground">{title}</h2>
-          {moreHref && (
-            <Link
-              href={moreHref}
-              className="flex items-center gap-0.5 text-[12px] text-muted-foreground hover:text-foreground"
-            >
-              전체보기 <ChevronRight className="h-3.5 w-3.5" />
-            </Link>
-          )}
-        </div>
+        <SectionHeader title={title} moreHref={moreHref} />
       ) : null}
 
       {horizontal ? (
