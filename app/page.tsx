@@ -93,7 +93,7 @@ function HomePage() {
         >
           <nav
             aria-label="카테고리"
-            className="scroll-hide  flex min-h-14 gap-2 overflow-x-auto px-4 py-3"
+            className="scroll-hide flex min-h-14 gap-2 overflow-x-auto px-4 py-3"
           >
             {CATEGORIES.map((category) => (
               <Chip
