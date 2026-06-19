@@ -2,20 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Compass, Home, MessageSquare, Plus } from "lucide-react";
 
 import { useSidebar } from "@/components/layout/sidebar-context";
 import { useAuth } from "@/hooks/use-auth";
+import { useConversationsQuery } from "@/hooks/queries/use-conversations-query";
+import type { RecentConversation } from "@/lib/api/conversations";
 import { cn } from "@/lib/utils";
-
-type RecentConversation = {
-  id: string;
-  character_id: string;
-  character_name: string;
-  character_image_url: string | null;
-  last_message_at: string | null;
-};
 
 const NAV_ITEMS = [
   { href: "/", label: "홈", icon: Home, match: (path: string) => path === "/" },
@@ -44,37 +38,16 @@ function SidebarNav({
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
-  // P1: auth 구독은 AuthProvider로 이전. conversations fetch는 P4에서 Query로 교체 예정
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
-  const [recentChats, setRecentChats] = useState<RecentConversation[]>([]);
+  // P4: useEffect fetch 제거 — TanStack Query 캐시 사용
+  const {
+    data: recentChats = [],
+    isPending: isConversationsLoading,
+  } = useConversationsQuery({ enabled: isAuthenticated });
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      return;
-    }
-
-    let cancelled = false;
-
-    fetch("/api/conversations")
-      .then((response) => {
-        if (cancelled || !response.ok) return null;
-        return response.json() as Promise<RecentConversation[]>;
-      })
-      .then((data) => {
-        if (cancelled) return;
-        setRecentChats(Array.isArray(data) ? data : []);
-      })
-      .catch(() => {
-        if (!cancelled) setRecentChats([]);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isAuthenticated]);
-
-  // 로그아웃 시 stale state가 UI에 노출되지 않도록 표시용 배열만 분리
-  const visibleRecentChats = isAuthenticated ? recentChats : [];
+  const visibleRecentChats: RecentConversation[] = isAuthenticated
+    ? recentChats
+    : [];
 
   return (
     <>
@@ -135,7 +108,10 @@ function SidebarNav({
             <p className="px-3 py-2 text-xs leading-relaxed text-muted-foreground">
               로그인하면 최근 대화가 여기에 표시됩니다.
             </p>
-          ) : !collapsed && visibleRecentChats.length === 0 ? (
+          ) : !collapsed &&
+            isAuthenticated &&
+            !isConversationsLoading &&
+            visibleRecentChats.length === 0 ? (
             <p className="px-3 py-2 text-xs leading-relaxed text-muted-foreground">
               아직 대화한 캐릭터가 없습니다.
             </p>
