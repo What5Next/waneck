@@ -5,6 +5,7 @@ import { supabaseAdmin } from '@/lib/supabase.server'
 import { createClient } from '@/lib/supabase/server'
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
+const MAX_CONTEXT_MESSAGES = 20
 
 export type Message = {
   role: 'user' | 'model'
@@ -43,7 +44,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Character not found' }, { status: 404 })
     }
 
-    const contents = messages.map((m) => ({
+    const promptMessages = messages.slice(-MAX_CONTEXT_MESSAGES)
+    const contents = promptMessages.map((m) => ({
       role: m.role,
       parts: [{ text: m.content }],
     }))
