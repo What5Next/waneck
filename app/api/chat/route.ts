@@ -59,6 +59,7 @@ export async function POST(req: NextRequest) {
       system: systemInstruction,
       messages: aiMessages,
       maxOutputTokens: 1000,
+      experimental_telemetry: { isEnabled: true },
     })
 
     const reply = text ?? '...'
