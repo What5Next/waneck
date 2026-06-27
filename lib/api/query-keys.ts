@@ -28,6 +28,9 @@ export const queryKeys = {
   conversations: {
     all: ["conversations"] as const,
     /** 사이드바 최근 대화 목록 */
-    list: () => [...queryKeys.conversations.all, "list"] as const,
+    list: () => [...queryKeys.conversations.all, 'list'] as const,
+    /** 특정 캐릭터의 대화 목록 */
+    byCharacter: (characterId: string) =>
+      [...queryKeys.conversations.all, 'byCharacter', characterId] as const,
   },
 } as const;

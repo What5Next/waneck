@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase.server'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const authClient = await createClient()
     const {
@@ -14,6 +14,24 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { searchParams } = new URL(req.url)
+    const characterId = searchParams.get('character_id')
+
+    if (characterId) {
+      // 특정 캐릭터의 대화 목록
+      const { data, error } = await supabaseAdmin
+        .from('conversations')
+        .select('id, title, created_at, last_message_at')
+        .eq('user_id', user.id)
+        .eq('character_id', characterId)
+        .order('last_message_at', { ascending: false, nullsFirst: false })
+
+      if (error) throw new Error(error.message)
+
+      return NextResponse.json(data ?? [])
+    }
+
+    // 전체 최근 대화 목록 (사이드바용)
     const { data, error } = await supabaseAdmin
       .from('conversations')
       .select(
@@ -56,19 +74,6 @@ export async function POST(req: NextRequest) {
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { data: existing } = await supabaseAdmin
-      .from('conversations')
-      .select('id')
-      .eq('character_id', characterId)
-      .eq('user_id', user.id)
-      .order('last_message_at', { ascending: false, nullsFirst: false })
-      .limit(1)
-      .maybeSingle()
-
-    if (existing) {
-      return NextResponse.json({ conversationId: existing.id })
     }
 
     const { data, error } = await supabaseAdmin
