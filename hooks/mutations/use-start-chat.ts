@@ -17,6 +17,9 @@ export function useStartChat() {
       void queryClient.invalidateQueries({
         queryKey: queryKeys.conversations.all,
       })
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.conversations.byCharacter(characterId),
+      })
       router.push(`/chat/${characterId}/${data.conversationId}`)
     },
   })
