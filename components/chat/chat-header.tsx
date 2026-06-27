@@ -11,6 +11,7 @@ import { useSidebar } from "@/components/layout/sidebar-context";
 import { FadeEdge } from "@/components/ui/fade-edge";
 import { IconButton } from "@/components/ui/icon-button";
 import { PopoverMenu, PopoverMenuTrigger } from "@/components/ui/popover-menu";
+import { useProfileQuery } from "@/hooks/queries/use-profile-query";
 import { cn } from "@/lib/utils";
 
 /** chat-header 하단 fade 높이 */
@@ -30,6 +31,7 @@ export function ChatHeader({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const { focusMode, toggleFocusMode } = useFocusMode();
   const { closeMobileSidebar } = useSidebar();
+  const { data: profile } = useProfileQuery();
 
   async function handleCopyTitle() {
     const chatPath = conversationId
@@ -115,7 +117,7 @@ export function ChatHeader({
           aria-label="won 충전"
         >
           <Gem className="h-4 w-4 text-primary" aria-hidden />
-          <span className="text-sm font-medium tabular-nums">0</span>
+          <span className="text-sm font-medium tabular-nums">{(profile?.token_balance ?? 0).toLocaleString("ko-KR")}</span>
         </Link>
 
         <PopoverMenu open={settingsOpen} onOpenChange={setSettingsOpen}>

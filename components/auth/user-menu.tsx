@@ -108,7 +108,7 @@ export function UserMenu({ user, onClose }: UserMenuProps) {
         <Row
           icon={<Gem className="h-4 w-4 text-primary" aria-hidden />}
           label="won"
-          value="0"
+          value={String(profile?.token_balance ?? 0)}
           interactive={false}
           showChevron={false}
           trailing={

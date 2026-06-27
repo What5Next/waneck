@@ -7,6 +7,7 @@ export type ProfileSummary = {
   display_name: string;
   handle: string;
   avatar_url: string | null;
+  token_balance: number;
   follower_count: number;
   following_count: number;
   wons_received_30d: number;

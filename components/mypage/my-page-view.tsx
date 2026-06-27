@@ -131,7 +131,7 @@ export function MyPageView() {
               href="/won"
               icon={<Gem className="h-4 w-4 text-primary/80" />}
               label="won 잔액"
-              value="0"
+              value={(profile.token_balance ?? 0).toLocaleString("ko-KR")}
             />
           </RowPanel>
 

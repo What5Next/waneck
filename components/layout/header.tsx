@@ -11,6 +11,7 @@ import { UserButton } from '@/components/auth/user-button'
 import { useSidebar } from '@/components/layout/sidebar-context'
 import { IconButton, headerIconClass } from '@/components/ui/icon-button'
 import { SearchInput } from '@/components/ui/search-input'
+import { useProfileQuery } from '@/hooks/queries/use-profile-query'
 import { cn } from '@/lib/utils'
 
 function SidebarToggleButton({
@@ -44,6 +45,7 @@ export function Header({ className }: { className?: string }) {
   const [query, setQuery] = useState('')
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const { collapsed, mobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar()
+  const { data: profile } = useProfileQuery()
 
   // 탐색 페이지에서 URL 검색어와 입력창 동기화
   useEffect(() => {
@@ -104,7 +106,7 @@ export function Header({ className }: { className?: string }) {
           aria-label="won 충전"
         >
           <Gem className="h-4 w-4 text-primary" aria-hidden />
-          <span className="text-sm font-medium tabular-nums">0</span>
+          <span className="text-sm font-medium tabular-nums">{(profile?.token_balance ?? 0).toLocaleString("ko-KR")}</span>
         </Link>
 
         {/* 데스크톱: 검색창 + 알림 + 프로필 */}
