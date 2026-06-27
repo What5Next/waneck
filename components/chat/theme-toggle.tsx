@@ -1,40 +1,26 @@
 'use client'
 
 import { Moon, Sun } from 'lucide-react'
-import { useTheme } from 'next-themes'
-import { startTransition, useEffect, useState } from 'react'
 
-import { Button } from '@/components/ui/button'
+import { IconButton, headerIconClass } from '@/components/ui/icon-button'
+import { useThemeReady } from '@/hooks/use-theme-ready'
 
 export function ThemeToggle() {
-  const { resolvedTheme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    startTransition(() => {
-      setMounted(true)
-    })
-  }, [])
-
-  if (!mounted) {
-    return (
-      <Button type="button" variant="ghost" size="sm" disabled aria-label="테마">
-        …
-      </Button>
-    )
-  }
-
-  const isDark = resolvedTheme === 'dark'
+  const { isReady, isDark, toggleTheme } = useThemeReady()
 
   return (
-    <Button
-      type="button"
-      variant="ghost"
-      size="sm"
-      aria-label="테마 전환"
-      onClick={() => setTheme(isDark ? 'light' : 'dark')}
+    <IconButton
+      aria-label={isReady ? '테마 전환' : '테마'}
+      disabled={!isReady}
+      onClick={isReady ? toggleTheme : undefined}
     >
-      {isDark ? <Sun className="size-4" aria-hidden /> : <Moon className="size-4" aria-hidden />}
-    </Button>
+      {!isReady ? (
+        <span className={headerIconClass} aria-hidden />
+      ) : isDark ? (
+        <Sun className={headerIconClass} aria-hidden />
+      ) : (
+        <Moon className={headerIconClass} aria-hidden />
+      )}
+    </IconButton>
   )
 }

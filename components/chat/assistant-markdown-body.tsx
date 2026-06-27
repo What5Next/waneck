@@ -15,14 +15,14 @@ const markdownComponents: Components = {
     const isBlock = className?.includes('language-')
     if (isBlock) {
       return (
-        <code className="bg-muted/80 block overflow-x-auto rounded px-2 py-1 text-xs">
+        <code className="scroll-hide bg-muted/80 block overflow-x-auto rounded px-2 py-1 text-xs">
           {children}
         </code>
       )
     }
     return <code className="bg-muted/80 rounded px-1 py-0.5 text-xs">{children}</code>
   },
-  pre: ({ children }) => <pre className="mb-2 overflow-x-auto last:mb-0">{children}</pre>,
+  pre: ({ children }) => <pre className="scroll-hide mb-2 overflow-x-auto last:mb-0">{children}</pre>,
   a: ({ href, children }) => (
     <a
       href={href}

@@ -9,48 +9,58 @@
 /* ─── 라이트 테마 (zinc 스케일 기반) ─── */
 :root {
   --background: 0 0% 100%;
-  --foreground: 240 10% 3.9%;          /* zinc-950 */
-  --card: 240 4.9% 96.1%;              /* zinc-100 */
-  --card-foreground: 240 10% 3.9%;     /* zinc-950 */
+  --foreground: 240 10% 3.9%; /* zinc-950 */
+  --card: 240 4.9% 96.1%; /* zinc-100 */
+  --card-foreground: 240 10% 3.9%; /* zinc-950 */
   --popover: 0 0% 100%;
   --popover-foreground: 240 10% 3.9%;
-  --primary: 240 5.9% 10%;             /* zinc-900 */
-  --primary-foreground: 0 0% 98%;      /* zinc-50 */
-  --secondary: 240 4.9% 96.1%;         /* zinc-100 */
+  --primary: 262 83% 58%; /* violet-600 #7C3AED */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 240 4.9% 96.1%; /* zinc-100 */
   --secondary-foreground: 240 5.9% 10%;
-  --muted: 240 5.9% 90.2%;             /* zinc-200 */
-  --muted-foreground: 240 3.7% 46.1%;  /* zinc-500 */
-  --accent: 240 5.9% 90.2%;            /* zinc-200 */
+  --muted: 240 5.9% 90.2%; /* zinc-200 */
+  --muted-foreground: 240 3.7% 46.1%; /* zinc-500 */
+  --accent: 240 5.9% 90.2%; /* zinc-200 */
   --accent-foreground: 240 5.9% 10%;
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 0 0% 98%;
-  --border: 240 5.9% 84.7%;            /* zinc-300 */
-  --input: 240 5.9% 84.7%;             /* zinc-300 */
-  --ring: 240 5.9% 10%;                /* zinc-900 */
+  --border: 240 5.9% 84.7%; /* zinc-300 */
+  --input: 240 5.9% 84.7%; /* zinc-300 */
+  --ring: 262 83% 58%; /* violet-600 #7C3AED */
   --radius: 0.5rem;
+  /* non-active UI (chip, 필터 등) */
+  --inactive: 240 5.9% 90.2% / 0.7; /* muted @ 70% */
+  --inactive-foreground: 240 3.7% 46.1% / 0.6; /* muted-foreground @ 60% */
+  --inactive-hover: 240 5.9% 90.2%; /* muted */
+  --inactive-hover-foreground: 240 3.7% 46.1% / 0.8; /* muted-foreground @ 80% */
 }
 
 /* ─── 다크 테마 (zinc 스케일 기반) ─── */
 .dark {
-  --background: 240 10% 3.9%;          /* zinc-950 */
-  --foreground: 0 0% 98%;              /* zinc-50 */
-  --card: 240 5.3% 10%;                /* zinc-900 */
-  --card-foreground: 0 0% 98%;         /* zinc-50 */
+  --background: 240 10% 3.9%; /* zinc-950 */
+  --foreground: 0 0% 98%; /* zinc-50 */
+  --card: 240 5.3% 10%; /* zinc-900 */
+  --card-foreground: 0 0% 98%; /* zinc-50 */
   --popover: 240 10% 3.9%;
   --popover-foreground: 0 0% 98%;
-  --primary: 0 0% 98%;                 /* zinc-50 */
-  --primary-foreground: 240 5.9% 10%;  /* zinc-900 */
-  --secondary: 240 3.7% 16.5%;         /* zinc-800 */
+  --primary: 262 83% 58%; /* violet-600 #7C3AED */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 240 3.7% 16.5%; /* zinc-800 */
   --secondary-foreground: 0 0% 98%;
-  --muted: 240 3.7% 16.5%;             /* zinc-800 */
-  --muted-foreground: 240 3.7% 65.9%;  /* zinc-400 */
-  --accent: 240 3.7% 16.5%;            /* zinc-800 */
+  --muted: 240 3.7% 16.5%; /* zinc-800 */
+  --muted-foreground: 240 3.7% 65.9%; /* zinc-400 */
+  --accent: 240 3.7% 16.5%; /* zinc-800 */
   --accent-foreground: 0 0% 98%;
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 0 0% 98%;
-  --border: 240 3.7% 16.5%;            /* zinc-800 */
-  --input: 240 3.7% 16.5%;             /* zinc-800 */
-  --ring: 240 5.9% 84.7%;              /* zinc-300 */
+  --border: 240 3.7% 16.5%; /* zinc-800 */
+  --input: 240 3.7% 16.5%; /* zinc-800 */
+  --ring: 262 83% 58%; /* violet-600 #7C3AED */
+  /* non-active UI (chip, 필터 등) */
+  --inactive: 240 3.7% 16.5% / 0.7; /* muted @ 70% */
+  --inactive-foreground: 240 3.7% 65.9% / 0.6; /* muted-foreground @ 60% */
+  --inactive-hover: 240 3.7% 16.5%; /* muted */
+  --inactive-hover-foreground: 240 3.7% 65.9% / 0.8; /* muted-foreground @ 80% */
 }
 
 @theme inline {
@@ -71,8 +81,49 @@
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
+  --color-inactive: hsl(var(--inactive));
+  --color-inactive-foreground: hsl(var(--inactive-foreground));
+  --color-inactive-hover: hsl(var(--inactive-hover));
+  --color-inactive-hover-foreground: hsl(var(--inactive-hover-foreground));
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+}
+
+@layer utilities {
+  .scroll-show {
+    -ms-overflow-style: auto;
+    scrollbar-width: auto;
+  }
+
+  .scroll-show::-webkit-scrollbar {
+    display: block;
+    width: 8px;
+    height: 8px;
+  }
+}
+
+/* Safari 포함 스크롤바 숨김 — layer 밖에서 webkit pseudo 적용 보장 */
+.scroll-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scroll-hide::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+
+.scroll-hide::-webkit-scrollbar-track,
+.scroll-hide::-webkit-scrollbar-thumb {
+  display: none;
+  width: 0;
+  height: 0;
+  background: transparent;
 }
 
 @layer base {

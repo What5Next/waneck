@@ -1,44 +1,29 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
 
 import { Button } from '@/components/ui/button'
 import { LoginModal } from '@/components/auth/login-modal'
-import { createClient } from '@/lib/supabase/browser'
+import { useAuth } from '@/hooks/use-auth'
+import { useStartChat } from '@/hooks/mutations/use-start-chat'
 
 export function StartChatButton({ characterId }: { characterId: string }) {
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
+  const { isAuthenticated } = useAuth()
+  const startChatMutation = useStartChat()
   const [showLogin, setShowLogin] = useState(false)
 
   const startChat = useCallback(async () => {
-    setLoading(true)
-    try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-
-      if (!user) {
-        setShowLogin(true)
-        return
-      }
-
-      const res = await fetch('/api/conversations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ characterId }),
-      })
-
-      if (!res.ok) throw new Error('conversation 생성 실패')
-
-      const { conversationId } = await res.json()
-      router.push(`/chat/${characterId}/${conversationId}`)
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setLoading(false)
+    if (!isAuthenticated) {
+      setShowLogin(true)
+      return
     }
-  }, [characterId, router])
+
+    try {
+      await startChatMutation.mutateAsync(characterId)
+    } catch (error) {
+      console.error(error)
+    }
+  }, [characterId, isAuthenticated, startChatMutation])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -57,10 +42,10 @@ export function StartChatButton({ characterId }: { characterId: string }) {
       />
       <Button
         onClick={startChat}
-        disabled={loading}
+        disabled={startChatMutation.isPending}
         className="w-full rounded-lg h-11 py-2 px-4 text-base font-semibold"
       >
-        {loading ? '대화 여는중' : '대화하기'}
+        {startChatMutation.isPending ? '대화 여는중' : '대화하기'}
       </Button>
     </>
   )

@@ -1,5 +1,8 @@
 import type { ReactNode } from 'react'
 
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+
 export function Label({ children, required }: { children: string; required?: boolean }) {
   return (
     <p className="mb-1.5 text-sm font-medium text-foreground">
@@ -42,19 +45,17 @@ export function TextInput({
 }) {
   return (
     <div className="relative">
-      <input
-        type="text"
+      <Input
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(event) => onChange(event.target.value)}
         maxLength={maxLength}
         placeholder={placeholder}
-        className="w-full rounded-xl border border-border bg-card px-4 py-3 text-[15px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
       />
-      {maxLength !== undefined && (
+      {maxLength !== undefined ? (
         <span className="pointer-events-none absolute bottom-3 right-4 text-xs text-muted-foreground">
           {value.length}/{maxLength}
         </span>
-      )}
+      ) : null}
     </div>
   )
 }
@@ -74,19 +75,18 @@ export function TextArea({
 }) {
   return (
     <div className="relative">
-      <textarea
+      <Textarea
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(event) => onChange(event.target.value)}
         maxLength={maxLength}
         placeholder={placeholder}
         rows={rows}
-        className="w-full resize-none rounded-xl border border-border bg-card px-4 py-3 text-[15px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
       />
-      {maxLength !== undefined && (
+      {maxLength !== undefined ? (
         <span className="pointer-events-none absolute bottom-3 right-4 text-xs text-muted-foreground">
           {value.length}/{maxLength}
         </span>
-      )}
+      ) : null}
     </div>
   )
 }

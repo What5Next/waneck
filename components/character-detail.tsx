@@ -1,56 +1,87 @@
-import type { Character } from '@/lib/types'
+import type { CharacterWithDetail } from '@/lib/types'
+import {
+  getCharacterDetailedDescription,
+  getCharacterHashtags,
+} from '@/lib/character-detail'
+import { CharacterIntroPreview } from '@/components/character-intro-preview'
 import { StartChatButton } from '@/components/start-chat-button'
-import { Divider } from './divider'
 
-export function CharacterDetail({ character }: { character: Character }) {
+export function CharacterDetail({ character }: { character: CharacterWithDetail }) {
+  const hashtags = getCharacterHashtags(character.genres, character.tag)
+  const detailedDescription = getCharacterDetailedDescription(
+    character.description,
+    character.detail_description,
+  )
+  const creatorName = character.creator?.display_name?.trim() || null
+
   return (
-    <div className="relative flex h-full flex-col gap-8 bg-background px-[20px] pt-[40px] pb-[100px]">
-      <div className='flex flex-col items-center gap-8 sm:flex-row sm:items-stretch'>
-        {/* 히어로 영역 */}
-        <div className="relative w-[300px] aspect-square rounded-2xl border border-gray-200 overflow-hidden">
-          <div className="flex h-full w-full items-center justify-center bg-card">
-            {character.profile_image_url
-              ? <img src={character.profile_image_url} alt={character.name} className="h-full w-full object-cover" />
-              : <div className="h-full w-full bg-muted" />}
-          </div>
-        </div>
-
-        <div className='flex-1 flex flex-col w-full items-start justify-between gap-4'>
-          <div className='flex flex-col w-full gap-4'>
-            <h1 className="text-2xl font-bold dark:text-white">{character.name}</h1>
-
-            <div className='flex flex-col gap-2'>
-              <p className="mt-1 text-sm dark:text-white/80">{character.short_intro}</p>
-
-              {/* 태그 */}
-              {character.tag && (
-                <div className="flex flex-wrap gap-2">
-                  <span className="rounded-full border border-border px-3 py-1 text-xs text-foreground/70">
-                    {character.tag}
-                  </span>
-                </div>
-              )}
+    <div className="flex h-full min-h-0 flex-col bg-background">
+      <div className="scroll-hide flex min-h-0 flex-1 flex-col overflow-y-auto">
+        {/* 상단 배너 */}
+        <div className="mx-[-20px] h-[220px] shrink-0 overflow-hidden bg-muted">
+          {character.profile_image_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={character.profile_image_url}
+              alt={character.name}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-5xl text-muted-foreground/40">
+              {character.name[0]}
             </div>
-          </div>
-
-          <StartChatButton characterId={character.id} />
+          )}
         </div>
 
+        <div className="flex flex-col gap-6 px-[20px] pt-6">
+          {/* 메타 */}
+          <div className="flex flex-col gap-3">
+            <h1 className="text-2xl font-bold text-foreground">{character.name}</h1>
+
+            {character.short_intro ? (
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                {character.short_intro}
+              </p>
+            ) : null}
+
+            {hashtags.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {hashtags.map((hashtag) => (
+                  <span key={hashtag} className="text-sm font-medium text-primary">
+                    #{hashtag}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+
+            {creatorName ? (
+              <p className="text-sm text-muted-foreground">
+                Creator · <span className="text-foreground">{creatorName}</span>
+              </p>
+            ) : null}
+          </div>
+
+          {/* 상세 설명 */}
+          {detailedDescription ? (
+            <section className="flex flex-col gap-2">
+              <h2 className="text-[15px] font-bold text-foreground">상세 설명</h2>
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
+                {detailedDescription}
+              </p>
+            </section>
+          ) : null}
+
+          {/* 인트로 프리뷰 */}
+          <CharacterIntroPreview
+            character={character}
+            introMessages={character.intro_messages}
+          />
+        </div>
       </div>
 
-      <Divider />
-
-      {/* 본문 */}
-      <div className="flex flex-1 flex-col gap-4 px-4 pb-28 pt-4">
-
-        {/* 소개 */}
-        <section>
-          <h2 className="mb-2 text-sm font-medium text-foreground/90">상세 설명</h2>
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
-            {character.description}
-          </p>
-        </section>
-
+      {/* 하단 고정 CTA — 메인 콘텐츠 영역 안에서만 고정 (사이드바 침범 방지) */}
+      <div className="shrink-0 rounded-t-2xl border border-b-0 border-border bg-background/95 px-5 py-4 backdrop-blur-sm">
+        <StartChatButton characterId={character.id} />
       </div>
     </div>
   )

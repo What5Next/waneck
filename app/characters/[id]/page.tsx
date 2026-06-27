@@ -1,22 +1,37 @@
-import { notFound } from 'next/navigation'
+'use client'
 
-import { supabase } from '@/lib/supabase'
+import { notFound } from 'next/navigation'
+import { use } from 'react'
+
 import { CharacterDetail } from '@/components/character-detail'
 import { MobileShell } from '@/components/mobile-shell'
+import { PageLoading } from '@/components/ui/page-loading'
+import { useCharacterQuery } from '@/hooks/queries/use-character-query'
+import { ApiError } from '@/lib/api/client'
 
-export default async function CharacterPage({
+export default function CharacterPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
-  const { id } = await params
-  const { data: character } = await supabase
-    .from('characters')
-    .select('*')
-    .eq('id', id)
-    .single()
+  const { id } = use(params)
+  const { data: character, isPending, error } = useCharacterQuery(id)
 
-  if (!character) notFound()
+  if (isPending && !character) {
+    return (
+      <MobileShell>
+        <PageLoading />
+      </MobileShell>
+    )
+  }
+
+  if (error instanceof ApiError && error.status === 404) {
+    notFound()
+  }
+
+  if (error || !character) {
+    notFound()
+  }
 
   return (
     <MobileShell>

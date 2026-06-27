@@ -1,10 +1,12 @@
-import { GoogleGenAI } from '@google/genai'
+import { createGoogleGenerativeAI } from '@ai-sdk/google'
+import { generateText, type ModelMessage } from 'ai'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { supabaseAdmin } from '@/lib/supabase.server'
 import { createClient } from '@/lib/supabase/server'
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
+const google = createGoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY })
+const MAX_CONTEXT_MESSAGES = 20
 
 export type Message = {
   role: 'user' | 'model'
@@ -43,24 +45,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Character not found' }, { status: 404 })
     }
 
-    const contents = messages.map((m) => ({
-      role: m.role,
-      parts: [{ text: m.content }],
+    const promptMessages = messages.slice(-MAX_CONTEXT_MESSAGES)
+    const aiMessages: ModelMessage[] = promptMessages.map((m) => ({
+      role: m.role === 'model' ? 'assistant' : 'user',
+      content: m.content,
     }))
 
     const systemInstruction = character.system_prompt +
       '\n\n행동이나 상황을 묘사할 때는 *행동 내용* 형식으로 별표 하나로 감싸서 표현하세요. 예: *조용히 미소 지으며* 안녕하세요.'
 
-    const res = await ai.models.generateContent({
-      model,
-      contents,
-      config: {
-        systemInstruction,
-        maxOutputTokens: 1000,
-      },
+    const { text } = await generateText({
+      model: google(model),
+      system: systemInstruction,
+      messages: aiMessages,
+      maxOutputTokens: 1000,
+      experimental_telemetry: { isEnabled: true },
     })
 
-    const reply = res.text ?? '...'
+    const reply = text ?? '...'
 
     // 로그인된 유저가 있으면 DB에 저장
     let conversationId: string | null = existingConvId ?? null

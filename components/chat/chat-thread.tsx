@@ -20,7 +20,7 @@ export function ChatThread({ messages, isLoading = false, character }: ChatThrea
   }, [messages, isLoading])
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto bg-background p-4">
+    <div className="scroll-hide flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto bg-background p-4">
       {messages.map((m, idx) => {
         const prevMsg = idx > 0 ? messages[idx - 1] : undefined
         const isConsecutiveSameRole = prevMsg?.role === m.role

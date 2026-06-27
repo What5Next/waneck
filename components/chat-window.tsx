@@ -8,7 +8,13 @@ import type { Message } from '@/lib/types'
 import { ChatThread } from '@/components/chat/chat-thread'
 import { ChatComposer } from '@/components/chat/chat-composer'
 import { LoginModal } from '@/components/auth/login-modal'
-import { createClient } from '@/lib/supabase/browser'
+import { useAuth } from '@/hooks/use-auth'
+import { useDefaultModel } from '@/hooks/use-user-settings'
+
+function parseCharacterSuggestions(raw: Character['suggestions']): string[] {
+  if (!Array.isArray(raw)) return []
+  return raw.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+}
 
 function getTime() {
   return new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
@@ -18,35 +24,33 @@ export default function ChatWindow({
   character,
   conversationId: initialConversationId = null,
   initialMessages = [],
-  model = 'gemini-2.5-flash',
 }: {
   character: Character
   conversationId?: string | null
   initialMessages?: Message[]
-  model?: string
 }) {
   const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [isLoading, setIsLoading] = useState(false)
   const [draft, setDraft] = useState('')
+  // P5: mypage 모델 설정과 storage 연동
+  const { modelId: model, setModelId: setModel } = useDefaultModel()
   const [conversationId, setConversationId] = useState<string | null>(initialConversationId)
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null)
+  // P1: 채팅 전송 전 로그인 여부 확인용
+  const { isAuthenticated } = useAuth()
   const [showLoginModal, setShowLoginModal] = useState(false)
 
+  // 로그인 성공 후 로그인 모달 자동 닫기
   useEffect(() => {
-    const supabase = createClient()
-    supabase.auth.getUser().then(({ data }) => setIsLoggedIn(!!data.user))
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-      setIsLoggedIn(!!session?.user)
-      if (session?.user) setShowLoginModal(false)
-    })
-    return () => subscription.unsubscribe()
-  }, [])
+    if (isAuthenticated) {
+      setShowLoginModal(false)
+    }
+  }, [isAuthenticated])
 
   async function sendMessage() {
     const trimmed = draft.trim()
     if (!trimmed || isLoading) return
 
-    if (!isLoggedIn) {
+    if (!isAuthenticated) {
       setShowLoginModal(true)
       return
     }
@@ -97,6 +101,9 @@ export default function ChatWindow({
             onChange={setDraft}
             onSubmit={sendMessage}
             disabled={isLoading}
+            model={model}
+            onModelChange={setModel}
+            suggestions={parseCharacterSuggestions(character.suggestions)}
           />
         </div>
       </div>
