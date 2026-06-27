@@ -20,7 +20,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
       containerClassName,
       size = 'sm',
       expandOnFocus = false,
-      placeholder = '캐릭터 검색',
+      placeholder = 'Search characters',
       ...props
     },
     ref,

@@ -51,8 +51,8 @@ function ComposerPlusMenu({
     <PopoverMenuContent side="top" align="start" width="sm">
       <PopoverMenuItem
         icon={<Asterisk className="h-4 w-4" strokeWidth={1.5} />}
-        label="행동 묘사"
-        description="*행동* 형식으로 삽입"
+        label="Action"
+        description="Insert as *action*"
         disabled={disabled}
         onClick={() => {
           onInsertActionMarkers();
@@ -63,7 +63,7 @@ function ComposerPlusMenu({
       <PopoverMenuDivider />
 
       <PopoverMenuSection
-        title="추천 답변"
+        title="Suggested replies"
         titleIcon={
           <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden />
         }
@@ -85,7 +85,7 @@ function ComposerPlusMenu({
           </div>
         ) : (
           <p className="text-[11px] text-muted-foreground">
-            등록된 추천 답변이 없어요
+            No suggested replies yet
           </p>
         )}
       </PopoverMenuSection>
@@ -174,7 +174,7 @@ export function ChatComposer({
             onChange={(ev) => onChange(ev.target.value)}
             onKeyDown={handleKeyDown}
             disabled={disabled}
-            placeholder="메시지를 입력해보세요"
+            placeholder="Type a message"
             rows={1}
           />
           <div className="flex items-center justify-between p-2">
@@ -184,7 +184,7 @@ export function ChatComposer({
                   <IconButton
                     size="md"
                     disabled={disabled}
-                    aria-label="추가 기능"
+                    aria-label="More options"
                   >
                     <Plus className="h-5 w-5" strokeWidth={1.5} />
                   </IconButton>

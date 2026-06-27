@@ -40,8 +40,8 @@ export default function CharactersPage() {
   );
 
   const emptyMessage = searchQuery
-    ? "검색 결과가 없습니다."
-    : "등록된 캐릭터가 없습니다.";
+    ? "No search results."
+    : "No characters yet.";
 
   const handleViewModeChange = (mode: BrowseViewMode) => {
     setViewMode(mode);
@@ -49,7 +49,7 @@ export default function CharactersPage() {
   console.log("sortedCharacters", characters);
   return (
     <ExplorePageLayout>
-      <h1 className="sr-only">캐릭터 탐색</h1>
+      <h1 className="sr-only">Explore Characters</h1>
 
       <div className="mx-auto my-2 w-full space-y-1 px-3 sm:px-4">
         <CharacterBrowseToolbar

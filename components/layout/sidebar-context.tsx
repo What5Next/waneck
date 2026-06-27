@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import {
   createContext,
@@ -8,63 +8,60 @@ import {
   useState,
   useSyncExternalStore,
   type ReactNode,
-} from 'react'
+} from "react";
+
+import { useHydrated } from "@/hooks/use-hydrated";
 
 import {
   getStorageItem,
   setStorageItem,
   subscribeStorageKey,
-} from '@/lib/stores/local-storage-store'
-import { SIDEBAR_COLLAPSED_KEY } from '@/lib/user-settings'
+} from "@/lib/stores/local-storage-store";
+import { SIDEBAR_COLLAPSED_KEY } from "@/lib/user-settings";
 
 function getCollapsedSnapshot() {
-  return getStorageItem(SIDEBAR_COLLAPSED_KEY) === 'true'
+  return getStorageItem(SIDEBAR_COLLAPSED_KEY) === "true";
 }
 
 function getCollapsedServerSnapshot() {
-  return false
+  return false;
 }
 
 type SidebarContextValue = {
-  collapsed: boolean
-  mobileOpen: boolean
-  toggleSidebar: () => void
-  toggleMobileSidebar: () => void
-  closeMobileSidebar: () => void
-}
+  collapsed: boolean;
+  mobileOpen: boolean;
+  toggleSidebar: () => void;
+  toggleMobileSidebar: () => void;
+  closeMobileSidebar: () => void;
+};
 
-const SidebarContext = createContext<SidebarContextValue | null>(null)
+const SidebarContext = createContext<SidebarContextValue | null>(null);
 
 export function SidebarProvider({ children }: { children: ReactNode }) {
-  const [mobileOpen, setMobileOpen] = useState(false)
-
-  // 하이드레이션 완료 전까지는 서버와 동일한 UI 유지
-  const isClient = useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false,
-  )
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const hydrated = useHydrated();
 
   const storedCollapsed = useSyncExternalStore(
-    (onStoreChange) => subscribeStorageKey(SIDEBAR_COLLAPSED_KEY, onStoreChange),
+    (onStoreChange) =>
+      subscribeStorageKey(SIDEBAR_COLLAPSED_KEY, onStoreChange),
     getCollapsedSnapshot,
     getCollapsedServerSnapshot,
-  )
+  );
 
-  const collapsed = isClient ? storedCollapsed : false
+  const collapsed = hydrated ? storedCollapsed : false;
 
   const toggleSidebar = useCallback(() => {
-    const nextCollapsed = !getCollapsedSnapshot()
-    setStorageItem(SIDEBAR_COLLAPSED_KEY, String(nextCollapsed))
-  }, [])
+    const nextCollapsed = !getCollapsedSnapshot();
+    setStorageItem(SIDEBAR_COLLAPSED_KEY, String(nextCollapsed));
+  }, []);
 
   const toggleMobileSidebar = useCallback(() => {
-    setMobileOpen((prev) => !prev)
-  }, [])
+    setMobileOpen((prev) => !prev);
+  }, []);
 
   const closeMobileSidebar = useCallback(() => {
-    setMobileOpen(false)
-  }, [])
+    setMobileOpen(false);
+  }, []);
 
   const value = useMemo(
     () => ({
@@ -74,16 +71,24 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
       toggleMobileSidebar,
       closeMobileSidebar,
     }),
-    [collapsed, mobileOpen, toggleSidebar, toggleMobileSidebar, closeMobileSidebar],
-  )
+    [
+      collapsed,
+      mobileOpen,
+      toggleSidebar,
+      toggleMobileSidebar,
+      closeMobileSidebar,
+    ],
+  );
 
-  return <SidebarContext.Provider value={value}>{children}</SidebarContext.Provider>
+  return (
+    <SidebarContext.Provider value={value}>{children}</SidebarContext.Provider>
+  );
 }
 
 export function useSidebar() {
-  const context = useContext(SidebarContext)
+  const context = useContext(SidebarContext);
   if (!context) {
-    throw new Error('useSidebar must be used within SidebarProvider')
+    throw new Error("useSidebar must be used within SidebarProvider");
   }
-  return context
+  return context;
 }

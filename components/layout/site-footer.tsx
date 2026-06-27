@@ -42,15 +42,15 @@ export function SiteFooter({ className }: { className?: string }) {
     SITE_COMPANY_INFO.copyright,
     SITE_COMPANY_INFO.address,
     SITE_COMPANY_INFO.businessRegistrationNumber
-      ? `사업자등록번호: ${SITE_COMPANY_INFO.businessRegistrationNumber}`
+      ? `Business registration: ${SITE_COMPANY_INFO.businessRegistrationNumber}`
       : null,
     SITE_COMPANY_INFO.mailOrderRegistrationNumber
-      ? `통신판매업 신고번호: ${SITE_COMPANY_INFO.mailOrderRegistrationNumber}`
+      ? `Mail-order sales registration: ${SITE_COMPANY_INFO.mailOrderRegistrationNumber}`
       : null,
-    SITE_COMPANY_INFO.phone ? `전화번호: ${SITE_COMPANY_INFO.phone}` : null,
-    SITE_COMPANY_INFO.email ? `이메일: ${SITE_COMPANY_INFO.email}` : null,
+    SITE_COMPANY_INFO.phone ? `Phone: ${SITE_COMPANY_INFO.phone}` : null,
+    SITE_COMPANY_INFO.email ? `Email: ${SITE_COMPANY_INFO.email}` : null,
     SITE_COMPANY_INFO.representative
-      ? `대표자: ${SITE_COMPANY_INFO.representative}`
+      ? `Representative: ${SITE_COMPANY_INFO.representative}`
       : null,
   ].filter((line): line is string => Boolean(line));
 

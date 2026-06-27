@@ -13,11 +13,11 @@ import {
 import { cn } from '@/lib/utils'
 
 export const MODELS = [
-  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', desc: '최신 고성능 모델', shortName: '2.5 Flash' },
-  { id: 'gemini-2.5-flash-lite', name: 'Gemini 2.5 Flash Lite', desc: '빠르고 가벼운 모델', shortName: '2.5 Lite' },
-  { id: 'gemini-3-flash', name: 'Gemini 3 Flash', desc: '차세대 기본 모델', shortName: '3 Flash' },
-  { id: 'gemini-3.1-flash-lite', name: 'Gemini 3.1 Flash Lite', desc: '차세대 경량 모델', shortName: '3.1 Lite' },
-  { id: 'gemini-3.5-flash', name: 'Gemini 3.5 Flash', desc: '차세대 고성능 모델', shortName: '3.5 Flash' },
+  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', desc: 'Latest high-performance model', shortName: '2.5 Flash' },
+  { id: 'gemini-2.5-flash-lite', name: 'Gemini 2.5 Flash Lite', desc: 'Fast and lightweight model', shortName: '2.5 Lite' },
+  { id: 'gemini-3-flash', name: 'Gemini 3 Flash', desc: 'Next-gen default model', shortName: '3 Flash' },
+  { id: 'gemini-3.1-flash-lite', name: 'Gemini 3.1 Flash Lite', desc: 'Next-gen lightweight model', shortName: '3.1 Lite' },
+  { id: 'gemini-3.5-flash', name: 'Gemini 3.5 Flash', desc: 'Next-gen high-performance model', shortName: '3.5 Flash' },
 ] as const
 
 export type ModelId = (typeof MODELS)[number]['id']

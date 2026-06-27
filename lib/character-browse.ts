@@ -2,9 +2,9 @@ import type { Character } from '@/lib/types'
 import { getCharacterChatCountValue } from '@/lib/character-display'
 
 export const SORT_OPTIONS = [
-  { id: 'popular', label: '대화 많이 나눈 순' },
-  { id: 'latest', label: '최신순' },
-  { id: 'name', label: '이름순' },
+  { id: 'popular', label: 'Most chatted' },
+  { id: 'latest', label: 'Newest' },
+  { id: 'name', label: 'Name' },
 ] as const
 
 export type CharacterSortId = (typeof SORT_OPTIONS)[number]['id']
@@ -12,9 +12,9 @@ export type CharacterSortId = (typeof SORT_OPTIONS)[number]['id']
 export type BrowseSortTab = 'relevance' | 'chat_count' | 'newest'
 
 export const BROWSE_SORT_TABS: { id: BrowseSortTab; label: string }[] = [
-  { id: 'relevance', label: '관련도' },
-  { id: 'chat_count', label: '대화순' },
-  { id: 'newest', label: '최신순' },
+  { id: 'relevance', label: 'Relevance' },
+  { id: 'chat_count', label: 'Most chatted' },
+  { id: 'newest', label: 'Newest' },
 ]
 
 function getSearchRelevanceScore(character: Character, keyword: string): number {
@@ -87,7 +87,7 @@ export function sortCharacters(
 }
 
 export function filterByGenre(characters: Character[], genre: string): Character[] {
-  if (genre === '전체') return characters
+  if (genre === 'all') return characters
 
   return characters.filter((character) =>
     character.genres.some((item) => item.toLowerCase() === genre.toLowerCase()),
@@ -106,7 +106,7 @@ export function filterBySearch(characters: Character[], search: string): Charact
   )
 }
 
-// 홈 카테고리 칩 → 장르 필터 (랭킹·추천 탭은 전체 표시)
+// Home category chips → genre filter (ranking/recommend tabs show all)
 const HOME_CATEGORY_GENRES = new Set([
   '로맨스',
   '판타지',
@@ -114,6 +114,23 @@ const HOME_CATEGORY_GENRES = new Set([
   'GL',
   'BL',
 ])
+
+export type HomeCategory = {
+  id: string
+  label: string
+}
+
+export const HOME_CATEGORIES: HomeCategory[] = [
+  { id: 'for-you', label: 'For You' },
+  { id: 'new-ranking', label: 'New Ranking' },
+  { id: 'all-ranking', label: 'All Ranking' },
+  { id: 'today-new', label: "Today's Picks" },
+  { id: '로맨스', label: 'Romance' },
+  { id: '판타지', label: 'Fantasy' },
+  { id: '시뮬레이션', label: 'Simulation' },
+  { id: 'GL', label: 'GL' },
+  { id: 'BL', label: 'BL' },
+]
 
 export function filterByHomeCategory(
   characters: Character[],

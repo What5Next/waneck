@@ -9,15 +9,15 @@ import { SegmentedControl } from '@/components/ui/segmented-control'
 type NotificationTab = 'notifications' | 'notices' | 'updates'
 
 const NOTIFICATION_OPTIONS = [
-  { value: 'notifications' as const, label: '알림' },
-  { value: 'notices' as const, label: '공지' },
-  { value: 'updates' as const, label: '업데이트' },
+  { value: 'notifications' as const, label: 'Notifications' },
+  { value: 'notices' as const, label: 'Notices' },
+  { value: 'updates' as const, label: 'Updates' },
 ]
 
 const EMPTY_MESSAGES: Record<NotificationTab, string> = {
-  notifications: '알림이 없습니다',
-  notices: '공지가 없습니다',
-  updates: '업데이트가 없습니다',
+  notifications: 'No notifications',
+  notices: 'No notices',
+  updates: 'No updates',
 }
 
 /** PopoverMenuContent 내부 콘텐츠 */
@@ -26,7 +26,7 @@ export function NotificationsPanelContent() {
 
   return (
     <>
-      <h2 className="mb-4 text-base font-bold text-foreground">알림</h2>
+      <h2 className="mb-4 text-base font-bold text-foreground">Notifications</h2>
 
       <SegmentedControl
         value={activeTab}
@@ -35,7 +35,7 @@ export function NotificationsPanelContent() {
         shape="rounded"
         layout="equal"
         className="mb-4 w-full"
-        aria-label="알림 종류"
+        aria-label="Notification type"
       />
 
       <EmptyState

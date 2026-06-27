@@ -20,7 +20,7 @@ import {
 import { cn } from "@/lib/utils";
 
 function formatKrw(amount: number) {
-  return `${amount.toLocaleString("ko-KR")}원`;
+  return `₩${amount.toLocaleString("en-US")}`;
 }
 
 export function WonShopView() {
@@ -37,35 +37,33 @@ export function WonShopView() {
 
   function handleCheckout() {
     if (activeTab === "free") {
-      toast.message("무료 won 지급은 준비 중이에요.");
+      toast.message("Free won rewards are coming soon.");
       return;
     }
 
     if (!selectedPackage) {
-      toast.error("상품을 선택해주세요.");
+      toast.error("Please select a package.");
       return;
     }
 
-    toast.message("결제는 준비 중이에요.");
+    toast.message("Checkout is coming soon.");
   }
 
   return (
     <div className="scroll-hide flex h-full min-h-0 flex-col overflow-y-auto bg-background pb-8">
-      {/* 잔액 */}
       <section className="px-4 pt-5">
         <div className="rounded-2xl bg-muted/30 px-4 py-4">
-          <p className="text-xs font-medium text-muted-foreground">나의 won</p>
+          <p className="text-xs font-medium text-muted-foreground">My won</p>
           <div className="mt-1 flex items-center gap-2">
             <Gem className="h-5 w-5 text-primary" aria-hidden />
             <span className="text-2xl font-bold tabular-nums text-foreground">
               {(profile?.token_balance ?? 0).toLocaleString("ko-KR")}
             </span>
-            <span className="text-sm text-muted-foreground">개</span>
+            <span className="text-sm text-muted-foreground">won</span>
           </div>
         </div>
       </section>
 
-      {/* 프로모 배너 */}
       <section className="px-4 pt-4">
         <div className="flex items-center gap-3 rounded-2xl bg-primary/10 px-4 py-3.5">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15">
@@ -73,16 +71,15 @@ export function WonShopView() {
           </div>
           <div className="min-w-0">
             <p className="text-sm font-semibold text-foreground">
-              첫 결제 시 보너스 won 지급
+              Bonus won on your first purchase
             </p>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              지금 충전하면 추가 혜택을 받을 수 있어요
+              Top up now for extra rewards
             </p>
           </div>
         </div>
       </section>
 
-      {/* 탭 */}
       <section className="px-4 pt-5">
         <SegmentedControl
           value={activeTab}
@@ -94,16 +91,15 @@ export function WonShopView() {
           size="md"
           columns={2}
           className="w-full"
-          aria-label="won 충전 방식"
+          aria-label="won purchase options"
         />
       </section>
 
       {activeTab === "purchase" ? (
         <>
-          {/* 상품 */}
           <section className="px-4 pt-5">
             <h2 className="mb-3 text-sm font-semibold text-foreground">
-              상품 구성
+              Packages
             </h2>
             <div className="grid grid-cols-2 gap-2.5">
               {WON_PACKAGES.map((item) => (
@@ -117,10 +113,9 @@ export function WonShopView() {
             </div>
           </section>
 
-          {/* 결제 수단 */}
           <section className="px-4 pt-6">
             <h2 className="mb-3 text-sm font-semibold text-foreground">
-              결제 수단
+              Payment method
             </h2>
             <div className="space-y-2">
               {WON_PAYMENT_METHODS.map((method) => {
@@ -154,7 +149,6 @@ export function WonShopView() {
             </div>
           </section>
 
-          {/* 결제 CTA */}
           <section className="px-4 pt-6">
             <Button
               type="button"
@@ -162,8 +156,8 @@ export function WonShopView() {
               onClick={handleCheckout}
             >
               {selectedPackage
-                ? `${formatKrw(selectedPackage.priceKrw)} 결제하기`
-                : "결제하기"}
+                ? `Pay ${formatKrw(selectedPackage.priceKrw)}`
+                : "Checkout"}
             </Button>
           </section>
         </>
@@ -174,10 +168,10 @@ export function WonShopView() {
               message={
                 <>
                   <span className="block text-sm font-semibold text-foreground">
-                    무료 won 받기
+                    Get free won
                   </span>
                   <span className="mt-1 block text-xs text-muted-foreground">
-                    출석·미션 보상은 곧 제공될 예정이에요.
+                    Check-in and mission rewards are coming soon.
                   </span>
                 </>
               }
@@ -191,16 +185,15 @@ export function WonShopView() {
               className="mt-4 rounded-xl"
               onClick={handleCheckout}
             >
-              무료로 받기
+              Claim free won
             </Button>
           </div>
         </section>
       )}
 
-      {/* 환불 안내 */}
       <section className="px-4 pt-8">
         <h2 className="mb-2 text-xs font-semibold text-muted-foreground">
-          환불 정책 및 won 이용 안내
+          Refund policy & won usage
         </h2>
         <ul className="space-y-1.5 text-[11px] leading-relaxed text-muted-foreground">
           {WON_REFUND_NOTICES.map((notice) => (
@@ -246,13 +239,13 @@ function PackageCard({
       <div className="flex items-center gap-1.5">
         <Gem className="h-4 w-4 text-primary" aria-hidden />
         <span className="text-base font-bold tabular-nums text-foreground">
-          {item.wonAmount.toLocaleString("ko-KR")}
+          {item.wonAmount.toLocaleString("en-US")}
         </span>
       </div>
 
       {item.bonusWon ? (
         <p className="mt-1 text-[11px] font-medium text-primary">
-          +{item.bonusWon.toLocaleString("ko-KR")} 보너스
+          +{item.bonusWon.toLocaleString("en-US")} bonus
         </p>
       ) : null}
 
@@ -262,7 +255,7 @@ function PackageCard({
 
       {item.bonusWon ? (
         <p className="mt-0.5 text-[10px] text-muted-foreground">
-          총 {totalWon.toLocaleString("ko-KR")} won
+          {totalWon.toLocaleString("en-US")} won total
         </p>
       ) : null}
     </button>

@@ -27,7 +27,7 @@ function SidebarToggleButton({
     <IconButton
       onClick={onClick}
       className={className}
-      aria-label={collapsed ? '사이드바 펼치기' : '사이드바 접기'}
+      aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
       aria-expanded={!collapsed}
     >
       {collapsed ? (
@@ -84,7 +84,7 @@ export function Header({ className }: { className?: string }) {
           className="sm:hidden"
         />
         <Link href="/" className="text-lg font-bold tracking-tight text-foreground">
-          와넥
+          Waneck
         </Link>
       </div>
 
@@ -93,7 +93,7 @@ export function Header({ className }: { className?: string }) {
         <IconButton
           onClick={() => setMobileSearchOpen(true)}
           className="sm:hidden"
-          aria-label="캐릭터 검색"
+          aria-label="Search characters"
         >
           <Search className={headerIconClass} />
         </IconButton>
@@ -106,7 +106,7 @@ export function Header({ className }: { className?: string }) {
         <Link
           href="/won"
           className="flex h-9 items-center gap-1.5 rounded-full px-2 text-foreground transition-colors hover:bg-muted"
-          aria-label="won 충전"
+          aria-label="Top up won"
         >
           <Gem className="h-4 w-4 text-primary" aria-hidden />
           <span className="text-sm font-medium tabular-nums">{(profile?.token_balance ?? 0).toLocaleString("ko-KR")}</span>
@@ -118,7 +118,7 @@ export function Header({ className }: { className?: string }) {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             expandOnFocus
-            aria-label="캐릭터 검색"
+            aria-label="Search characters"
           />
         </form>
 

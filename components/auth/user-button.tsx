@@ -31,7 +31,7 @@ export function UserButton() {
           <IconButton
             onClick={() => setLoginOpen(true)}
             active={loginOpen}
-            aria-label="로그인"
+            aria-label="Sign in"
           >
             <LogIn className={headerIconClass} />
           </IconButton>
@@ -58,7 +58,7 @@ export function UserButton() {
           type="button"
           className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-muted text-sm font-bold text-foreground"
           aria-haspopup="menu"
-          aria-label="프로필 메뉴"
+          aria-label="Profile menu"
         >
           {user.user_metadata?.avatar_url ? (
             // eslint-disable-next-line @next/next/no-img-element
