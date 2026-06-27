@@ -4,6 +4,14 @@ import Link from 'next/link'
 import { MessageCircle, Plus, Trash2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from '@/components/ui/dialog'
 import { LoginModal } from '@/components/auth/login-modal'
 import { useAuth } from '@/hooks/use-auth'
 import { useStartChat } from '@/hooks/mutations/use-start-chat'
@@ -36,6 +44,7 @@ export function CharacterChatSection({ characterId }: Props) {
     isAuthenticated,
   )
   const [showLogin, setShowLogin] = useState(false)
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
 
   async function handleNewChat() {
     if (!isAuthenticated) {
@@ -54,6 +63,41 @@ export function CharacterChatSection({ characterId }: Props) {
         onOpenChange={setShowLogin}
         redirectPath={`/characters/${characterId}?autostart=true`}
       />
+
+      <Dialog
+        open={pendingDeleteId !== null}
+        onOpenChange={(open) => { if (!open) setPendingDeleteId(null) }}
+      >
+        <DialogContent variant="center" showClose={false}>
+          <DialogHeader>
+            <DialogTitle>Delete chat?</DialogTitle>
+            <DialogDescription>
+              This conversation and all its messages will be permanently deleted.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-6 flex gap-2">
+            <DialogClose asChild>
+              <Button variant="outline" className="flex-1 rounded-xl">
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button
+              variant="destructive"
+              className="flex-1 rounded-xl"
+              disabled={deleteMutation.isPending}
+              onClick={() => {
+                if (pendingDeleteId) {
+                  deleteMutation.mutate(pendingDeleteId, {
+                    onSuccess: () => setPendingDeleteId(null),
+                  })
+                }
+              }}
+            >
+              {deleteMutation.isPending ? 'Deleting…' : 'Delete'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {hasPrevious ? (
         <div className="flex flex-col gap-3">
@@ -79,8 +123,7 @@ export function CharacterChatSection({ characterId }: Props) {
                 <button
                   type="button"
                   aria-label="Delete chat"
-                  onClick={() => deleteMutation.mutate(conv.id)}
-                  disabled={deleteMutation.isPending}
+                  onClick={() => setPendingDeleteId(conv.id)}
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                 >
                   <Trash2 className="h-4 w-4" />
