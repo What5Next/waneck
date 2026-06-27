@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { ChatSettingsPanel } from "@/components/chat/chat-settings-panel";
 import { useFocusMode } from "@/components/layout/focus-mode-context";
 import { useSidebar } from "@/components/layout/sidebar-context";
+import { BottomSheetContent } from "@/components/ui/bottom-sheet";
+import { Dialog, DialogTitle } from "@/components/ui/dialog";
 import { FadeEdge } from "@/components/ui/fade-edge";
 import { IconButton } from "@/components/ui/icon-button";
 import { PopoverMenu, PopoverMenuTrigger } from "@/components/ui/popover-menu";
@@ -27,7 +29,8 @@ export function ChatHeader({
   characterName,
   conversationId,
 }: ChatHeaderProps) {
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [mobileSettingsOpen, setMobileSettingsOpen] = useState(false);
+  const [desktopSettingsOpen, setDesktopSettingsOpen] = useState(false);
   const { focusMode, toggleFocusMode } = useFocusMode();
   const { closeMobileSidebar } = useSidebar();
 
@@ -42,9 +45,9 @@ export function ChatHeader({
 
     try {
       await navigator.clipboard.writeText(shareUrl);
-      toast.success("링크를 복사했어요.");
+      toast.success("Link copied.");
     } catch {
-      toast.error("복사에 실패했어요.");
+      toast.error("Failed to copy link.");
     }
   }
 
@@ -54,7 +57,7 @@ export function ChatHeader({
   }
 
   function handleSearch() {
-    toast.message("대화 검색은 준비 중이에요.");
+    toast.message("Chat search is coming soon.");
   }
 
   return (
@@ -78,7 +81,7 @@ export function ChatHeader({
         <IconButton
           size="md"
           shape="square"
-          aria-label="대화 링크 복사"
+          aria-label="Copy chat link"
           onClick={handleCopyTitle}
         >
           <Copy className="h-4 w-4" />
@@ -86,7 +89,7 @@ export function ChatHeader({
         <IconButton
           size="md"
           shape="square"
-          aria-label={focusMode ? "집중 모드 끄기" : "집중 모드"}
+          aria-label={focusMode ? "Exit focus mode" : "Focus mode"}
           onClick={handleFocusMode}
           className={cn(
             "hidden sm:flex",
@@ -103,7 +106,7 @@ export function ChatHeader({
         <IconButton
           size="md"
           shape="square"
-          aria-label="대화 검색"
+          aria-label="Search chat"
           onClick={handleSearch}
         >
           <Search className="h-4 w-4" />
@@ -112,37 +115,79 @@ export function ChatHeader({
         <Link
           href="/won"
           className="flex h-8 items-center gap-1.5 rounded-lg px-1.5 text-foreground transition-colors hover:bg-muted"
-          aria-label="won 충전"
+          aria-label="Top up won"
         >
           <Gem className="h-4 w-4 text-primary" aria-hidden />
           <span className="text-sm font-medium tabular-nums">0</span>
         </Link>
 
-        <PopoverMenu open={settingsOpen} onOpenChange={setSettingsOpen}>
-          <PopoverMenuTrigger asChild>
-            <IconButton
-              size="md"
-              shape="square"
-              aria-label="채팅 설정"
-              className={
-                settingsOpen
-                  ? "bg-primary text-primary-foreground hover:text-primary-foreground"
-                  : undefined
-              }
-            >
-              <SlidersHorizontal className="h-4 w-4" />
-            </IconButton>
-          </PopoverMenuTrigger>
+        {/* 모바일: 바텀시트 (PopoverMenu와 open 상태 분리 — click-outside 충돌 방지) */}
+        <div className="sm:hidden">
+          <IconButton
+            size="md"
+            shape="square"
+            aria-label="Chat settings"
+            aria-expanded={mobileSettingsOpen}
+            className={
+              mobileSettingsOpen
+                ? "bg-primary text-primary-foreground hover:text-primary-foreground"
+                : undefined
+            }
+            onClick={() => setMobileSettingsOpen(true)}
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+          </IconButton>
 
-          {settingsOpen ? (
-            <ChatSettingsPanel
-              characterId={characterId}
-              characterName={characterName}
-              conversationId={conversationId}
-              onClose={() => setSettingsOpen(false)}
-            />
-          ) : null}
-        </PopoverMenu>
+          <Dialog open={mobileSettingsOpen} onOpenChange={setMobileSettingsOpen}>
+            <BottomSheetContent
+              open={mobileSettingsOpen}
+              onDismiss={() => setMobileSettingsOpen(false)}
+              aria-describedby={undefined}
+            >
+              <DialogTitle className="sr-only">Chat settings</DialogTitle>
+              <ChatSettingsPanel
+                characterId={characterId}
+                characterName={characterName}
+                conversationId={conversationId}
+                presentation="sheet"
+                onClose={() => setMobileSettingsOpen(false)}
+              />
+            </BottomSheetContent>
+          </Dialog>
+        </div>
+
+        {/* 데스크톱: 팝오버 */}
+        <div className="hidden sm:block">
+          <PopoverMenu
+            open={desktopSettingsOpen}
+            onOpenChange={setDesktopSettingsOpen}
+          >
+            <PopoverMenuTrigger asChild>
+              <IconButton
+                size="md"
+                shape="square"
+                aria-label="Chat settings"
+                className={
+                  desktopSettingsOpen
+                    ? "bg-primary text-primary-foreground hover:text-primary-foreground"
+                    : undefined
+                }
+              >
+                <SlidersHorizontal className="h-4 w-4" />
+              </IconButton>
+            </PopoverMenuTrigger>
+
+            {desktopSettingsOpen ? (
+              <ChatSettingsPanel
+                characterId={characterId}
+                characterName={characterName}
+                conversationId={conversationId}
+                presentation="popover"
+                onClose={() => setDesktopSettingsOpen(false)}
+              />
+            ) : null}
+          </PopoverMenu>
+        </div>
       </div>
       </header>
     </FadeEdge>
