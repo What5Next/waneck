@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { FormEvent, useEffect, useState } from 'react'
+import { FormEvent, useState } from 'react'
 import { PanelLeft, PanelLeftClose, Search, Gem } from 'lucide-react'
 
 import { MobileSearchDialog } from '@/components/layout/mobile-search-dialog'
@@ -42,15 +42,18 @@ function SidebarToggleButton({
 export function Header({ className }: { className?: string }) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [query, setQuery] = useState('')
+  const urlQuery = searchParams.get('search') ?? ''
+  const [query, setQuery] = useState(urlQuery)
+  const [committedUrlQuery, setCommittedUrlQuery] = useState(urlQuery)
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const { collapsed, mobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar()
   const { data: profile } = useProfileQuery()
 
-  // 탐색 페이지에서 URL 검색어와 입력창 동기화
-  useEffect(() => {
-    setQuery(searchParams.get('search') ?? '')
-  }, [searchParams])
+  // URL 검색어가 바뀌면 입력창 동기화 (React 권장 derived state 패턴)
+  if (committedUrlQuery !== urlQuery) {
+    setCommittedUrlQuery(urlQuery)
+    setQuery(urlQuery)
+  }
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
