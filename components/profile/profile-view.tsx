@@ -25,15 +25,15 @@ import { cn } from "@/lib/utils";
 import { useProfileQuery } from "@/hooks/queries/use-profile-query";
 
 const PROFILE_TABS = [
-  { value: "characters" as const, label: "캐릭터" },
-  { value: "followers" as const, label: "팔로워" },
-  { value: "following" as const, label: "팔로잉" },
+  { value: "characters" as const, label: "Characters" },
+  { value: "followers" as const, label: "Followers" },
+  { value: "following" as const, label: "Following" },
 ];
 
 const CHARACTER_SORT_OPTIONS = [
-  { id: "newest", label: "최신순" },
-  { id: "oldest", label: "오래된순" },
-  { id: "name", label: "이름순" },
+  { id: "newest", label: "Newest" },
+  { id: "oldest", label: "Oldest" },
+  { id: "name", label: "Name" },
 ] as const;
 
 type CharacterSortId = (typeof CHARACTER_SORT_OPTIONS)[number]["id"];
@@ -82,7 +82,7 @@ export function ProfileView() {
     try {
       if (navigator.share) {
         await navigator.share({
-          title: `${profile.display_name} | 와넥`,
+          title: `${profile.display_name} | Waneck`,
           url: shareUrl,
         });
         return;
@@ -99,7 +99,7 @@ export function ProfileView() {
       <div className="flex h-full min-h-0 flex-col bg-background">
         <div className="h-14 shrink-0 border-b border-border" />
         <div className="flex flex-1 items-center justify-center">
-          <p className="text-sm text-muted-foreground">불러오는 중…</p>
+          <p className="text-sm text-muted-foreground">Loading…</p>
         </div>
       </div>
     );
@@ -114,7 +114,7 @@ export function ProfileView() {
           shape="square"
           onClick={() => router.back()}
           className="text-foreground"
-          aria-label="뒤로 가기"
+          aria-label="Go back"
         >
           <ChevronLeft className="h-5 w-5" />
         </IconButton>
@@ -139,19 +139,19 @@ export function ProfileView() {
                 {profile.display_name}
               </h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                <span>{profile.follower_count} 팔로워</span>
+                <span>{profile.follower_count} followers</span>
                 <span className="mx-2 text-border">|</span>
-                <span>{profile.following_count} 팔로잉</span>
+                <span>{profile.following_count} following</span>
               </p>
             </div>
 
             <div className="flex shrink-0 items-center gap-2">
-              <IconButton onClick={handleShare} aria-label="프로필 공유">
+              <IconButton onClick={handleShare} aria-label="Share profile">
                 <Share2 className="h-4 w-4" />
               </IconButton>
-              <Button type="button" variant="pill" aria-label="프로필 수정">
+              <Button type="button" variant="pill" aria-label="Edit profile">
                 <Pencil className="h-3.5 w-3.5" />
-                프로필 수정
+                Edit profile
               </Button>
             </div>
           </div>
@@ -165,7 +165,7 @@ export function ProfileView() {
                 🔮
               </span>
             }
-            label="최근 30일 받은 won"
+            label="won received (30 days)"
             value={String(profile.wons_received_30d)}
           />
         </RowPanel>
@@ -183,9 +183,9 @@ export function ProfileView() {
             <>
               <div className="mb-4 flex items-center justify-between gap-3">
                 <p className="text-xs text-muted-foreground">
-                  {profile.public_character_count} 공개 캐릭터
+                  {profile.public_character_count} public characters
                   <span className="mx-1.5">|</span>
-                  {profile.chat_count} 대화
+                  {profile.chat_count} chats
                 </p>
 
                 <PopoverMenu open={sortMenuOpen} onOpenChange={setSortMenuOpen}>
@@ -230,7 +230,7 @@ export function ProfileView() {
 
               {sortedCharacters.length === 0 ? (
                 <EmptyState
-                  message="결과가 없습니다."
+                  message="No results."
                   className="min-h-[200px] py-16"
                   messageClassName="text-sm"
                 />
@@ -249,8 +249,8 @@ export function ProfileView() {
             <EmptyState
               message={
                 activeTab === "followers"
-                  ? "아직 팔로워가 없습니다."
-                  : "아직 팔로잉하는 사용자가 없습니다."
+                  ? "No followers yet."
+                  : "Not following anyone yet."
               }
               className="min-h-[200px] py-16"
               messageClassName="text-sm"

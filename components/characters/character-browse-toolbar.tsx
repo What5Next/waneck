@@ -20,8 +20,8 @@ const SORT_TAB_OPTIONS = BROWSE_SORT_TABS.map((tab) => ({
 }))
 
 const VIEW_OPTIONS = [
-  { value: 'grid' as const, label: '그리드', icon: LayoutGrid, 'aria-label': '그리드 보기' },
-  { value: 'list' as const, label: '리스트', icon: List, 'aria-label': '리스트 보기' },
+  { value: 'grid' as const, label: 'Grid', icon: LayoutGrid, 'aria-label': 'Grid view' },
+  { value: 'list' as const, label: 'List', icon: List, 'aria-label': 'List view' },
 ]
 
 interface CharacterBrowseToolbarProps {
@@ -44,7 +44,7 @@ export function CharacterBrowseToolbar({
         onValueChange={onSortTabChange}
         options={SORT_TAB_OPTIONS}
         columns={3}
-        aria-label="정렬"
+        aria-label="Sort"
       />
 
       <SegmentedControl
@@ -52,7 +52,7 @@ export function CharacterBrowseToolbar({
         onValueChange={onViewModeChange}
         options={VIEW_OPTIONS}
         iconOnly
-        aria-label="보기 방식"
+        aria-label="View mode"
       />
     </div>
   )

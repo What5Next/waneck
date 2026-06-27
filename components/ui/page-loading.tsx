@@ -7,7 +7,7 @@ interface PageLoadingProps {
 
 /** 전체 페이지 로딩 플레이스홀더 */
 export function PageLoading({
-  message = '불러오는 중…',
+  message = 'Loading…',
   className,
 }: PageLoadingProps) {
   return (

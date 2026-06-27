@@ -82,7 +82,7 @@ export default function ChatWindow({
     } catch {
       setMessages(next.slice(0, -1))
       setDraft(trimmed)
-      toast.error('전송에 실패했어요. 다시 전송해주세요.')
+      toast.error('Failed to send. Please try again.')
     } finally {
       setIsLoading(false)
     }

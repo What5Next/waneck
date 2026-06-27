@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { ChevronRight, Volume2, X } from "lucide-react";
 
 import {
+  HOME_CATEGORIES,
   SORT_OPTIONS,
   type CharacterSortId,
   filterByHomeCategory,
@@ -24,18 +25,6 @@ import { useCharactersQuery } from "@/hooks/queries/use-characters-query";
 /** 카테고리 chip 하단 fade 높이 */
 const CHIP_FADE_SIZE = 16;
 
-const CATEGORIES = [
-  "추천",
-  "신규 랭킹",
-  "전체 랭킹",
-  "오늘 신작",
-  "로맨스",
-  "판타지",
-  "시뮬레이션",
-  "GL",
-  "BL",
-];
-
 export default function Home() {
   return (
     <Suspense>
@@ -48,7 +37,7 @@ function HomePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("search") ?? "";
-  const [activeCategory, setActiveCategory] = useState("추천");
+  const [activeCategory, setActiveCategory] = useState(HOME_CATEGORIES[0].id);
   const [activeSort, setActiveSort] = useState<CharacterSortId>("popular");
   const [showNotice, setShowNotice] = useState(true);
   // P2: useEffect fetch 대신 TanStack Query 캐시 사용
@@ -79,7 +68,7 @@ function HomePage() {
       scrollClassName="pb-2 pt-2"
       header={
         <>
-          <h1 className="sr-only">와넥 홈</h1>
+          <h1 className="sr-only">Waneck Home</h1>
 
           <FadeEdge
             bottom
@@ -88,16 +77,16 @@ function HomePage() {
             className="z-10 shrink-0 bg-background"
           >
             <nav
-              aria-label="카테고리"
+              aria-label="Categories"
               className="scroll-hide flex min-h-14 gap-2 overflow-x-auto px-4 py-3"
             >
-              {CATEGORIES.map((category) => (
+              {HOME_CATEGORIES.map((category) => (
                 <Chip
-                  key={category}
-                  selected={activeCategory === category}
-                  onClick={() => setActiveCategory(category)}
+                  key={category.id}
+                  selected={activeCategory === category.id}
+                  onClick={() => setActiveCategory(category.id)}
                 >
-                  {category}
+                  {category.label}
                 </Chip>
               ))}
             </nav>
@@ -131,7 +120,7 @@ function HomePage() {
                 <div className="absolute inset-0 flex gap-3 p-4">
                   <div className="flex h-full flex-1 flex-col justify-end gap-1.5 overflow-hidden">
                     <span className="inline-block w-fit rounded-sm bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
-                      NEW 캐릭터
+                      NEW CHARACTER
                     </span>
                     <h2 className="line-clamp-1 text-base font-bold leading-snug text-white">
                       {featuredCharacter.name}
@@ -160,7 +149,7 @@ function HomePage() {
                       type="button"
                       className="mt-1 w-fit rounded-lg border border-white/30 px-3 py-1 text-[11px] text-white hover:bg-white/10"
                     >
-                      자세히보기
+                      View details
                     </button>
                   </div>
                   <div className="relative mt-auto aspect-square h-full shrink-0">
@@ -188,18 +177,18 @@ function HomePage() {
         <div className="flex items-center justify-between overflow-hidden rounded-xl border border-border bg-card px-3 py-3">
           <div>
             <p className="text-[11px] leading-tight text-muted-foreground">
-              함께 즐기면,{"\n"}더 재미있는
+              More fun{"\n"}together
             </p>
-            <p className="mt-0.5 text-sm font-bold text-primary">파티챗</p>
+            <p className="mt-0.5 text-sm font-bold text-primary">Party Chat</p>
           </div>
           <span className="text-3xl">💬</span>
         </div>
         <div className="flex items-center justify-between overflow-hidden rounded-xl border border-border bg-card px-3 py-3">
           <div>
             <p className="text-[11px] leading-tight text-muted-foreground">
-              오리지널{"\n"}A-RPG
+              Original{"\n"}A-RPG
             </p>
-            <p className="mt-0.5 text-sm font-bold text-primary">이세계 모험</p>
+            <p className="mt-0.5 text-sm font-bold text-primary">Isekai Quest</p>
           </div>
           <span className="text-3xl">⚔️</span>
         </div>
@@ -210,12 +199,11 @@ function HomePage() {
           <span className="text-3xl">🎁</span>
           <div>
             <p className="text-[13px] font-bold leading-snug text-black">
-              신규 사용자에게만 드리는 대박 혜택
+              Exclusive bonus for new users
             </p>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
-              미션 완료 시{" "}
-              <span className="font-semibold text-primary">포인트 1000</span>{" "}
-              증정
+              Complete missions to earn{" "}
+              <span className="font-semibold text-primary">1,000 points</span>
             </p>
           </div>
         </div>
@@ -227,14 +215,14 @@ function HomePage() {
           <div className="flex items-center gap-2">
             <Volume2 className="h-4 w-4 shrink-0 text-primary" />
             <p className="text-[13px] text-foreground">
-              [업데이트] 내 취향 설정 기능 추가
+              [Update] Preference settings are now available
             </p>
           </div>
           <IconButton
             size="xs"
             onClick={() => setShowNotice(false)}
             className="ml-2"
-            aria-label="닫기"
+            aria-label="Close"
           >
             <X className="text-muted-foreground" />
           </IconButton>
@@ -242,14 +230,14 @@ function HomePage() {
       ) : null}
 
       <CharacterSection
-        title="떠오르는 신예 창작자들"
+        title="Rising Creators"
         characters={risingCreators}
         loading={loading}
         horizontal
       />
 
       <CharacterSection
-        title="요즘 트렌드"
+        title="Trending Now"
         characters={trendingCharacters}
         loading={loading}
         showRank
@@ -257,10 +245,10 @@ function HomePage() {
       />
 
       <section className="mt-8">
-        <SectionHeader title="캐릭터 모아보기" />
+        <SectionHeader title="Browse Characters" />
 
         <div
-          aria-label="정렬"
+          aria-label="Sort"
           className="scroll-hide mb-4 flex gap-2 overflow-x-auto px-4 pb-1"
         >
           {SORT_OPTIONS.map((option) => (
@@ -279,7 +267,7 @@ function HomePage() {
           characters={allCharacters}
           loading={loading}
           className="mt-0"
-          emptyMessage="등록된 캐릭터가 없습니다."
+          emptyMessage="No characters yet."
         />
       </section>
     </ExplorePageLayout>

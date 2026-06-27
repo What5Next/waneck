@@ -14,11 +14,10 @@ import { useCreateCharacter } from '@/hooks/mutations/use-create-character'
 type TabId = 'settings' | 'intro' | 'prompt' | 'advanced' | 'detail'
 
 const TABS: { id: TabId; label: string; required?: boolean }[] = [
-  { id: 'settings', label: '캐릭터 설정', required: true },
-  { id: 'intro',    label: '인트로',     required: true },
-  { id: 'prompt',   label: '프롬프트',   required: true },
-  // { id: 'advanced', label: '고급 기능' },
-  { id: 'detail',   label: '캐릭터 상세' },
+  { id: 'settings', label: 'Character', required: true },
+  { id: 'intro',    label: 'Intro',     required: true },
+  { id: 'prompt',   label: 'Prompt',   required: true },
+  { id: 'detail',   label: 'Details' },
 ]
 
 const TAB_ORDER: TabId[] = TABS.map((t) => t.id)
@@ -79,7 +78,7 @@ function SettingsTab({
   return (
     <div className="flex flex-col gap-6">
       {/* 캐릭터 이미지 */}
-      <Field label="캐릭터 이미지">
+      <Field label="Character image">
         <div className="flex flex-col items-center gap-3">
           {/* 이미지 프리뷰 */}
           <div className="relative h-[140px] w-[140px] overflow-hidden rounded-2xl border border-border bg-muted">
@@ -88,14 +87,14 @@ function SettingsTab({
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={form.imageUrl}
-                  alt="캐릭터 이미지"
+                  alt="Character image"
                   className="h-full w-full object-cover"
                 />
                 <button
                   type="button"
                   onClick={() => { onFileChange(null); setForm((f) => ({ ...f, imageUrl: '' })) }}
                   className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white"
-                  aria-label="이미지 제거"
+                  aria-label="Remove image"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -125,7 +124,7 @@ function SettingsTab({
               }}
             >
               <Plus className="h-3.5 w-3.5" />
-              이미지 생성
+              Generate image
             </Button>
             <Button
               type="button"
@@ -135,7 +134,7 @@ function SettingsTab({
               onClick={() => fileRef.current?.click()}
             >
               <Upload className="h-3.5 w-3.5" />
-              업로드
+              Upload
             </Button>
           </div>
 
@@ -150,24 +149,24 @@ function SettingsTab({
       </Field>
 
       {/* 캐릭터 이름 */}
-      <Field label="캐릭터 이름" required>
+      <Field label="Character name" required>
         <TextInput
           value={form.name}
           onChange={(v) => setForm((f) => ({ ...f, name: v }))}
-          placeholder="이름을 입력하세요"
+          placeholder="Enter a name"
           maxLength={30}
         />
       </Field>
 
       {/* 한 줄 소개 */}
       <Field
-        label="한 줄 소개"
-        hint="캐릭터를 한 문장으로 소개해 주세요"
+        label="Tagline"
+        hint="Introduce your character in one sentence"
       >
         <TextInput
           value={form.tagline}
           onChange={(v) => setForm((f) => ({ ...f, tagline: v }))}
-          placeholder="예) 당신의 이야기를 들어드릴게요"
+          placeholder="e.g. I'm here to hear your story"
           maxLength={50}
         />
       </Field>
@@ -212,9 +211,9 @@ function IntroTab({
   return (
     <div className="flex flex-col gap-6">
       <Field
-        label="인트로 대화"
+        label="Intro conversation"
         required
-        hint="채팅 시작 시 보여줄 예시 대화를 작성해 주세요"
+        hint="Write sample dialogue shown when a chat starts"
       >
         <div className="flex flex-col gap-3">
           {form.introTurns.map((turn, idx) => (
@@ -225,8 +224,8 @@ function IntroTab({
                   onChange={(e) => updateTurn(idx, 'role', e.target.value)}
                   className="rounded-lg border border-border bg-card px-2 py-1 text-xs text-foreground focus:outline-none"
                 >
-                  <option value="user">사용자</option>
-                  <option value="model">캐릭터</option>
+                  <option value="user">User</option>
+                  <option value="model">Character</option>
                 </select>
                 {form.introTurns.length > 1 && (
                   <button
@@ -241,7 +240,7 @@ function IntroTab({
               <TextArea
                 value={turn.text}
                 onChange={(v) => updateTurn(idx, 'text', v)}
-                placeholder={turn.role === 'user' ? '사용자 메시지' : '캐릭터 응답'}
+                placeholder={turn.role === 'user' ? 'User message' : 'Character reply'}
                 rows={2}
               />
             </div>
@@ -254,7 +253,7 @@ function IntroTab({
             onClick={addTurn}
           >
             <Plus className="h-3.5 w-3.5" />
-            대화 추가
+            Add message
           </Button>
         </div>
       </Field>
@@ -274,26 +273,26 @@ function PromptTab({
   return (
     <div className="flex flex-col gap-6">
       <Field
-        label="시스템 프롬프트"
+        label="System prompt"
         required
-        hint="캐릭터의 성격, 말투, 역할을 AI에게 지시하는 문장을 작성해 주세요"
+        hint="Describe personality, tone, and role for the AI"
       >
         <TextArea
           value={form.system}
           onChange={(v) => setForm((f) => ({ ...f, system: v }))}
-          placeholder={`예) 너의 이름은 하나야. 따뜻하고 감성적인 20대 여자 친구야. 항상 상대방의 감정에 공감하고, 부드럽고 다정한 반말로 대화해. AI라고 절대 밝히지 마.`}
+          placeholder={`e.g. Your name is Hana. You're a warm, empathetic friend in your 20s. Always respond with casual, caring language. Never reveal you're an AI.`}
           rows={8}
           maxLength={2000}
         />
       </Field>
 
       <div className="rounded-xl border border-border bg-muted/50 p-4">
-        <p className="mb-2 text-xs font-medium text-foreground">작성 팁</p>
+        <p className="mb-2 text-xs font-medium text-foreground">Writing tips</p>
         <ul className="flex flex-col gap-1 text-xs leading-relaxed text-muted-foreground">
-          <li>• 이름, 나이, 성격을 명확하게 서술하세요</li>
-          <li>• 말투 (반말/존댓말, 이모지 사용 여부) 를 지정하세요</li>
-          <li>• &quot;AI라고 절대 밝히지 마&quot; 로 몰입감을 높이세요</li>
-          <li>• 특정 표현 패턴을 예시로 포함하면 좋아요</li>
+          <li>• Clearly state name, age, and personality</li>
+          <li>• Specify tone (casual/formal, emoji usage)</li>
+          <li>• Add &quot;Never reveal you&apos;re an AI&quot; for immersion</li>
+          <li>• Include example phrases when helpful</li>
         </ul>
       </div>
     </div>
@@ -321,8 +320,8 @@ function AdvancedTab({
     <div className="flex flex-col gap-6">
       {/* 추천 대화 */}
       <Field
-        label="추천 대화"
-        hint="채팅 화면에서 사용자에게 제안할 대화 예시 (최대 3개)"
+        label="Suggested replies"
+        hint="Up to 3 conversation starters shown in chat"
       >
         <div className="flex flex-col gap-2">
           {form.suggestions.map((s, idx) => (
@@ -330,7 +329,7 @@ function AdvancedTab({
               key={idx}
               value={s}
               onChange={(v) => updateSuggestion(idx, v)}
-              placeholder={`추천 대화 ${idx + 1}`}
+              placeholder={`Suggested reply ${idx + 1}`}
               maxLength={40}
             />
           ))}
@@ -339,13 +338,13 @@ function AdvancedTab({
 
       {/* 현재 상태 */}
       <Field
-        label="현재 상태"
-        hint="캐릭터 목록에 표시될 짧은 상태 메시지"
+        label="Status"
+        hint="Short status shown on character lists"
       >
         <TextInput
           value={form.mood}
           onChange={(v) => setForm((f) => ({ ...f, mood: v }))}
-          placeholder="예) 따뜻하게 기다리는 중"
+          placeholder="e.g. Waiting warmly"
           maxLength={20}
         />
       </Field>
@@ -362,12 +361,12 @@ function DetailTab({
   form: FormState
   setForm: React.Dispatch<React.SetStateAction<FormState>>
 }) {
-  const TAGS = ['감성', '직설', '지식', '유머', '판타지', '로맨스', '스릴러', '일상']
+  const TAGS = ['Emotional', 'Direct', 'Knowledge', 'Humor', 'Fantasy', 'Romance', 'Thriller', 'Slice of life']
 
   return (
     <div className="flex flex-col gap-6">
       {/* 태그 */}
-      <Field label="태그" hint="캐릭터를 가장 잘 표현하는 태그를 선택하세요">
+      <Field label="Tag" hint="Pick the tag that best fits your character">
         <div className="flex flex-wrap gap-2">
           {TAGS.map((tag) => (
             <button
@@ -389,13 +388,13 @@ function DetailTab({
 
       {/* 상세 소개 */}
       <Field
-        label="상세 소개"
-        hint="캐릭터 상세 페이지에 표시될 소개글"
+        label="Full description"
+        hint="Shown on the character detail page"
       >
         <TextArea
           value={form.desc}
           onChange={(v) => setForm((f) => ({ ...f, desc: v }))}
-          placeholder="캐릭터에 대해 자세히 소개해 주세요"
+          placeholder="Describe your character in detail"
           rows={5}
           maxLength={300}
         />
@@ -428,7 +427,7 @@ export function CharacterCreateForm() {
     })
     if (!res.ok) {
       const { error } = await res.json()
-      throw new Error(error ?? '이미지 업로드 실패')
+      throw new Error(error ?? 'Image upload failed')
     }
     const { publicUrl } = await res.json()
     return publicUrl
@@ -456,7 +455,7 @@ export function CharacterCreateForm() {
       })
       router.push(`/characters/${data.id}`)
     } catch (e) {
-      setError(e instanceof Error ? e.message : '저장에 실패했어요')
+      setError(e instanceof Error ? e.message : 'Failed to save')
     } finally {
       setSubmitting(false)
     }
@@ -487,18 +486,18 @@ export function CharacterCreateForm() {
           variant="ghost"
           size="icon"
           onClick={() => router.back()}
-          aria-label="뒤로가기"
+          aria-label="Go back"
         >
           <ChevronLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-base font-semibold text-foreground">캐릭터 만들기</h1>
+        <h1 className="text-base font-semibold text-foreground">Create character</h1>
         <div className="h-10 w-10" />
       </header>
 
       {/* 탭 바 */}
       <nav
         className="scroll-hide flex shrink-0 gap-0 overflow-x-auto border-b border-border bg-background"
-        aria-label="단계"
+        aria-label="Steps"
       >
         {TABS.map((tab) => (
           <button
@@ -542,7 +541,7 @@ export function CharacterCreateForm() {
           disabled={!canNext || submitting}
           className="w-full rounded-xl py-3 text-base font-semibold"
         >
-          {submitting ? '저장 중...' : isLast ? '완료' : '다음'}
+          {submitting ? 'Saving…' : isLast ? 'Done' : 'Next'}
         </Button>
       </div>
     </div>

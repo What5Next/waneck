@@ -86,7 +86,7 @@ function HorizontalSlider({
           size="sm"
           onClick={() => slide('left')}
           className="absolute left-1 top-[40%] z-10 -translate-y-1/2"
-          aria-label="이전"
+          aria-label="Previous"
         >
           <ChevronLeft />
         </IconButton>
@@ -99,7 +99,7 @@ function HorizontalSlider({
           size="sm"
           onClick={() => slide('right')}
           className="absolute right-1 top-[40%] z-10 -translate-y-1/2"
-          aria-label="다음"
+          aria-label="Next"
         >
           <ChevronRight />
         </IconButton>
@@ -137,7 +137,7 @@ export function CharacterSection({
   moreHref,
   horizontal = false,
   showRank = false,
-  emptyMessage = '표시할 캐릭터가 없습니다.',
+  emptyMessage = 'No characters to show.',
   className,
 }: CharacterSectionProps) {
   return (

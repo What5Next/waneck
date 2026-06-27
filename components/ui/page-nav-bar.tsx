@@ -32,7 +32,7 @@ export function PageNavBar({
         shape="square"
         onClick={onBack}
         className="text-foreground"
-        aria-label="뒤로 가기"
+        aria-label="Go back"
       >
         <ChevronLeft className="h-5 w-5" />
       </IconButton>
