@@ -4,6 +4,7 @@ export type Character = Tables<'characters'>
 export type DBMessage = Tables<'messages'>
 export type Conversation = Tables<'conversations'>
 export type User = Tables<'users'>
+export type TokenTransaction = Tables<'token_transactions'>
 export type ConvSummary = Tables<'conv_summaries'>
 export type CharacterExampleDialogue = Tables<'character_example_dialogues'>
 export type CharacterSituationImage = Tables<'character_situation_images'>
