@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SegmentedControl } from "@/components/ui/segmented-control";
+import { useProfileQuery } from "@/hooks/queries/use-profile-query";
 import {
   WON_PACKAGES,
   WON_PAYMENT_METHODS,
@@ -23,6 +24,7 @@ function formatKrw(amount: number) {
 }
 
 export function WonShopView() {
+  const { data: profile } = useProfileQuery()
   const [activeTab, setActiveTab] = useState<WonPurchaseTab>("purchase");
   const [selectedPackageId, setSelectedPackageId] = useState(
     WON_PACKAGES[1]?.id ?? "",
@@ -55,7 +57,7 @@ export function WonShopView() {
           <div className="mt-1 flex items-center gap-2">
             <Gem className="h-5 w-5 text-primary" aria-hidden />
             <span className="text-2xl font-bold tabular-nums text-foreground">
-              0
+              {(profile?.token_balance ?? 0).toLocaleString("ko-KR")}
             </span>
             <span className="text-sm text-muted-foreground">won</span>
           </div>

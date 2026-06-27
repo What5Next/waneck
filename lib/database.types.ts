@@ -293,6 +293,47 @@ export type Database = {
           },
         ]
       }
+      token_transactions: {
+        Row: {
+          amount: number
+          balance_after: number
+          created_at: string | null
+          description: string | null
+          external_ref: string | null
+          id: string
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          balance_after: number
+          created_at?: string | null
+          description?: string | null
+          external_ref?: string | null
+          id?: string
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          created_at?: string | null
+          description?: string | null
+          external_ref?: string | null
+          id?: string
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "token_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           created_at: string
@@ -300,6 +341,7 @@ export type Database = {
           email: string
           id: string
           persona: Json | null
+          token_balance: number
         }
         Insert: {
           created_at?: string
@@ -307,6 +349,7 @@ export type Database = {
           email: string
           id?: string
           persona?: Json | null
+          token_balance?: number
         }
         Update: {
           created_at?: string
@@ -314,6 +357,7 @@ export type Database = {
           email?: string
           id?: string
           persona?: Json | null
+          token_balance?: number
         }
         Relationships: []
       }

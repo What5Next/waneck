@@ -23,7 +23,7 @@ export async function GET() {
       await Promise.all([
         supabaseAdmin
           .from("users")
-          .select("display_name")
+          .select("display_name, token_balance")
           .eq("id", user.id)
           .maybeSingle(),
         supabaseAdmin
@@ -47,6 +47,7 @@ export async function GET() {
       display_name: displayName,
       handle: getProfileHandle(user, profileRow?.display_name),
       avatar_url: avatarUrl,
+      token_balance: profileRow?.token_balance ?? 0,
       follower_count: 0,
       following_count: 0,
       wons_received_30d: 0,

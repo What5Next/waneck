@@ -124,8 +124,8 @@ export function MyPageView() {
             <RowLink
               href="/won"
               icon={<Gem className="h-4 w-4 text-primary/80" />}
+              value={(profile.token_balance ?? 0).toLocaleString("ko-KR")}
               label="won balance"
-              value="0"
             />
           </RowPanel>
 

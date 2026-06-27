@@ -13,6 +13,7 @@ import { Dialog, DialogTitle } from "@/components/ui/dialog";
 import { FadeEdge } from "@/components/ui/fade-edge";
 import { IconButton } from "@/components/ui/icon-button";
 import { PopoverMenu, PopoverMenuTrigger } from "@/components/ui/popover-menu";
+import { useProfileQuery } from "@/hooks/queries/use-profile-query";
 import { cn } from "@/lib/utils";
 
 /** chat-header 하단 fade 높이 */
@@ -33,6 +34,7 @@ export function ChatHeader({
   const [desktopSettingsOpen, setDesktopSettingsOpen] = useState(false);
   const { focusMode, toggleFocusMode } = useFocusMode();
   const { closeMobileSidebar } = useSidebar();
+  const { data: profile } = useProfileQuery();
 
   async function handleCopyTitle() {
     const chatPath = conversationId
@@ -118,7 +120,7 @@ export function ChatHeader({
           aria-label="Top up won"
         >
           <Gem className="h-4 w-4 text-primary" aria-hidden />
-          <span className="text-sm font-medium tabular-nums">0</span>
+          <span className="text-sm font-medium tabular-nums">{(profile?.token_balance ?? 0).toLocaleString("ko-KR")}</span>
         </Link>
 
         {/* 모바일: 바텀시트 (PopoverMenu와 open 상태 분리 — click-outside 충돌 방지) */}
