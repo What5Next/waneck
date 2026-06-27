@@ -54,7 +54,7 @@ export function MobileSearchDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent variant="sheet-top" aria-describedby={undefined}>
-        <DialogTitle className="sr-only">캐릭터 검색</DialogTitle>
+        <DialogTitle className="sr-only">Search characters</DialogTitle>
 
         <form onSubmit={handleSubmit} className="flex items-center gap-2">
           <SearchInput
@@ -66,14 +66,14 @@ export function MobileSearchDialog({
             }}
             enterKeyHint="search"
             containerClassName="flex-1"
-            aria-label="캐릭터 검색"
+            aria-label="Search characters"
           />
 
           <DialogClose
             type="button"
             className="flex h-11 shrink-0 items-center justify-center rounded-full px-3 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
           >
-            취소
+            Cancel
           </DialogClose>
         </form>
       </DialogContent>

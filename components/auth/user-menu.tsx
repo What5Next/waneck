@@ -117,7 +117,7 @@ export function UserMenu({ user, onClose }: UserMenuProps) {
               onClick={onClose}
               className="text-sm font-medium text-primary hover:underline"
             >
-              충전
+              Top up
             </Link>
           }
         />
@@ -129,20 +129,20 @@ export function UserMenu({ user, onClose }: UserMenuProps) {
         <PopoverMenuLink
           href="/mypage"
           icon={<LayoutGrid className="h-4 w-4" />}
-          label="마이페이지"
+          label="My Page"
           onClick={onClose}
         />
 
         <Row
           icon={<ShieldCheck className="h-4 w-4" />}
-          label="세이프티 필터"
+          label="Safety filter"
           interactive={false}
           showChevron={false}
           trailing={
             <Switch
               checked={safetyFilterEnabled}
               onCheckedChange={handleSafetyFilterChange}
-              aria-label="세이프티 필터"
+              aria-label="Safety filter"
             />
           }
         />
@@ -159,7 +159,7 @@ export function UserMenu({ user, onClose }: UserMenuProps) {
               <Moon className="h-4 w-4" />
             )
           }
-          label="테마"
+          label="Theme"
           trailing={themeLabel}
           onClick={handleThemeToggle}
         />
@@ -186,7 +186,7 @@ export function UserMenu({ user, onClose }: UserMenuProps) {
 
         <PopoverMenuItem
           icon={<LogOut className="h-4 w-4" />}
-          label="로그아웃"
+          label="Sign out"
           onClick={handleSignOut}
         />
       </div>

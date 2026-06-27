@@ -24,7 +24,7 @@ export function NotificationButton({ className }: { className?: string }) {
       <PopoverMenuTrigger asChild>
         <IconButton
           active={isOpen}
-          aria-label="알림"
+          aria-label="Notifications"
           aria-haspopup="dialog"
         >
           <Bell className={headerIconClass} />

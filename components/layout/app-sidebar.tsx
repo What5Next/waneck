@@ -12,10 +12,10 @@ import type { RecentConversation } from "@/lib/api/conversations";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { href: "/", label: "홈", icon: Home, match: (path: string) => path === "/" },
+  { href: "/", label: "Home", icon: Home, match: (path: string) => path === "/" },
   {
     href: "/characters",
-    label: "탐색",
+    label: "Explore",
     icon: Compass,
     match: (path: string) =>
       path === "/characters" ||
@@ -24,7 +24,7 @@ const NAV_ITEMS = [
   },
   {
     href: "/characters/create",
-    label: "만들기",
+    label: "Create",
     icon: Plus,
     match: (path: string) => path.startsWith("/characters/create"),
   },
@@ -52,7 +52,7 @@ function SidebarNav({
   return (
     <>
       <nav
-        aria-label="주요 메뉴"
+        aria-label="Main menu"
         className={cn(
           "flex shrink-0 flex-col gap-0.5",
           collapsed ? "px-2" : "px-3",
@@ -98,7 +98,7 @@ function SidebarNav({
           <MessageSquare className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
           {!collapsed ? (
             <span className="text-xs font-semibold text-muted-foreground">
-              최근 대화
+              Recent chats
             </span>
           ) : null}
         </div>
@@ -106,14 +106,14 @@ function SidebarNav({
         <div className="scroll-hide min-h-0 flex-1 overflow-y-auto">
           {!collapsed && !isAuthLoading && !isAuthenticated ? (
             <p className="px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-              로그인하면 최근 대화가 여기에 표시됩니다.
+              Sign in to see your recent chats here.
             </p>
           ) : !collapsed &&
             isAuthenticated &&
             !isConversationsLoading &&
             visibleRecentChats.length === 0 ? (
             <p className="px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-              아직 대화한 캐릭터가 없습니다.
+              No chats yet.
             </p>
           ) : (
             <ul className="flex flex-col gap-0.5">
@@ -196,7 +196,7 @@ export function AppSidebar() {
           <button
             type="button"
             className="fixed inset-y-0 right-0 z-40 w-1/2 bg-transparent sm:hidden"
-            aria-label="사이드바 닫기"
+            aria-label="Close sidebar"
             onClick={closeMobileSidebar}
           />
           <div

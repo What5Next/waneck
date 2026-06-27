@@ -47,7 +47,7 @@ export function getProfileName(
     displayName?.trim() ||
     (user.user_metadata?.full_name as string | undefined)?.trim() ||
     user.email?.split("@")[0] ||
-    "사용자"
+    "User"
   );
 }
 

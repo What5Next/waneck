@@ -10,7 +10,7 @@ export function ThemeToggle() {
 
   return (
     <IconButton
-      aria-label={isReady ? '테마 전환' : '테마'}
+      aria-label={isReady ? 'Toggle theme' : 'Theme'}
       disabled={!isReady}
       onClick={isReady ? toggleTheme : undefined}
     >

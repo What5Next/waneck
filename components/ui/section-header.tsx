@@ -14,7 +14,7 @@ interface SectionHeaderProps {
 export function SectionHeader({
   title,
   moreHref,
-  moreLabel = '전체보기',
+  moreLabel = 'See all',
   className,
 }: SectionHeaderProps) {
   return (

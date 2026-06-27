@@ -34,7 +34,7 @@ export async function GET() {
       return {
         id: row.id,
         character_id: row.character_id,
-        character_name: character?.name ?? '알 수 없음',
+        character_name: character?.name ?? 'Unknown',
         character_image_url: character?.profile_image_url ?? null,
         last_message_at: row.last_message_at,
       }

@@ -29,8 +29,8 @@ export function useThemeReady() {
     !mounted || resolvedTheme === undefined
       ? '…'
       : isDark
-        ? '다크'
-        : '라이트'
+        ? 'Dark'
+        : 'Light'
 
   return {
     isReady,

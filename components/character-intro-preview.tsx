@@ -19,7 +19,7 @@ export function CharacterIntroPreview({
 
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="text-[15px] font-bold text-foreground">인트로 프리뷰</h2>
+      <h2 className="text-[15px] font-bold text-foreground">Intro Preview</h2>
       <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card/50 p-4">
         {introMessages.map((message, index) => {
           const role = normalizeRole(message.role)

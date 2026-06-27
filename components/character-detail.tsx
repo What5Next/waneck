@@ -64,7 +64,7 @@ export function CharacterDetail({ character }: { character: CharacterWithDetail 
           {/* 상세 설명 */}
           {detailedDescription ? (
             <section className="flex flex-col gap-2">
-              <h2 className="text-[15px] font-bold text-foreground">상세 설명</h2>
+              <h2 className="text-[15px] font-bold text-foreground">About</h2>
               <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
                 {detailedDescription}
               </p>

@@ -44,9 +44,7 @@ export function MyPageView() {
   const router = useRouter();
   const signOutMutation = useSignOut();
   const { themeLabel, toggleTheme } = useThemeReady();
-  // P3: profile-view와 동일 Query 캐시 공유
   const { data: profile, isPending: loading } = useProfileQuery();
-  // P5: localStorage 설정 — user-menu·chat-window와 실시간 동기화
   const { enabled: safetyFilterEnabled, setEnabled: setSafetyFilterEnabled } =
     useSafetyFilter();
   const { modelId: defaultModelId } = useDefaultModel();
@@ -72,31 +70,28 @@ export function MyPageView() {
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background">
-      {/* 태블릿 이상 상단 헤더 */}
       <header className="sticky top-0 z-20 hidden shrink-0 border-b border-border bg-background/95 backdrop-blur-sm sm:block">
         <div className="mx-auto flex h-14 max-w-3xl items-center px-2">
           <IconButton
             onClick={() => router.back()}
             className="hover:bg-muted/50"
-            aria-label="뒤로 가기"
+            aria-label="Go back"
           >
             <ChevronLeft className="h-4 w-4" />
           </IconButton>
-          <h1 className="px-1 text-base font-semibold">마이페이지</h1>
+          <h1 className="px-1 text-base font-semibold">My Page</h1>
         </div>
       </header>
 
       <div className="scroll-hide min-h-0 flex-1 overflow-y-auto pb-8">
-        {/* 모바일 상단 */}
         <PageNavBar
-          title="마이페이지"
+          title="My Page"
           onBack={() => router.back()}
           titleClassName="font-semibold text-foreground"
           className="sm:hidden"
         />
 
         <section className="mx-auto max-w-3xl space-y-5 px-4 py-4">
-          {/* 프로필 카드 → 커뮤니티 프로필 */}
           <Link
             href="/profile"
             className="flex items-center gap-3.5 rounded-2xl bg-muted/15 px-4 py-3.5 transition-colors hover:bg-muted/20"
@@ -117,92 +112,88 @@ export function MyPageView() {
                 {profile.handle}
               </p>
               <div className="mt-0.5 flex items-center gap-3 text-xs text-muted-foreground/60">
-                <span>팔로워 {profile.follower_count}</span>
-                <span>팔로잉 {profile.following_count}</span>
-                <span>좋아요 0</span>
+                <span>{profile.follower_count} followers</span>
+                <span>{profile.following_count} following</span>
+                <span>0 likes</span>
               </div>
             </div>
             <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
           </Link>
 
-          {/* won 잔액 */}
           <RowPanel>
             <RowLink
               href="/won"
               icon={<Gem className="h-4 w-4 text-primary/80" />}
-              label="won 잔액"
+              label="won balance"
               value="0"
             />
           </RowPanel>
 
-          {/* 빠른 설정 */}
-          <List title="빠른 설정">
+          <List title="Quick settings">
             <Row
               icon={<Bot className="h-4 w-4" />}
-              label="모델 설정"
+              label="Model"
               value={defaultModel.shortName}
             />
             <Row
               icon={<FileText className="h-4 w-4" />}
-              label="프롬프트 설정"
-              value="기본 프롬프트"
+              label="Prompt"
+              value="Default prompt"
             />
             <Row
               icon={<CircleUser className="h-4 w-4" />}
-              label="페르소나 설정"
+              label="Persona"
               value={profile.display_name}
             />
             <Row
               icon={<NotebookText className="h-4 w-4" />}
-              label="유저 노트"
-              value="등록된 노트 없음"
+              label="User notes"
+              value="No notes yet"
             />
           </List>
 
-          {/* MY */}
           <List title="MY">
             <Row
               icon={<Heart className="h-4 w-4" />}
-              label="좋아요한 캐릭터"
+              label="Liked characters"
             />
             <Row
               icon={<Shield className="h-4 w-4" />}
-              label="세이프티 필터"
+              label="Safety filter"
               interactive={false}
               showChevron={false}
               trailing={
                 <Switch
                   checked={safetyFilterEnabled}
                   onCheckedChange={handleSafetyFilterChange}
-                  aria-label="세이프티 필터"
+                  aria-label="Safety filter"
                 />
               }
             />
             <Row
               icon={<CircleCheckBig className="h-4 w-4" />}
-              label="본인 인증"
+              label="Verification"
               showChevron={false}
               trailing={
                 <span className="text-xs font-medium text-green-500">
-                  성인 인증됨
+                  Age verified
                 </span>
               }
             />
             <Row
               icon={<Ban className="h-4 w-4" />}
-              label="차단 관리"
+              label="Blocked users"
             />
           </List>
 
-          {/* 소통 */}
-          <List title="소통">
+          <List title="Community">
             <Row
               icon={<FileText className="h-4 w-4" />}
-              label="개발 현황"
+              label="Development updates"
             />
             <Row
               icon={<LifeBuoy className="h-4 w-4" />}
-              label="라이브 채팅"
+              label="Live chat"
             />
             {DISCORD_URL ? (
               <RowLink
@@ -220,30 +211,28 @@ export function MyPageView() {
             <RowLink
               href={`mailto:${SUPPORT_EMAIL}`}
               icon={<Mail className="h-4 w-4" />}
-              label="이메일 문의"
+              label="Email support"
             />
           </List>
 
-          {/* 설정 */}
-          <List title="설정">
+          <List title="Settings">
             <Row
               icon={<Settings className="h-4 w-4" />}
-              label="계정"
+              label="Account"
             />
             <Row
               icon={<Server className="h-4 w-4" />}
-              label="서버 상태"
+              label="Server status"
             />
             <Row
               icon={<Settings className="h-4 w-4" />}
-              label="테마"
+              label="Theme"
               value={themeLabel}
               onClick={handleThemeToggle}
               showChevron={false}
             />
           </List>
 
-          {/* 로그아웃 */}
           <div className="pt-2">
             <button
               type="button"
@@ -254,7 +243,7 @@ export function MyPageView() {
               )}
             >
               <LogOut className="h-4 w-4" />
-              로그아웃
+              Sign out
             </button>
           </div>
         </section>
