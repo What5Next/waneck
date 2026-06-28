@@ -49,6 +49,84 @@ export type Database = {
           },
         ]
       }
+      character_comments: {
+        Row: {
+          character_id: string
+          content: string
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          character_id: string
+          content: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          character_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "character_comments_character_id_fkey"
+            columns: ["character_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "character_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      character_likes: {
+        Row: {
+          character_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          character_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          character_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "character_likes_character_id_fkey"
+            columns: ["character_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "character_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       character_intro_messages: {
         Row: {
           character_id: string
@@ -121,6 +199,7 @@ export type Database = {
       }
       characters: {
         Row: {
+          comment_count: number
           created_at: string
           created_by: string | null
           description: string | null
@@ -128,6 +207,8 @@ export type Database = {
           genres: string[]
           id: string
           is_public: boolean
+          like_count: number
+          message_count: number
           mood: string | null
           name: string
           origin_story: string | null
@@ -139,6 +220,7 @@ export type Database = {
           tag: string | null
         }
         Insert: {
+          comment_count?: number
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -146,6 +228,8 @@ export type Database = {
           genres?: string[]
           id?: string
           is_public?: boolean
+          like_count?: number
+          message_count?: number
           mood?: string | null
           name: string
           origin_story?: string | null
@@ -157,6 +241,7 @@ export type Database = {
           tag?: string | null
         }
         Update: {
+          comment_count?: number
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -164,6 +249,8 @@ export type Database = {
           genres?: string[]
           id?: string
           is_public?: boolean
+          like_count?: number
+          message_count?: number
           mood?: string | null
           name?: string
           origin_story?: string | null

@@ -13,9 +13,21 @@ export type CharacterIntroMessage = Pick<
   'role' | 'content' | 'created_at' | 'sort_order'
 >
 
+/** 캐릭터 댓글 (API 응답) */
+export type CharacterComment = {
+  id: string
+  content: string
+  created_at: string
+  updated_at: string
+  author: { id: string; display_name: string | null }
+}
+
 export type CharacterWithDetail = Character & {
   creator: { display_name: string | null } | null
   intro_messages: CharacterIntroMessage[]
+  /** 로그인 시에만 포함 */
+  is_liked?: boolean
+  my_comment?: CharacterComment | null
 }
 
 // UI 채팅 상태용 타입 (DB에 직접 저장하지 않음)
