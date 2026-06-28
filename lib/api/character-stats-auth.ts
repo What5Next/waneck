@@ -71,3 +71,23 @@ export function parseCommentContent(body: unknown): string | NextResponse {
 
   return content
 }
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+/** parent_id optional UUID — 없으면 null, 잘못된 값이면 400 */
+export function parseCommentParentId(body: unknown): string | null | NextResponse {
+  if (!body || typeof body !== 'object' || !('parent_id' in body)) {
+    return null
+  }
+
+  const raw = (body as { parent_id: unknown }).parent_id
+  if (raw == null || raw === '') return null
+
+  const parentId = String(raw).trim()
+  if (!UUID_RE.test(parentId)) {
+    return NextResponse.json({ error: 'invalid parent_id' }, { status: 400 })
+  }
+
+  return parentId
+}

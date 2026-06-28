@@ -20,11 +20,11 @@ export function patchCharacterStatsInCache(
   )
 }
 
-/** detail 캐시에서 is_liked / my_comment 패치 */
+/** detail 캐시에서 is_liked 패치 */
 export function patchCharacterEngagementInCache(
   queryClient: QueryClient,
   characterId: string,
-  patch: Partial<Pick<CharacterWithDetail, 'is_liked' | 'my_comment'>>,
+  patch: Partial<Pick<CharacterWithDetail, 'is_liked'>>,
 ) {
   queryClient.setQueryData<CharacterWithDetail>(
     queryKeys.characters.detail(characterId),

@@ -29,7 +29,6 @@ export async function getCharacterDetail(
     creator: data.creator ?? null,
     intro_messages: data.intro_messages ?? [],
     is_liked: data.is_liked ?? false,
-    my_comment: data.my_comment ?? null,
   }
 }
 
