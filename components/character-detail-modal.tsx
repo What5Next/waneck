@@ -1,4 +1,4 @@
-"use client";
+'use client'
 
 import { useRouter } from "next/navigation";
 
@@ -15,15 +15,15 @@ import type { CharacterWithDetail } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type CharacterDetailModalProps = {
-  character: CharacterWithDetail;
+  character: CharacterWithDetail
   /** overlay: URL 변경 없이 닫기, route: router.back/push (직접 URL 진입) */
-  closeMode?: "overlay" | "route";
-  onClose?: () => void;
-};
+  closeMode?: 'overlay' | 'route'
+  onClose?: () => void
+}
 
 export function CharacterDetailModal({
   character,
-  closeMode = "route",
+  closeMode = 'route',
   onClose,
 }: CharacterDetailModalProps) {
   const router = useRouter();
@@ -39,13 +39,6 @@ export function CharacterDetailModal({
       return;
     }
     router.push("/characters");
-  };
-
-  const handleStartChat = () => {
-    // 오버레이 모달만 명시적으로 닫음 (route 모드는 채팅 페이지 이동 시 자동 언마운트)
-    if (closeMode === "overlay") {
-      onClose?.();
-    }
   };
 
   return (
@@ -82,9 +75,9 @@ export function CharacterDetailModal({
         </FadeEdge>
         <CharacterDetail
           character={character}
-          onBeforeNavigate={handleStartChat}
+          onBeforeNavigate={handleClose}
         />
       </DialogContent>
     </Dialog>
-  );
+  )
 }

@@ -27,10 +27,9 @@ export function StartChatButton({
       return
     }
 
-    onBeforeNavigate?.()
-
     try {
       await startChatMutation.mutateAsync(characterId)
+      onBeforeNavigate?.()
     } catch (error) {
       console.error(error)
     }
@@ -40,7 +39,8 @@ export function StartChatButton({
     const params = new URLSearchParams(window.location.search)
     if (params.get('autostart') === 'true') {
       window.history.replaceState({}, '', window.location.pathname)
-      startChat()
+      const timeoutId = setTimeout(startChat, 0)
+      return () => clearTimeout(timeoutId)
     }
   }, [startChat])
 
