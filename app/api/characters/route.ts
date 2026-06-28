@@ -11,7 +11,15 @@ export async function GET() {
     .order('created_at', { ascending: true })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data)
+
+  const characters = (data ?? []).map((character) => ({
+    ...character,
+    like_count: character.like_count ?? 0,
+    comment_count: character.comment_count ?? 0,
+    message_count: character.message_count ?? 0,
+  }))
+
+  return NextResponse.json(characters)
 }
 
 type IntroTurn = { role: string; text: string }
