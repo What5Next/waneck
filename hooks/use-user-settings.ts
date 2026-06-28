@@ -1,9 +1,14 @@
 'use client'
 
-import { useCallback, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useSyncExternalStore } from 'react'
 
-import { MODELS, type ModelId } from '@/components/chat/model-selector'
+import type { ModelId } from '@/components/chat/model-selector'
 import type { BrowseViewMode } from '@/components/characters/character-browse-toolbar'
+import { useAiModelsQuery } from '@/hooks/queries/use-ai-models-query'
+import {
+  getCachedActiveAiModels,
+  resolveStoredModelId,
+} from '@/lib/ai-models'
 import {
   getStorageItem,
   setStorageItem,
@@ -18,16 +23,19 @@ import {
 } from '@/lib/user-settings'
 
 function readDefaultModelFromStorage(): ModelId {
-  const stored = getStorageItem(DEFAULT_MODEL_KEY) as ModelId | null
-  if (stored && MODELS.some((model) => model.id === stored)) {
-    return stored
+  const stored = getStorageItem(DEFAULT_MODEL_KEY)
+  const models = getCachedActiveAiModels()
+  const resolved = resolveStoredModelId(stored, models)
+
+  if (resolved) {
+    return resolved
   }
-  return MODELS[0].id
+
+  return models[0]?.id ?? stored ?? ''
 }
 
-function readBrowseViewModeFromStorage(): BrowseViewMode {
-  const stored = getStorageItem(BROWSE_VIEW_STORAGE_KEY)
-  return stored === 'grid' ? 'grid' : 'list'
+function readDefaultModelServerSnapshot(): ModelId {
+  return getCachedActiveAiModels()[0]?.id ?? ''
 }
 
 /**
@@ -54,7 +62,7 @@ export function useDefaultModel() {
   const modelId = useSyncExternalStore(
     (onStoreChange) => subscribeStorageKey(DEFAULT_MODEL_KEY, onStoreChange),
     readDefaultModelFromStorage,
-    () => MODELS[0].id,
+    readDefaultModelServerSnapshot,
   )
 
   const setModelId = useCallback((nextModelId: ModelId) => {
@@ -62,6 +70,27 @@ export function useDefaultModel() {
   }, [])
 
   return { modelId, setModelId }
+}
+
+/**
+ * 모델 목록 로드 후 유효한 ai_models.id를 보장.
+ * localStorage에 model_name(레거시)이 저장돼 있으면 id로 자동 마이그레이션.
+ */
+export function useResolvedDefaultModel() {
+  const { modelId, setModelId } = useDefaultModel()
+  const { data: models = [] } = useAiModelsQuery()
+
+  const resolvedModelId =
+    resolveStoredModelId(modelId, models) ?? models[0]?.id ?? modelId
+
+  useEffect(() => {
+    if (!resolvedModelId || resolvedModelId === modelId) {
+      return
+    }
+    setModelId(resolvedModelId)
+  }, [resolvedModelId, modelId, setModelId])
+
+  return { modelId: resolvedModelId, setModelId }
 }
 
 /**
@@ -116,4 +145,9 @@ export function useChatRoomName(
 ) {
   const storageKey = getChatRoomNameStorageKey(characterId, conversationId)
   return useStoredString(storageKey, characterName)
+}
+
+function readBrowseViewModeFromStorage(): BrowseViewMode {
+  const stored = getStorageItem(BROWSE_VIEW_STORAGE_KEY)
+  return stored === 'grid' ? 'grid' : 'list'
 }

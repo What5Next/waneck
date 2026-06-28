@@ -30,4 +30,9 @@ export const queryKeys = {
     /** 사이드바 최근 대화 목록 */
     list: () => [...queryKeys.conversations.all, "list"] as const,
   },
+  aiModels: {
+    all: ["ai-models"] as const,
+    /** 활성 AI 모델 목록 */
+    list: () => [...queryKeys.aiModels.all, "list"] as const,
+  },
 } as const;

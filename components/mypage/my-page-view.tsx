@@ -22,7 +22,7 @@ import {
   Shield,
 } from "lucide-react";
 import { useThemeReady } from "@/hooks/use-theme-ready";
-import { MODELS } from "@/components/chat/model-selector";
+import { getModelShortName, findAiModelById } from "@/lib/ai-models";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { IconButton } from "@/components/ui/icon-button";
 import { PageLoading } from "@/components/ui/page-loading";
@@ -39,7 +39,8 @@ import { cn } from "@/lib/utils";
 import { useProfileQuery } from "@/hooks/queries/use-profile-query";
 import { useLikedCharactersQuery } from "@/hooks/queries/use-liked-characters-query";
 import { useSignOut } from "@/hooks/mutations/use-sign-out";
-import { useSafetyFilter, useDefaultModel } from "@/hooks/use-user-settings";
+import { useSafetyFilter, useResolvedDefaultModel } from "@/hooks/use-user-settings";
+import { useAiModelsQuery } from "@/hooks/queries/use-ai-models-query";
 
 export function MyPageView() {
   const router = useRouter();
@@ -51,10 +52,13 @@ export function MyPageView() {
   });
   const { enabled: safetyFilterEnabled, setEnabled: setSafetyFilterEnabled } =
     useSafetyFilter();
-  const { modelId: defaultModelId } = useDefaultModel();
+  const { modelId: defaultModelId } = useResolvedDefaultModel();
+  const { data: aiModels = [] } = useAiModelsQuery();
 
-  const defaultModel =
-    MODELS.find((model) => model.id === defaultModelId) ?? MODELS[0];
+  const defaultModel = findAiModelById(aiModels, defaultModelId);
+  const defaultModelLabel = defaultModel
+    ? getModelShortName(defaultModel.display_name)
+    : "...";
 
   function handleSafetyFilterChange(enabled: boolean) {
     setSafetyFilterEnabled(enabled);
@@ -137,7 +141,7 @@ export function MyPageView() {
             <Row
               icon={<Bot className="h-4 w-4" />}
               label="Model"
-              value={defaultModel.shortName}
+              value={defaultModelLabel}
             />
             <Row
               icon={<FileText className="h-4 w-4" />}

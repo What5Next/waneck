@@ -10,7 +10,9 @@ import { ChatThread } from '@/components/chat/chat-thread'
 import { ChatComposer } from '@/components/chat/chat-composer'
 import { LoginModal } from '@/components/auth/login-modal'
 import { useAuth } from '@/hooks/use-auth'
-import { useDefaultModel } from '@/hooks/use-user-settings'
+import { useResolvedDefaultModel } from '@/hooks/use-user-settings'
+import { useAiModelsQuery } from '@/hooks/queries/use-ai-models-query'
+import { resolveModelName } from '@/lib/ai-models'
 import { bumpCharacterMessageCountInCache } from '@/lib/api/character-stats-cache'
 
 function parseCharacterSuggestions(raw: Character['suggestions']): string[] {
@@ -35,7 +37,8 @@ export default function ChatWindow({
   const [isLoading, setIsLoading] = useState(false)
   const [draft, setDraft] = useState('')
   // P5: mypage 모델 설정과 storage 연동
-  const { modelId: model, setModelId: setModel } = useDefaultModel()
+  const { modelId, setModelId: setModel } = useResolvedDefaultModel()
+  const { data: aiModels = [] } = useAiModelsQuery()
   const [conversationId, setConversationId] = useState<string | null>(initialConversationId)
   // P1: 채팅 전송 전 로그인 여부 확인용
   const { isAuthenticated } = useAuth()
@@ -72,7 +75,7 @@ export default function ChatWindow({
           characterId: character.id,
           messages: next.map((m) => ({ role: m.role, content: m.content })),
           conversationId,
-          model,
+          model: resolveModelName(modelId, aiModels),
         }),
       })
 
@@ -105,7 +108,7 @@ export default function ChatWindow({
             onChange={setDraft}
             onSubmit={sendMessage}
             disabled={isLoading}
-            model={model}
+            model={modelId}
             onModelChange={setModel}
             suggestions={parseCharacterSuggestions(character.suggestions)}
           />

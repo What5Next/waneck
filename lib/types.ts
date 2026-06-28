@@ -1,5 +1,16 @@
 import type { Tables } from "./database.types";
 
+export type AiModel = Pick<
+  Tables<"ai_models">,
+  | "id"
+  | "model_name"
+  | "display_name"
+  | "description"
+  | "token_cost"
+  | "provider"
+  | "sort_order"
+>;
+
 export type Character = Tables<"characters">;
 export type DBMessage = Tables<"messages">;
 export type Conversation = Tables<"conversations">;

@@ -14,6 +14,42 @@ export type Database = {
   };
   public: {
     Tables: {
+      ai_models: {
+        Row: {
+          created_at: string | null;
+          description: string | null;
+          display_name: string;
+          id: string;
+          is_active: boolean;
+          model_name: string;
+          provider: string | null;
+          sort_order: number | null;
+          token_cost: number;
+        };
+        Insert: {
+          created_at?: string | null;
+          description?: string | null;
+          display_name: string;
+          id?: string;
+          is_active?: boolean;
+          model_name: string;
+          provider?: string | null;
+          sort_order?: number | null;
+          token_cost?: number;
+        };
+        Update: {
+          created_at?: string | null;
+          description?: string | null;
+          display_name?: string;
+          id?: string;
+          is_active?: boolean;
+          model_name?: string;
+          provider?: string | null;
+          sort_order?: number | null;
+          token_cost?: number;
+        };
+        Relationships: [];
+      };
       character_example_dialogues: {
         Row: {
           character_id: string;
