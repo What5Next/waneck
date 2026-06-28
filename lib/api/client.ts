@@ -44,5 +44,15 @@ export async function apiFetch<T>(
     throw new ApiError(response.status, message)
   }
 
-  return response.json() as Promise<T>
+  // DELETE 204 등 본문 없는 성공 응답
+  if (response.status === 204 || response.status === 205) {
+    return undefined as T
+  }
+
+  const text = await response.text()
+  if (!text.trim()) {
+    return undefined as T
+  }
+
+  return JSON.parse(text) as T
 }

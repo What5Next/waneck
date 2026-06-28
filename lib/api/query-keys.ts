@@ -13,6 +13,9 @@ export const queryKeys = {
     /** 캐릭터 상세 (creator, intro_messages 포함) */
     detail: (id: string) =>
       [...queryKeys.characters.all, 'detail', id] as const,
+    comments: (id: string) =>
+      [...queryKeys.characters.all, 'comments', id] as const,
+    liked: () => [...queryKeys.characters.all, 'liked'] as const,
   },
   profile: {
     all: ['profile'] as const,
