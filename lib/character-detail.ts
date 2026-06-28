@@ -12,6 +12,45 @@ export function formatIntroTimestamp(isoDate: string): string {
   return `${year}. ${month}. ${day}. ${hours}:${minutes}`
 }
 
+/** 생성일 표시 (예: Created Jun 25, 2024) */
+export function formatCharacterCreatedDate(isoDate: string): string {
+  const date = new Date(isoDate)
+  if (Number.isNaN(date.getTime())) return ''
+
+  const formatted = date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+
+  return formatted ? `Created ${formatted}` : ''
+}
+
+/** 댓글용 상대 시간 (예: 6d, 2h) */
+export function formatRelativeCommentTime(isoDate: string): string {
+  const date = new Date(isoDate)
+  if (Number.isNaN(date.getTime())) return ''
+
+  const diffMs = Math.max(0, Date.now() - date.getTime())
+  const diffMinutes = Math.floor(diffMs / 60_000)
+
+  if (diffMinutes < 1) return 'now'
+  if (diffMinutes < 60) return `${diffMinutes}m`
+
+  const diffHours = Math.floor(diffMinutes / 60)
+  if (diffHours < 24) return `${diffHours}h`
+
+  const diffDays = Math.floor(diffHours / 24)
+  if (diffDays < 7) return `${diffDays}d`
+
+  const diffWeeks = Math.floor(diffDays / 7)
+  if (diffWeeks < 5) return `${diffWeeks}w`
+
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${month}.${day}`
+}
+
 /** genres + tag 병합 후 중복 제거 */
 export function getCharacterHashtags(genres: string[], tag: string | null): string[] {
   const hashtags = [

@@ -3,7 +3,8 @@
 import { notFound } from 'next/navigation'
 import { use } from 'react'
 
-import { CharacterDetail } from '@/components/character-detail'
+import { CharacterDetailMobile } from '@/components/character-detail-mobile'
+import { CharacterDetailModal } from '@/components/character-detail-modal'
 import { MobileShell } from '@/components/mobile-shell'
 import { PageLoading } from '@/components/ui/page-loading'
 import { useCharacterQuery } from '@/hooks/queries/use-character-query'
@@ -19,9 +20,16 @@ export default function CharacterPage({
 
   if (isPending && !character) {
     return (
-      <MobileShell>
-        <PageLoading />
-      </MobileShell>
+      <>
+        <div className="sm:hidden">
+          <MobileShell>
+            <PageLoading />
+          </MobileShell>
+        </div>
+        <div className="hidden sm:block">
+          <PageLoading />
+        </div>
+      </>
     )
   }
 
@@ -34,8 +42,15 @@ export default function CharacterPage({
   }
 
   return (
-    <MobileShell>
-      <CharacterDetail character={character} />
-    </MobileShell>
+    <>
+      <div className="sm:hidden">
+        <MobileShell>
+          <CharacterDetailMobile character={character} />
+        </MobileShell>
+      </div>
+      <div className="hidden sm:contents">
+        <CharacterDetailModal character={character} />
+      </div>
+    </>
   )
 }
