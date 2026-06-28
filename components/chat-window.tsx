@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 import type { Character } from '@/lib/types'
@@ -10,6 +11,7 @@ import { ChatComposer } from '@/components/chat/chat-composer'
 import { LoginModal } from '@/components/auth/login-modal'
 import { useAuth } from '@/hooks/use-auth'
 import { useDefaultModel } from '@/hooks/use-user-settings'
+import { bumpCharacterMessageCountInCache } from '@/lib/api/character-stats-cache'
 
 function parseCharacterSuggestions(raw: Character['suggestions']): string[] {
   if (!Array.isArray(raw)) return []
@@ -38,6 +40,7 @@ export default function ChatWindow({
   // P1: 채팅 전송 전 로그인 여부 확인용
   const { isAuthenticated } = useAuth()
   const [showLoginModal, setShowLoginModal] = useState(false)
+  const queryClient = useQueryClient()
 
   // 로그인 성공 후 로그인 모달 자동 닫기
   useEffect(() => {
@@ -79,6 +82,7 @@ export default function ChatWindow({
       if (data.conversationId) setConversationId(data.conversationId)
 
       setMessages((prev) => [...prev, { role: 'model', content: reply, time: getTime() }])
+      bumpCharacterMessageCountInCache(queryClient, character.id, 2)
     } catch {
       setMessages(next.slice(0, -1))
       setDraft(trimmed)

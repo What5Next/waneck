@@ -1,7 +1,7 @@
 import Link from 'next/link'
 
 import type { Character } from '@/lib/types'
-import { formatCharacterChatCount } from '@/lib/character-display'
+import { formatCompactCount } from '@/lib/character-display'
 import { cn } from '@/lib/utils'
 
 interface CharacterGridCardProps {
@@ -39,7 +39,7 @@ export function CharacterGridCard({ character, rank, className }: CharacterGridC
         )}
 
         <span className="absolute bottom-1.5 right-1.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[9px] font-medium text-white backdrop-blur-sm">
-          {formatCharacterChatCount(character.id)}
+          {formatCompactCount(character.message_count ?? 0)}
         </span>
       </div>
 

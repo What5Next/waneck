@@ -1,5 +1,4 @@
 import type { Character } from '@/lib/types'
-import { getCharacterChatCountValue } from '@/lib/character-display'
 
 export const SORT_OPTIONS = [
   { id: 'popular', label: 'Most chatted' },
@@ -16,6 +15,10 @@ export const BROWSE_SORT_TABS: { id: BrowseSortTab; label: string }[] = [
   { id: 'chat_count', label: 'Most chatted' },
   { id: 'newest', label: 'Newest' },
 ]
+
+function getMessageCount(character: Character): number {
+  return character.message_count ?? 0
+}
 
 function getSearchRelevanceScore(character: Character, keyword: string): number {
   const lowerKeyword = keyword.toLowerCase()
@@ -46,9 +49,7 @@ export function sortBrowseCharacters(
   }
 
   if (sortTab === 'chat_count') {
-    return sorted.sort(
-      (a, b) => getCharacterChatCountValue(b.id) - getCharacterChatCountValue(a.id),
-    )
+    return sorted.sort((a, b) => getMessageCount(b) - getMessageCount(a))
   }
 
   if (keyword) {
@@ -56,13 +57,11 @@ export function sortBrowseCharacters(
       const scoreDiff =
         getSearchRelevanceScore(b, keyword) - getSearchRelevanceScore(a, keyword)
       if (scoreDiff !== 0) return scoreDiff
-      return getCharacterChatCountValue(b.id) - getCharacterChatCountValue(a.id)
+      return getMessageCount(b) - getMessageCount(a)
     })
   }
 
-  return sorted.sort(
-    (a, b) => getCharacterChatCountValue(b.id) - getCharacterChatCountValue(a.id),
-  )
+  return sorted.sort((a, b) => getMessageCount(b) - getMessageCount(a))
 }
 
 export function sortCharacters(
@@ -81,9 +80,7 @@ export function sortCharacters(
     return sorted.sort((a, b) => a.name.localeCompare(b.name, 'ko'))
   }
 
-  return sorted.sort(
-    (a, b) => getCharacterChatCountValue(b.id) - getCharacterChatCountValue(a.id),
-  )
+  return sorted.sort((a, b) => getMessageCount(b) - getMessageCount(a))
 }
 
 export function filterByGenre(characters: Character[], genre: string): Character[] {
@@ -106,7 +103,6 @@ export function filterBySearch(characters: Character[], search: string): Charact
   )
 }
 
-// Home category chips → genre filter (ranking/recommend tabs show all)
 const HOME_CATEGORY_GENRES = new Set([
   '로맨스',
   '판타지',

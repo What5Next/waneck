@@ -8,10 +8,8 @@ import {
 
 import type { Character } from '@/lib/types'
 import {
-  formatCharacterChatCount,
   formatCompactCount,
   getCharacterImageCountValue,
-  getCharacterLikeCountValue,
 } from '@/lib/character-display'
 import { cn } from '@/lib/utils'
 
@@ -41,7 +39,7 @@ export function CharacterListCard({ character, className }: CharacterListCardPro
   const tagLabels = buildTagLabels(character)
   const visibleTags = tagLabels.slice(0, MAX_VISIBLE_TAGS)
   const hiddenTagCount = Math.max(0, tagLabels.length - MAX_VISIBLE_TAGS)
-  const likeCount = getCharacterLikeCountValue(character.id)
+  const likeCount = character.like_count ?? 0
   const imageCount = getCharacterImageCountValue(character.id)
 
   return (
@@ -82,7 +80,7 @@ export function CharacterListCard({ character, className }: CharacterListCardPro
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
               <MessageCircle className="size-3" aria-hidden />
-              <span>{formatCharacterChatCount(character.id)}</span>
+              <span>{formatCompactCount(character.message_count ?? 0)}</span>
             </div>
             <div className="flex items-center gap-1">
               <Heart className="size-3" aria-hidden />
