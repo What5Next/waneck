@@ -10,6 +10,11 @@ export type DeleteCharacterCommentResult = {
   deleted_count: number
 }
 
+export type CharacterCommentLikeResult = {
+  is_liked: boolean
+  like_count: number
+}
+
 /** GET /api/characters/[id]/comments — nested top-level + replies */
 export async function getCharacterComments(characterId: string): Promise<CharacterComment[]> {
   const data = await apiFetch<CharacterComment[]>(`/api/characters/${characterId}/comments`)
@@ -57,6 +62,28 @@ export async function deleteCharacterComment(
 ): Promise<DeleteCharacterCommentResult> {
   return apiFetch<DeleteCharacterCommentResult>(
     `/api/characters/${characterId}/comments/${commentId}`,
+    { method: 'DELETE' },
+  )
+}
+
+/** POST /api/characters/[id]/comments/[commentId]/likes */
+export async function addCharacterCommentLike(
+  characterId: string,
+  commentId: string,
+): Promise<CharacterCommentLikeResult> {
+  return apiFetch<CharacterCommentLikeResult>(
+    `/api/characters/${characterId}/comments/${commentId}/likes`,
+    { method: 'POST' },
+  )
+}
+
+/** DELETE /api/characters/[id]/comments/[commentId]/likes */
+export async function removeCharacterCommentLike(
+  characterId: string,
+  commentId: string,
+): Promise<CharacterCommentLikeResult> {
+  return apiFetch<CharacterCommentLikeResult>(
+    `/api/characters/${characterId}/comments/${commentId}/likes`,
     { method: 'DELETE' },
   )
 }

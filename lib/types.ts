@@ -21,6 +21,9 @@ export type CharacterComment = {
   updated_at: string;
   parent_id: string | null;
   author: { id: string; display_name: string | null };
+  like_count: number;
+  /** 로그인 사용자에게만 포함 */
+  is_liked?: boolean;
   /** GET nested 응답용 (1단계 답글) */
   replies?: CharacterComment[];
 };

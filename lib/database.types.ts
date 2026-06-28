@@ -101,6 +101,42 @@ export type Database = {
           },
         ];
       };
+      character_comment_likes: {
+        Row: {
+          comment_id: string;
+          created_at: string;
+          id: string;
+          user_id: string;
+        };
+        Insert: {
+          comment_id: string;
+          created_at?: string;
+          id?: string;
+          user_id: string;
+        };
+        Update: {
+          comment_id?: string;
+          created_at?: string;
+          id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "character_comment_likes_comment_id_fkey";
+            columns: ["comment_id"];
+            isOneToOne: false;
+            referencedRelation: "character_comments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "character_comment_likes_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       character_likes: {
         Row: {
           character_id: string;

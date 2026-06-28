@@ -37,7 +37,15 @@ export function useCreateCharacterComment(characterId: string) {
             }
             return updated
           }
-          return [{ ...comment, replies: [] }, ...list]
+          return [
+            {
+              ...comment,
+              like_count: comment.like_count ?? 0,
+              is_liked: comment.is_liked ?? false,
+              replies: [],
+            },
+            ...list,
+          ]
         },
       )
 

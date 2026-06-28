@@ -2,15 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 
 import {
   COMMENT_SELECT,
+  enrichCommentsWithLikes,
   mapCommentRow,
   nestComments,
 } from "@/lib/api/character-comment-mapper";
+import { fetchCommentLikeStats } from "@/lib/api/character-comment-likes";
 import {
   getCharacterOr404,
   parseCommentContent,
   parseCommentParentId,
   requireAuthenticatedUser,
 } from "@/lib/api/character-stats-auth";
+import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase.server";
 
 const DEFAULT_LIMIT = 50;
@@ -66,7 +69,30 @@ export async function GET(
     }
 
     const replies = (replyRows ?? []).map(mapCommentRow);
-    return NextResponse.json(nestComments(topLevel, replies));
+    const allCommentIds = [...topLevelIds, ...replies.map((reply) => reply.id)];
+
+    const authClient = await createClient();
+    const {
+      data: { user },
+    } = await authClient.auth.getUser();
+
+    const { likeCountByCommentId, likedCommentIds } =
+      await fetchCommentLikeStats(allCommentIds, user?.id);
+
+    const enrichedTopLevel = enrichCommentsWithLikes(
+      topLevel,
+      likeCountByCommentId,
+      likedCommentIds,
+      Boolean(user),
+    );
+    const enrichedReplies = enrichCommentsWithLikes(
+      replies,
+      likeCountByCommentId,
+      likedCommentIds,
+      Boolean(user),
+    );
+
+    return NextResponse.json(nestComments(enrichedTopLevel, enrichedReplies));
   } catch (err) {
     console.error("[/api/characters/[id]/comments GET]", err);
     return NextResponse.json(
@@ -142,7 +168,14 @@ export async function POST(
       );
     }
 
-    return NextResponse.json(mapCommentRow(data), { status: 201 });
+    return NextResponse.json(
+      {
+        ...mapCommentRow(data),
+        like_count: 0,
+        is_liked: false,
+      },
+      { status: 201 },
+    );
   } catch (err) {
     console.error("[/api/characters/[id]/comments POST]", err);
     return NextResponse.json(

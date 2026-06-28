@@ -1,34 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { COMMENT_SELECT, mapCommentRow } from '@/lib/api/character-comment-mapper'
+import { getCommentForCharacter } from '@/lib/api/character-comment-auth'
+import { COMMENT_SELECT, enrichCommentWithLikes, mapCommentRow } from '@/lib/api/character-comment-mapper'
+import { fetchCommentLikeStats } from '@/lib/api/character-comment-likes'
 import {
   getCharacterOr404,
   parseCommentContent,
   requireAuthenticatedUser,
 } from '@/lib/api/character-stats-auth'
 import { supabaseAdmin } from '@/lib/supabase.server'
-
-async function getCommentForCharacter(commentId: string, characterId: string) {
-  const { data, error } = await supabaseAdmin
-    .from('character_comments')
-    .select('id, user_id, character_id, parent_id')
-    .eq('id', commentId)
-    .eq('character_id', characterId)
-    .maybeSingle()
-
-  if (error) {
-    return { comment: null as null, errorResponse: NextResponse.json({ error: error.message }, { status: 500 }) }
-  }
-
-  if (!data) {
-    return {
-      comment: null as null,
-      errorResponse: NextResponse.json({ error: 'Comment not found' }, { status: 404 }),
-    }
-  }
-
-  return { comment: data, errorResponse: null as null }
-}
 
 /** 삭제 대상 row 수 (top-level + cascade replies) */
 async function countDeletableRows(commentId: string, characterId: string): Promise<number> {
@@ -96,7 +76,15 @@ export async function PATCH(
       return NextResponse.json({ error: 'Comment not found' }, { status: 404 })
     }
 
-    return NextResponse.json(mapCommentRow(data))
+    const mapped = mapCommentRow(data)
+    const { likeCountByCommentId, likedCommentIds } = await fetchCommentLikeStats(
+      [commentId],
+      auth.user.id,
+    )
+
+    return NextResponse.json(
+      enrichCommentWithLikes(mapped, likeCountByCommentId, likedCommentIds, true),
+    )
   } catch (err) {
     console.error('[/api/characters/[id]/comments/[commentId] PATCH]', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

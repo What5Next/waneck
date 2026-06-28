@@ -25,7 +25,7 @@ export type CommentRow = {
     | null;
 };
 
-/** DB row → API CharacterComment */
+/** DB row → API CharacterComment (like 필드는 enrich 전 기본값) */
 export function mapCommentRow(row: CommentRow): CharacterComment {
   const author = Array.isArray(row.author) ? row.author[0] : row.author;
   return {
@@ -38,7 +38,37 @@ export function mapCommentRow(row: CommentRow): CharacterComment {
       id: row.user_id,
       display_name: author?.display_name ?? null,
     },
+    like_count: 0,
   };
+}
+
+/** flat 댓글 목록에 like_count / is_liked 부착 */
+export function enrichCommentsWithLikes(
+  comments: CharacterComment[],
+  likeCountByCommentId: Map<string, number>,
+  likedCommentIds: Set<string>,
+  includeIsLiked: boolean,
+): CharacterComment[] {
+  return comments.map((comment) => ({
+    ...comment,
+    like_count: likeCountByCommentId.get(comment.id) ?? 0,
+    ...(includeIsLiked ? { is_liked: likedCommentIds.has(comment.id) } : {}),
+  }));
+}
+
+/** 단일 댓글 enrich (PATCH/create 응답용) */
+export function enrichCommentWithLikes(
+  comment: CharacterComment,
+  likeCountByCommentId: Map<string, number>,
+  likedCommentIds: Set<string>,
+  includeIsLiked: boolean,
+): CharacterComment {
+  return enrichCommentsWithLikes(
+    [comment],
+    likeCountByCommentId,
+    likedCommentIds,
+    includeIsLiked,
+  )[0];
 }
 
 /** flat replies → top-level에 replies[] 붙이기 */

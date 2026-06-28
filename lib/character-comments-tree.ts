@@ -17,7 +17,7 @@ export function appendReply(
   });
 }
 
-/** 트리에서 commentId에 해당하는 댓글/답글 업데이트 */
+/** 트리에서 commentId에 해당하는 댓글/답글 업데이트 (partial merge) */
 export function updateInTree(
   comments: CharacterComment[],
   commentId: string,
@@ -25,12 +25,32 @@ export function updateInTree(
 ): CharacterComment[] {
   return comments.map((comment) => {
     if (comment.id === commentId) {
-      return { ...patch, replies: comment.replies };
+      return { ...comment, ...patch, replies: comment.replies };
     }
     if (comment.replies?.length) {
       return {
         ...comment,
         replies: updateInTree(comment.replies, commentId, patch),
+      };
+    }
+    return comment;
+  });
+}
+
+/** 트리에서 commentId에 like 등 partial 패치 */
+export function patchInTree(
+  comments: CharacterComment[],
+  commentId: string,
+  patch: Partial<CharacterComment>,
+): CharacterComment[] {
+  return comments.map((comment) => {
+    if (comment.id === commentId) {
+      return { ...comment, ...patch, replies: comment.replies };
+    }
+    if (comment.replies?.length) {
+      return {
+        ...comment,
+        replies: patchInTree(comment.replies, commentId, patch),
       };
     }
     return comment;

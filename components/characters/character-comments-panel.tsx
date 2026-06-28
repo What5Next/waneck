@@ -15,6 +15,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { useCreateCharacterComment } from "@/hooks/mutations/use-create-character-comment";
 import { useDeleteCharacterComment } from "@/hooks/mutations/use-delete-character-comment";
+import { useToggleCharacterCommentLike } from "@/hooks/mutations/use-toggle-character-comment-like";
 import { useUpdateCharacterComment } from "@/hooks/mutations/use-update-character-comment";
 import { useCharacterCommentsQuery } from "@/hooks/queries/use-character-comments-query";
 import { sortTopLevelComments } from "@/lib/character-comments-tree";
@@ -147,6 +148,40 @@ function CommentComposer({
   );
 }
 
+function CommentLikeButton({
+  comment,
+  onLike,
+  disabled,
+}: {
+  comment: CharacterComment;
+  onLike: () => void;
+  disabled?: boolean;
+}) {
+  const isLiked = comment.is_liked ?? false;
+  const likeCount = comment.like_count ?? 0;
+
+  return (
+    <button
+      type="button"
+      onClick={onLike}
+      disabled={disabled}
+      className={cn(
+        "inline-flex items-center gap-1 transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
+        isLiked && "text-primary",
+      )}
+      aria-label={isLiked ? "Unlike comment" : "Like comment"}
+    >
+      <Heart
+        className={cn(
+          "h-3.5 w-3.5",
+          isLiked && "fill-primary text-primary",
+        )}
+      />
+      <span>{likeCount}</span>
+    </button>
+  );
+}
+
 function CommentListItem({
   comment,
   depth,
@@ -159,6 +194,7 @@ function CommentListItem({
   onEdit,
   onDelete,
   onReply,
+  onLike,
   isDeleting,
   isBusy,
   showReplyButton,
@@ -174,6 +210,7 @@ function CommentListItem({
   onEdit: () => void;
   onDelete: () => void;
   onReply?: () => void;
+  onLike: () => void;
   isDeleting?: boolean;
   isBusy: boolean;
   showReplyButton: boolean;
@@ -247,17 +284,18 @@ function CommentListItem({
           </p>
         )}
 
-        {!isEditing && depth === "top" ? (
-          <div className="mt-2.5 flex items-center gap-4 text-xs text-muted-foreground">
-            <button
-              type="button"
-              disabled
-              title="Coming soon"
-              className="inline-flex items-center gap-1 opacity-50"
-            >
-              <Heart className="h-3.5 w-3.5" />
-              <span>0</span>
-            </button>
+        {!isEditing ? (
+          <div
+            className={cn(
+              "mt-2.5 flex items-center gap-4 text-xs text-muted-foreground",
+              depth === "reply" && "mt-2",
+            )}
+          >
+            <CommentLikeButton
+              comment={comment}
+              onLike={onLike}
+              disabled={isBusy}
+            />
             {showReplyButton && onReply ? (
               <button
                 type="button"
@@ -285,6 +323,7 @@ function CommentThread({
   onStartEdit,
   onDelete,
   onReply,
+  onLike,
   replyingToId,
   replyDraft,
   onReplyDraftChange,
@@ -303,6 +342,7 @@ function CommentThread({
   onStartEdit: (comment: CharacterComment) => void;
   onDelete: (commentId: string) => void;
   onReply: (commentId: string) => void;
+  onLike: (comment: CharacterComment) => void;
   replyingToId: string | null;
   replyDraft: string;
   onReplyDraftChange: (value: string) => void;
@@ -327,6 +367,7 @@ function CommentThread({
         onEdit={() => onStartEdit(comment)}
         onDelete={() => onDelete(comment.id)}
         onReply={() => onReply(comment.id)}
+        onLike={() => onLike(comment)}
         isDeleting={isDeletingId === comment.id}
         isBusy={isBusy}
         showReplyButton
@@ -365,6 +406,7 @@ function CommentThread({
                 onEditCancel={onEditCancel}
                 onEdit={() => onStartEdit(reply)}
                 onDelete={() => onDelete(reply.id)}
+                onLike={() => onLike(reply)}
                 isDeleting={isDeletingId === reply.id}
                 isBusy={isBusy}
                 showReplyButton={false}
@@ -399,11 +441,13 @@ export function CharacterCommentsPanel({
   const createComment = useCreateCharacterComment(characterId);
   const updateComment = useUpdateCharacterComment(characterId);
   const deleteComment = useDeleteCharacterComment(characterId);
+  const toggleCommentLike = useToggleCharacterCommentLike(characterId);
 
   const isBusy =
     createComment.isPending ||
     updateComment.isPending ||
-    deleteComment.isPending;
+    deleteComment.isPending ||
+    toggleCommentLike.isPending;
 
   const displayComments = useMemo(
     () => sortTopLevelComments(comments, sort),
@@ -504,6 +548,21 @@ export function CharacterCommentsPanel({
     });
   }
 
+  async function handleLike(comment: CharacterComment) {
+    if (isBusy) return;
+
+    requireAuth(async () => {
+      try {
+        await toggleCommentLike.mutateAsync({
+          commentId: comment.id,
+          isLiked: comment.is_liked ?? false,
+        });
+      } catch {
+        toast.error("좋아요 처리에 실패했습니다.");
+      }
+    });
+  }
+
   return (
     <div className="flex flex-col gap-3">
       <LoginModal
@@ -575,6 +634,7 @@ export function CharacterCommentsPanel({
               onStartEdit={handleStartEdit}
               onDelete={handleDelete}
               onReply={handleReply}
+              onLike={handleLike}
               replyingToId={replyingToId}
               replyDraft={replyDraft}
               onReplyDraftChange={setReplyDraft}
