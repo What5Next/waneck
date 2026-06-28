@@ -3,9 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-import {
-  CharacterRecommendRow,
-} from "@/components/characters/character-recommend-row";
+import { CharacterRecommendRow } from "@/components/characters/character-recommend-row";
 import { CharacterSimilarSection } from "@/components/characters/character-similar-section";
 import { ChevronRight, Heart, MessageCircle, MoreVertical } from "lucide-react";
 
