@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+
+import { normalizeCharacterGenres } from '@/lib/character-genres'
 import { supabase } from '@/lib/supabase'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase.server'
@@ -29,6 +31,7 @@ type CreateCharacterBody = {
   short_intro?: string
   system_prompt: string
   tag?: string
+  genres?: string[]
   mood?: string
   description?: string
   suggestions?: string[]
@@ -73,7 +76,7 @@ export async function POST(req: NextRequest) {
       suggestions: body.suggestions?.filter(Boolean) ?? [],
       profile_image_url: body.profile_image_url ?? null,
       is_public: true,
-      genres: [],
+      genres: normalizeCharacterGenres(body.genres),
       created_by: user?.id ?? null,
     })
     .select()

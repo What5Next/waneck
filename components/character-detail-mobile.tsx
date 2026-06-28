@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Heart, MessageCircle } from 'lucide-react'
 
+import { CharacterSimilarSection } from '@/components/characters/character-similar-section'
 import { CharacterCommentsPanel } from '@/components/characters/character-comments-panel'
 import { CharacterLikeButton } from '@/components/characters/character-like-button'
 import { CharacterIntroPreview } from '@/components/character-intro-preview'
@@ -122,6 +123,12 @@ export function CharacterDetailMobile({ character }: { character: CharacterWithD
               <CharacterIntroPreview
                 character={character}
                 introMessages={character.intro_messages}
+              />
+
+              <CharacterSimilarSection
+                characterId={character.id}
+                createdBy={character.created_by}
+                layout="horizontal"
               />
             </>
           ) : (

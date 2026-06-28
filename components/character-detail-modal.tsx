@@ -1,88 +1,86 @@
-'use client'
+"use client";
 
-import { useMemo, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
-import { CharacterDetailLink } from '@/components/characters/character-detail-link'
-import { ChevronRight, Heart, MessageCircle, MoreVertical } from 'lucide-react'
+import {
+  CharacterRecommendRow,
+} from "@/components/characters/character-recommend-row";
+import { CharacterSimilarSection } from "@/components/characters/character-similar-section";
+import { ChevronRight, Heart, MessageCircle, MoreVertical } from "lucide-react";
 
-import { CharacterCommentsPanel } from '@/components/characters/character-comments-panel'
-import { CharacterLikeButton } from '@/components/characters/character-like-button'
-import { StartChatButton } from '@/components/start-chat-button'
-import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
-import { useCharactersQuery } from '@/hooks/queries/use-characters-query'
-import { formatCompactCount } from '@/lib/character-display'
+import { CharacterCommentsPanel } from "@/components/characters/character-comments-panel";
+import { CharacterLikeButton } from "@/components/characters/character-like-button";
+import { StartChatButton } from "@/components/start-chat-button";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { useMoreFromCreator } from "@/hooks/queries/use-more-from-creator";
+import { formatCompactCount } from "@/lib/character-display";
 import {
   formatCharacterCreatedDate,
   getCharacterDetailedDescription,
   getCharacterHashtags,
-} from '@/lib/character-detail'
-import type { CharacterWithDetail } from '@/lib/types'
-import { cn } from '@/lib/utils'
+} from "@/lib/character-detail";
+import type { CharacterWithDetail } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
-type DetailTab = 'about' | 'comments'
+type DetailTab = "about" | "comments";
 
 type CharacterDetailModalProps = {
-  character: CharacterWithDetail
+  character: CharacterWithDetail;
   /** overlay: URL 변경 없이 닫기, route: router.back/push (직접 URL 진입) */
-  closeMode?: 'overlay' | 'route'
-  onClose?: () => void
-}
+  closeMode?: "overlay" | "route";
+  onClose?: () => void;
+};
 
 export function CharacterDetailModal({
   character,
-  closeMode = 'route',
+  closeMode = "route",
   onClose,
 }: CharacterDetailModalProps) {
-  const router = useRouter()
-  const [activeTab, setActiveTab] = useState<DetailTab>('about')
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<DetailTab>("about");
 
-  const { data: allCharacters = [] } = useCharactersQuery()
+  const { items: moreFromCreator } = useMoreFromCreator(
+    character.id,
+    character.created_by,
+  );
 
-  const hashtags = getCharacterHashtags(character.genres, character.tag)
+  const hashtags = getCharacterHashtags(character.genres, character.tag);
   const detailedDescription = getCharacterDetailedDescription(
     character.description,
     character.detail_description,
-  )
-  const creatorName = character.creator?.display_name?.trim() || null
-  const createdDateLabel = formatCharacterCreatedDate(character.created_at)
-  const messageCountLabel = formatCompactCount(character.message_count ?? 0)
-  const likeCountLabel = formatCompactCount(character.like_count ?? 0)
-
-  const moreFromCreator = useMemo(() => {
-    if (!character.created_by) return []
-
-    return allCharacters
-      .filter((item) => item.created_by === character.created_by && item.id !== character.id)
-      .slice(0, 3)
-  }, [allCharacters, character.created_by, character.id])
+  );
+  const creatorName = character.creator?.display_name?.trim() || null;
+  const createdDateLabel = formatCharacterCreatedDate(character.created_at);
+  const messageCountLabel = formatCompactCount(character.message_count ?? 0);
+  const likeCountLabel = formatCompactCount(character.like_count ?? 0);
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
-      if (closeMode === 'overlay') {
-        onClose?.()
-        return
+      if (closeMode === "overlay") {
+        onClose?.();
+        return;
       }
 
-      if (typeof window !== 'undefined' && window.history.length > 1) {
-        router.back()
-        return
+      if (typeof window !== "undefined" && window.history.length > 1) {
+        router.back();
+        return;
       }
-      router.push('/characters')
+      router.push("/characters");
     }
-  }
+  };
 
   return (
     <Dialog open onOpenChange={handleOpenChange}>
       <DialogContent
         showClose
         className={cn(
-          'left-1/2 top-1/2 flex h-[min(90dvh,820px)] w-[min(1100px,95vw)] max-w-none -translate-x-1/2 -translate-y-1/2',
-          'flex-row gap-0 overflow-hidden rounded-2xl border border-border bg-background p-0 shadow-2xl',
-          'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
-          'data-[state=open]:animate-in data-[state=closed]:animate-out',
-          'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
+          "left-1/2 top-1/2 flex h-[min(90dvh,820px)] w-[min(1100px,95vw)] max-w-none -translate-x-1/2 -translate-y-1/2",
+          "flex-row gap-0 overflow-hidden rounded-2xl border border-border bg-background p-0 shadow-2xl",
+          "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+          "data-[state=open]:animate-in data-[state=closed]:animate-out",
+          "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
         )}
       >
         <DialogTitle className="sr-only">{character.name}</DialogTitle>
@@ -115,7 +113,9 @@ export function CharacterDetailModal({
 
               <div className="flex min-w-0 flex-1 flex-col gap-2">
                 <div className="flex items-start justify-between gap-3">
-                  <h1 className="text-xl font-bold leading-tight text-foreground">{character.name}</h1>
+                  <h1 className="text-xl font-bold leading-tight text-foreground">
+                    {character.name}
+                  </h1>
                   <div className="flex shrink-0 items-center gap-1">
                     <CharacterLikeButton
                       characterId={character.id}
@@ -157,7 +157,9 @@ export function CharacterDetailModal({
                 ) : null}
 
                 {createdDateLabel ? (
-                  <p className="text-xs text-muted-foreground">{createdDateLabel}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {createdDateLabel}
+                  </p>
                 ) : null}
               </div>
             </div>
@@ -169,46 +171,50 @@ export function CharacterDetailModal({
             <div className="flex gap-6 border-b border-border px-6">
               <button
                 type="button"
-                onClick={() => setActiveTab('about')}
+                onClick={() => setActiveTab("about")}
                 className={cn(
-                  'border-b-2 pb-2.5 text-sm font-semibold transition-colors',
-                  activeTab === 'about'
-                    ? 'border-primary text-foreground'
-                    : 'border-transparent text-muted-foreground hover:text-foreground',
+                  "border-b-2 pb-2.5 text-sm font-semibold transition-colors",
+                  activeTab === "about"
+                    ? "border-primary text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground",
                 )}
               >
                 About
               </button>
               <button
                 type="button"
-                onClick={() => setActiveTab('comments')}
+                onClick={() => setActiveTab("comments")}
                 className={cn(
-                  'border-b-2 pb-2.5 text-sm font-semibold transition-colors',
-                  activeTab === 'comments'
-                    ? 'border-primary text-foreground'
-                    : 'border-transparent text-muted-foreground hover:text-foreground',
+                  "border-b-2 pb-2.5 text-sm font-semibold transition-colors",
+                  activeTab === "comments"
+                    ? "border-primary text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground",
                 )}
               >
                 Comments
                 {(character.comment_count ?? 0) > 0 ? (
-                  <span className="ml-1 text-muted-foreground">({character.comment_count})</span>
+                  <span className="ml-1 text-muted-foreground">
+                    ({character.comment_count})
+                  </span>
                 ) : null}
               </button>
             </div>
 
             <div className="flex-1 px-6 py-5">
-              {activeTab === 'about' ? (
+              {activeTab === "about" ? (
                 detailedDescription ? (
                   <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
                     {detailedDescription}
                   </p>
                 ) : (
-                  <p className="text-sm text-muted-foreground">No description yet.</p>
+                  <p className="text-sm text-muted-foreground">
+                    No description yet.
+                  </p>
                 )
               ) : (
                 <CharacterCommentsPanel
                   characterId={character.id}
-                  enabled={activeTab === 'comments'}
+                  enabled={activeTab === "comments"}
                 />
               )}
             </div>
@@ -220,15 +226,22 @@ export function CharacterDetailModal({
             {creatorName ? (
               <section className="flex flex-col items-center gap-3 text-center">
                 <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-muted text-xl font-bold text-muted-foreground">
-                  {creatorName[0]?.toUpperCase() ?? '?'}
+                  {creatorName[0]?.toUpperCase() ?? "?"}
                 </div>
                 <div className="flex flex-col gap-1">
-                  <p className="text-sm font-semibold text-foreground">{creatorName}</p>
+                  <p className="text-sm font-semibold text-foreground">
+                    {creatorName}
+                  </p>
                   <p className="text-xs text-muted-foreground">
                     Followers 0 · Following 0
                   </p>
                 </div>
-                <Button variant="default" size="sm" disabled className="w-full rounded-lg">
+                <Button
+                  variant="default"
+                  size="sm"
+                  disabled
+                  className="w-full rounded-lg"
+                >
                   Follow
                 </Button>
               </section>
@@ -241,36 +254,25 @@ export function CharacterDetailModal({
                 </h2>
                 <div className="flex flex-col gap-2">
                   {moreFromCreator.map((item) => (
-                    <CharacterDetailLink
+                    <CharacterRecommendRow
                       key={item.id}
                       characterId={item.id}
-                      className="flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-muted/60"
-                    >
-                      <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-muted">
-                        {item.profile_image_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={item.profile_image_url}
-                            alt={item.name}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
-                            {item.name[0]}
-                          </div>
-                        )}
-                      </div>
-                      <p className="line-clamp-2 text-sm font-medium text-foreground">
-                        {item.name}
-                      </p>
-                    </CharacterDetailLink>
+                      name={item.name}
+                      profileImageUrl={item.profile_image_url}
+                    />
                   ))}
                 </div>
               </section>
             ) : null}
+
+            <CharacterSimilarSection
+              characterId={character.id}
+              createdBy={character.created_by}
+              layout="list"
+            />
           </div>
         </aside>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

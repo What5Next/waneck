@@ -5,6 +5,7 @@ import { useRef, useState } from 'react'
 import { ChevronLeft, Plus, Upload, User, X } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
+import { CHARACTER_GENRE_OPTIONS } from '@/lib/character-genres'
 import { Button } from '@/components/ui/button'
 import { Field, TextInput, TextArea } from '@/components/ui/form-field'
 import { useCreateCharacter } from '@/hooks/mutations/use-create-character'
@@ -34,6 +35,7 @@ type FormState = {
   introTurns: IntroTurn[]
   system: string
   tag: string
+  genres: string[]
   mood: string
   desc: string
   suggestions: string[]
@@ -49,6 +51,7 @@ const DEFAULT_FORM: FormState = {
   ],
   system: '',
   tag: '',
+  genres: [],
   mood: '',
   desc: '',
   suggestions: ['', '', ''],
@@ -363,8 +366,38 @@ function DetailTab({
 }) {
   const TAGS = ['Emotional', 'Direct', 'Knowledge', 'Humor', 'Fantasy', 'Romance', 'Thriller', 'Slice of life']
 
+  function toggleGenre(genre: string) {
+    setForm((current) => ({
+      ...current,
+      genres: current.genres.includes(genre)
+        ? current.genres.filter((item) => item !== genre)
+        : [...current.genres, genre],
+    }))
+  }
+
   return (
     <div className="flex flex-col gap-6">
+      {/* 장르 (복수 선택) */}
+      <Field label="Genres" hint="Pick categories that fit your character">
+        <div className="flex flex-wrap gap-2">
+          {CHARACTER_GENRE_OPTIONS.map((genre) => (
+            <button
+              key={genre}
+              type="button"
+              onClick={() => toggleGenre(genre)}
+              className={cn(
+                'rounded-full border px-3 py-1 text-xs transition-colors',
+                form.genres.includes(genre)
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border bg-card text-foreground hover:border-primary/50',
+              )}
+            >
+              {genre}
+            </button>
+          ))}
+        </div>
+      </Field>
+
       {/* 태그 */}
       <Field label="Tag" hint="Pick the tag that best fits your character">
         <div className="flex flex-wrap gap-2">
@@ -447,6 +480,7 @@ export function CharacterCreateForm() {
         short_intro: form.tagline,
         system_prompt: form.system,
         tag: form.tag,
+        genres: form.genres,
         mood: form.mood,
         description: form.desc,
         suggestions: form.suggestions.filter(Boolean),

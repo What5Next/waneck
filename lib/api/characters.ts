@@ -39,11 +39,46 @@ export type CreateCharacterBody = {
   short_intro?: string
   system_prompt: string
   tag?: string
+  genres?: string[]
   mood?: string
   description?: string
   suggestions?: string[]
   introTurns?: IntroTurn[]
   profile_image_url?: string | null
+}
+
+type GetSimilarCharactersOptions = {
+  limit?: number
+  excludeIds?: string[]
+}
+
+/** GET /api/characters/[id]/similar — 유사 캐릭터 목록 */
+export async function getSimilarCharacters(
+  characterId: string,
+  options: GetSimilarCharactersOptions = {},
+): Promise<Character[]> {
+  const params = new URLSearchParams()
+  if (options.limit != null) {
+    params.set('limit', String(options.limit))
+  }
+
+  const excludeIds = (options.excludeIds ?? []).filter((id) => id !== characterId)
+  if (excludeIds.length > 0) {
+    params.set('exclude', excludeIds.join(','))
+  }
+
+  const query = params.toString()
+  const url = query
+    ? `/api/characters/${characterId}/similar?${query}`
+    : `/api/characters/${characterId}/similar`
+
+  const data = await apiFetch<Character[]>(url)
+
+  if (!Array.isArray(data)) {
+    throw new Error('Invalid similar characters response')
+  }
+
+  return data
 }
 
 /** POST /api/characters — 캐릭터 생성 */

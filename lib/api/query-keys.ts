@@ -8,23 +8,26 @@
  */
 export const queryKeys = {
   characters: {
-    all: ['characters'] as const,
-    list: () => [...queryKeys.characters.all, 'list'] as const,
+    all: ["characters"] as const,
+    list: () => [...queryKeys.characters.all, "list"] as const,
     /** 캐릭터 상세 (creator, intro_messages 포함) */
     detail: (id: string) =>
-      [...queryKeys.characters.all, 'detail', id] as const,
+      [...queryKeys.characters.all, "detail", id] as const,
     comments: (id: string) =>
-      [...queryKeys.characters.all, 'comments', id] as const,
-    liked: () => [...queryKeys.characters.all, 'liked'] as const,
+      [...queryKeys.characters.all, "comments", id] as const,
+    liked: () => [...queryKeys.characters.all, "liked"] as const,
+    /** 유사 캐릭터 추천 */
+    similar: (id: string, excludeKey = "") =>
+      [...queryKeys.characters.all, "similar", id, excludeKey] as const,
   },
   profile: {
-    all: ['profile'] as const,
+    all: ["profile"] as const,
     /** 현재 로그인 사용자 프로필 */
-    me: () => [...queryKeys.profile.all, 'me'] as const,
+    me: () => [...queryKeys.profile.all, "me"] as const,
   },
   conversations: {
-    all: ['conversations'] as const,
+    all: ["conversations"] as const,
     /** 사이드바 최근 대화 목록 */
-    list: () => [...queryKeys.conversations.all, 'list'] as const,
+    list: () => [...queryKeys.conversations.all, "list"] as const,
   },
-} as const
+} as const;
