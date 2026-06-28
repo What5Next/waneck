@@ -127,7 +127,6 @@ export function CharacterDetailMobile({ character }: { character: CharacterWithD
           ) : (
             <CharacterCommentsPanel
               characterId={character.id}
-              myComment={character.my_comment}
               enabled={activeTab === 'comments'}
             />
           )}
