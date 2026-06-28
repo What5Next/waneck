@@ -4,6 +4,7 @@ import { Suspense } from 'react'
 import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
 
+import { CharacterDetailOverlayProvider } from '@/components/characters/character-detail-overlay'
 import { AppSidebar } from '@/components/layout/app-sidebar'
 import { FocusModeProvider, useFocusMode } from '@/components/layout/focus-mode-context'
 import { Header } from '@/components/layout/header'
@@ -50,7 +51,9 @@ export function ConditionalShell({ children }: { children: ReactNode }) {
   return (
     <SidebarProvider>
       <FocusModeProvider>
-        <ShellLayout>{children}</ShellLayout>
+        <CharacterDetailOverlayProvider>
+          <ShellLayout>{children}</ShellLayout>
+        </CharacterDetailOverlayProvider>
       </FocusModeProvider>
     </SidebarProvider>
   )

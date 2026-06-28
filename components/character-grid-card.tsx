@@ -1,5 +1,6 @@
-import Link from 'next/link'
+import { Heart, MessageSquare } from 'lucide-react'
 
+import { CharacterDetailLink } from '@/components/characters/character-detail-link'
 import type { Character } from '@/lib/types'
 import { formatCompactCount } from '@/lib/character-display'
 import { cn } from '@/lib/utils'
@@ -12,10 +13,12 @@ interface CharacterGridCardProps {
 
 export function CharacterGridCard({ character, rank, className }: CharacterGridCardProps) {
   const creatorLabel = character.tag?.trim() || null
+  const likeCount = character.like_count ?? 0
+  const commentCount = character.comment_count ?? 0
 
   return (
-    <Link
-      href={`/characters/${character.id}`}
+    <CharacterDetailLink
+      characterId={character.id}
       className={cn('group flex w-full min-w-0 flex-col', className)}
     >
       <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-muted">
@@ -38,9 +41,16 @@ export function CharacterGridCard({ character, rank, className }: CharacterGridC
           </span>
         )}
 
-        <span className="absolute bottom-1.5 right-1.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[9px] font-medium text-white backdrop-blur-sm">
-          {formatCompactCount(character.message_count ?? 0)}
-        </span>
+        <div className="absolute bottom-1.5 right-1.5 flex items-center gap-1.5">
+          <span className="flex items-center gap-0.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[9px] font-medium text-white backdrop-blur-sm">
+            <Heart className="size-2.5" aria-hidden />
+            {formatCompactCount(likeCount)}
+          </span>
+          <span className="flex items-center gap-0.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[9px] font-medium text-white backdrop-blur-sm">
+            <MessageSquare className="size-2.5" aria-hidden />
+            {formatCompactCount(commentCount)}
+          </span>
+        </div>
       </div>
 
       <div className="mt-1.5 min-w-0">
@@ -52,6 +62,6 @@ export function CharacterGridCard({ character, rank, className }: CharacterGridC
           <p className="mt-1 line-clamp-1 text-[9px] text-muted-foreground/60">{creatorLabel}</p>
         )}
       </div>
-    </Link>
+    </CharacterDetailLink>
   )
 }

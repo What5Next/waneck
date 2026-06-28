@@ -1,9 +1,10 @@
 "use client";
 
 import { Suspense, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import { ChevronRight, Volume2, X } from "lucide-react";
+
+import { CharacterDetailLink } from "@/components/characters/character-detail-link";
 
 import {
   HOME_CATEGORIES,
@@ -34,7 +35,6 @@ export default function Home() {
 }
 
 function HomePage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("search") ?? "";
   const [activeCategory, setActiveCategory] = useState(HOME_CATEGORIES[0].id);
@@ -103,9 +103,9 @@ function HomePage() {
         (() => {
           const featuredCharacter = characters[characters.length - 1];
           return (
-            <div
-              className="mx-4 h-[220px] cursor-pointer overflow-hidden rounded-2xl"
-              onClick={() => router.push(`/characters/${featuredCharacter.id}`)}
+            <CharacterDetailLink
+              characterId={featuredCharacter.id}
+              className="mx-4 block h-[220px] cursor-pointer overflow-hidden rounded-2xl"
             >
               <div
                 className="relative h-full w-full bg-cover bg-center"
@@ -168,7 +168,7 @@ function HomePage() {
                   </div>
                 </div>
               </div>
-            </div>
+            </CharacterDetailLink>
           );
         })()
       )}

@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import {
   Hash,
   Heart,
@@ -6,6 +5,7 @@ import {
   MessageCircle,
 } from 'lucide-react'
 
+import { CharacterDetailLink } from '@/components/characters/character-detail-link'
 import type { Character } from '@/lib/types'
 import {
   formatCompactCount,
@@ -43,8 +43,8 @@ export function CharacterListCard({ character, className }: CharacterListCardPro
   const imageCount = getCharacterImageCountValue(character.id)
 
   return (
-    <Link
-      href={`/characters/${character.id}`}
+    <CharacterDetailLink
+      characterId={character.id}
       className={cn(
         'group flex w-full min-w-0 cursor-pointer gap-4 overflow-hidden',
         className,
@@ -120,6 +120,6 @@ export function CharacterListCard({ character, className }: CharacterListCardPro
           </div>
         </div>
       </div>
-    </Link>
+    </CharacterDetailLink>
   )
 }

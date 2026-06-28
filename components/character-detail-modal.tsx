@@ -1,8 +1,9 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+
+import { CharacterDetailLink } from '@/components/characters/character-detail-link'
 import { ChevronRight, Heart, MessageCircle, MoreVertical } from 'lucide-react'
 
 import { CharacterCommentsPanel } from '@/components/characters/character-comments-panel'
@@ -22,7 +23,18 @@ import { cn } from '@/lib/utils'
 
 type DetailTab = 'about' | 'comments'
 
-export function CharacterDetailModal({ character }: { character: CharacterWithDetail }) {
+type CharacterDetailModalProps = {
+  character: CharacterWithDetail
+  /** overlay: URL 변경 없이 닫기, route: router.back/push (직접 URL 진입) */
+  closeMode?: 'overlay' | 'route'
+  onClose?: () => void
+}
+
+export function CharacterDetailModal({
+  character,
+  closeMode = 'route',
+  onClose,
+}: CharacterDetailModalProps) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<DetailTab>('about')
 
@@ -48,6 +60,11 @@ export function CharacterDetailModal({ character }: { character: CharacterWithDe
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
+      if (closeMode === 'overlay') {
+        onClose?.()
+        return
+      }
+
       if (typeof window !== 'undefined' && window.history.length > 1) {
         router.back()
         return
@@ -191,7 +208,6 @@ export function CharacterDetailModal({ character }: { character: CharacterWithDe
               ) : (
                 <CharacterCommentsPanel
                   characterId={character.id}
-                  myComment={character.my_comment}
                   enabled={activeTab === 'comments'}
                 />
               )}
@@ -225,9 +241,9 @@ export function CharacterDetailModal({ character }: { character: CharacterWithDe
                 </h2>
                 <div className="flex flex-col gap-2">
                   {moreFromCreator.map((item) => (
-                    <Link
+                    <CharacterDetailLink
                       key={item.id}
-                      href={`/characters/${item.id}`}
+                      characterId={item.id}
                       className="flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-muted/60"
                     >
                       <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-muted">
@@ -247,7 +263,7 @@ export function CharacterDetailModal({ character }: { character: CharacterWithDe
                       <p className="line-clamp-2 text-sm font-medium text-foreground">
                         {item.name}
                       </p>
-                    </Link>
+                    </CharacterDetailLink>
                   ))}
                 </div>
               </section>
