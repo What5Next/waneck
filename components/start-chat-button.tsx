@@ -7,7 +7,13 @@ import { LoginModal } from '@/components/auth/login-modal'
 import { useAuth } from '@/hooks/use-auth'
 import { useStartChat } from '@/hooks/mutations/use-start-chat'
 
-export function StartChatButton({ characterId }: { characterId: string }) {
+export function StartChatButton({
+  characterId,
+  onSuccess,
+}: {
+  characterId: string
+  onSuccess?: () => void
+}) {
   const { isAuthenticated } = useAuth()
   const startChatMutation = useStartChat()
   const [showLogin, setShowLogin] = useState(false)
@@ -20,10 +26,11 @@ export function StartChatButton({ characterId }: { characterId: string }) {
 
     try {
       await startChatMutation.mutateAsync(characterId)
+      onSuccess?.()
     } catch (error) {
       console.error(error)
     }
-  }, [characterId, isAuthenticated, startChatMutation])
+  }, [characterId, isAuthenticated, onSuccess, startChatMutation])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)

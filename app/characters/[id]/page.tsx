@@ -3,7 +3,7 @@
 import { notFound } from 'next/navigation'
 import { use } from 'react'
 
-import { CharacterDetailMobile } from '@/components/character-detail-mobile'
+import { CharacterDetail } from '@/components/character-detail'
 import { CharacterDetailModal } from '@/components/character-detail-modal'
 import { MobileShell } from '@/components/mobile-shell'
 import { PageLoading } from '@/components/ui/page-loading'
@@ -48,7 +48,7 @@ export default function CharacterPage({
       {/* 모바일: 풀페이지 — CSS로 PC에서 숨김 */}
       <div className="sm:hidden">
         <MobileShell>
-          <CharacterDetailMobile character={character} />
+          <CharacterDetail character={character} />
         </MobileShell>
       </div>
 
