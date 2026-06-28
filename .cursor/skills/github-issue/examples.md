@@ -1,8 +1,115 @@
 # GitHub Issue 예시
 
-## Feature — AI 모델 DB 관리
+## Feature — 캐릭터 신고·공유 (풀스택 UX)
 
-**Title:** `🤖 [Feature] AI 모델 종류 DB 관리`
+**Title:** `💬 [Feature] 캐릭터 신고·공유 기능`
+
+**Labels:** `feature`, `area: frontend`, `area: backend`, `area: db`  
+**Milestone:** MVP
+
+---
+
+### Background
+
+캐릭터 상세 UI(`CharacterDetailModal`)에 `MoreVertical` 버튼이 있지만 동작이 연결되어 있지 않다. 모바일 상세(`CharacterDetailMobile`)에는 공유·신고 진입점이 없다. 프로필 페이지는 `navigator.share` / 클립보드 복사 패턴이 있고, 채팅 헤더는 링크 복사만 지원한다. UGC 서비스에서 캐릭터 페이지 URL 공유와 부적절 콘텐츠 신고는 MVP에 필요한 기본 안전·확산 기능이다.
+
+---
+
+### Goals
+
+- 캐릭터 상세(모달·모바일)에서 캐릭터 페이지 URL을 공유할 수 있다.
+- 로그인 사용자가 부적절한 캐릭터를 사유와 함께 신고할 수 있다.
+- 동일 사용자의 중복 신고를 방지하고, 신고 데이터를 운영·후속 조치에 활용할 수 있다.
+
+---
+
+### Tasks
+
+#### 1. DB 스키마 — 캐릭터 신고
+
+- [ ] `character_reports` 테이블 생성
+- [ ] `(character_id, user_id)` 유니크 제약으로 중복 신고 방지
+- [ ] RLS: 본인 신고 insert만 허용, 조회는 서버(service role) 전용
+
+```sql
+CREATE TABLE character_reports (
+  id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  character_id uuid NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+  user_id      uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  reason       text NOT NULL,
+  detail       text,
+  status       text NOT NULL DEFAULT 'pending',
+  created_at   timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (character_id, user_id)
+);
+
+CREATE INDEX character_reports_character_id_idx ON character_reports (character_id);
+CREATE INDEX character_reports_status_idx ON character_reports (status);
+```
+
+#### 2. API — 캐릭터 신고
+
+- [ ] `POST /api/characters/[id]/reports` — 신고 접수
+- [ ] 인증 필수 (`requireAuthenticatedUser`)
+- [ ] 본인 캐릭터 신고 차단 (`selfLikeForbiddenResponse` 패턴 재사용)
+- [ ] 사유 enum 검증, `other`일 때 `detail` 필수
+- [ ] 중복 신고 시 `409 Conflict` 또는 idempotent `200` (팀 정책 결정)
+- [ ] `lib/database.types.ts` 갱신
+
+```ts
+type CharacterReportBody = {
+  reason: 'spam' | 'inappropriate' | 'copyright' | 'other';
+  detail?: string;
+};
+```
+
+#### 3. 공유 UI — 캐릭터 상세
+
+- [ ] `useCharacterShare(characterId)` 훅 또는 공유 유틸 추출 (프로필 `handleShare` 패턴 참고)
+- [ ] 공유 URL: `${origin}/characters/${characterId}`
+- [ ] `navigator.share` 지원 시 네이티브 공유, 미지원 시 클립보드 복사 + toast
+- [ ] PC 모달 `MoreVertical` → `PopoverMenu`에 "공유" 항목 연결
+- [ ] 모바일 상세 헤더/액션 영역에 공유 버튼 또는 메뉴 추가
+
+#### 4. 신고 UI — 캐릭터 상세
+
+- [ ] `MoreVertical` 메뉴에 "신고하기" 항목 추가 (모바일 동일)
+- [ ] 신고 다이얼로그: 사유 선택(라디오) + 기타 시 텍스트 입력
+- [ ] 미로그인 시 로그인 유도
+- [ ] 제출 성공 toast, 실패 시 에러 메시지 표시
+- [ ] `useReportCharacterMutation` 훅 + `query-keys` 추가
+
+#### 5. (Post-MVP) 어드민 신고 목록·처리
+
+- [ ] 신고 목록 조회·상태 변경 UI (`area: admin`)
+- [ ] 신고 누적 시 캐릭터 비공개/삭제 워크플로
+
+---
+
+### Acceptance Criteria
+
+- [ ] PC 캐릭터 상세 모달 `MoreVertical` 메뉴에서 공유·신고가 동작한다.
+- [ ] 모바일 캐릭터 상세에서도 공유·신고에 접근할 수 있다.
+- [ ] 공유 시 `/characters/{id}` URL이 복사되거나 OS 공유 시트가 열린다.
+- [ ] 로그인 사용자가 사유를 선택해 신고하면 DB에 `pending` 상태로 저장된다.
+- [ ] 동일 사용자가 같은 캐릭터를 재신고할 수 없다.
+- [ ] 본인이 만든 캐릭터는 신고할 수 없다.
+- [ ] 미로그인 사용자는 신고 시 로그인이 요구된다.
+
+---
+
+### Notes
+
+- 공유는 클라이언트만으로 구현 가능 (API 불필요). 프로필·채팅 헤더 패턴을 통일해 `lib/share.ts` 등으로 추출 검토.
+- 신고 사유 라벨은 UI 상수로 관리, i18n은 후속.
+- 댓글 신고는 본 이슈 범위 밖 (별도 이슈).
+- 어드민 처리 UI는 Post-MVP — MVP에서는 DB 적재만으로 운영팀이 Supabase에서 확인 가능.
+
+---
+
+## Feature — AI 모델 DB 관리 (DB·API 중심)
+
+**Title:** `💬 [Feature] AI 모델 종류 DB 관리`
 
 **Labels:** `feature`, `area: backend`, `area: db`  
 **Milestone:** MVP
