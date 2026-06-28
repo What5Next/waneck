@@ -1,21 +1,28 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { updateCharacterComment } from '@/lib/api/character-comments'
-import { patchCharacterEngagementInCache } from '@/lib/api/character-stats-cache'
+import { updateInTree } from '@/lib/character-comments-tree'
 import { queryKeys } from '@/lib/api/query-keys'
 import type { CharacterComment } from '@/lib/types'
+
+type UpdateCharacterCommentInput = {
+  commentId: string
+  content: string
+}
 
 export function useUpdateCharacterComment(characterId: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (content: string) => updateCharacterComment(characterId, content),
+    mutationFn: ({ commentId, content }: UpdateCharacterCommentInput) =>
+      updateCharacterComment(characterId, commentId, content),
     onSuccess: (comment) => {
       queryClient.setQueryData<CharacterComment[]>(
         queryKeys.characters.comments(characterId),
-        (prev) => prev?.map((item) => (item.id === comment.id ? comment : item)),
+        (prev) => (prev ? updateInTree(prev, comment.id, comment) : prev),
       )
-      patchCharacterEngagementInCache(queryClient, characterId, { my_comment: comment })
     },
   })
 }
+
+export type { UpdateCharacterCommentInput }
