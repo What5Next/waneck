@@ -37,6 +37,7 @@ import {
 import { getProfileInitials } from "@/lib/user-profile";
 import { cn } from "@/lib/utils";
 import { useProfileQuery } from "@/hooks/queries/use-profile-query";
+import { useLikedCharactersQuery } from "@/hooks/queries/use-liked-characters-query";
 import { useSignOut } from "@/hooks/mutations/use-sign-out";
 import { useSafetyFilter, useDefaultModel } from "@/hooks/use-user-settings";
 
@@ -45,6 +46,9 @@ export function MyPageView() {
   const signOutMutation = useSignOut();
   const { themeLabel, toggleTheme } = useThemeReady();
   const { data: profile, isPending: loading } = useProfileQuery();
+  const { data: likedCharacters = [] } = useLikedCharactersQuery({
+    enabled: !!profile,
+  });
   const { enabled: safetyFilterEnabled, setEnabled: setSafetyFilterEnabled } =
     useSafetyFilter();
   const { modelId: defaultModelId } = useDefaultModel();
@@ -114,7 +118,7 @@ export function MyPageView() {
               <div className="mt-0.5 flex items-center gap-3 text-xs text-muted-foreground/60">
                 <span>{profile.follower_count} followers</span>
                 <span>{profile.following_count} following</span>
-                <span>0 likes</span>
+                <span>{likedCharacters.length} likes</span>
               </div>
             </div>
             <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
@@ -153,9 +157,11 @@ export function MyPageView() {
           </List>
 
           <List title="MY">
-            <Row
+            <RowLink
+              href="/mypage/liked"
               icon={<Heart className="h-4 w-4" />}
               label="Liked characters"
+              value={String(likedCharacters.length)}
             />
             <Row
               icon={<Shield className="h-4 w-4" />}
