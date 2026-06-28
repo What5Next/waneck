@@ -114,11 +114,9 @@ export function CharacterChatSection({ characterId }: Props) {
                   <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
                     {conv.title ?? `Chat ${i + 1}`}
                   </span>
-                  {conv.last_message_at ? (
-                    <span className="shrink-0 text-xs text-muted-foreground">
-                      {formatRelativeTime(conv.last_message_at)}
-                    </span>
-                  ) : null}
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    {conv.last_message_at ? formatRelativeTime(conv.last_message_at) : 'NEW'}
+                  </span>
                 </Link>
                 <button
                   type="button"
