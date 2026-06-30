@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+import {
+  getCommentCountsByCharacterIds,
+  withCommentCounts,
+} from '@/lib/api/character-comment-counts'
 import { normalizeCharacterGenres } from '@/lib/character-genres'
 import { supabase } from '@/lib/supabase'
 import { createClient } from '@/lib/supabase/server'
@@ -14,10 +18,12 @@ export async function GET() {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  const characters = (data ?? []).map((character) => ({
+  const rows = data ?? []
+  const commentCounts = await getCommentCountsByCharacterIds(rows.map((row) => row.id))
+
+  const characters = withCommentCounts(rows, commentCounts).map((character) => ({
     ...character,
     like_count: character.like_count ?? 0,
-    comment_count: character.comment_count ?? 0,
     message_count: character.message_count ?? 0,
   }))
 

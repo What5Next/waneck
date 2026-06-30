@@ -5,9 +5,8 @@ import {
   type CreateCharacterCommentInput,
 } from '@/lib/api/character-comments'
 import { appendReply } from '@/lib/character-comments-tree'
-import { patchCharacterStatsInCache } from '@/lib/api/character-stats-cache'
 import { queryKeys } from '@/lib/api/query-keys'
-import type { CharacterComment, CharacterWithDetail } from '@/lib/types'
+import type { CharacterComment } from '@/lib/types'
 
 export function useCreateCharacterComment(characterId: string) {
   const queryClient = useQueryClient()
@@ -49,11 +48,11 @@ export function useCreateCharacterComment(characterId: string) {
         },
       )
 
-      const detail = queryClient.getQueryData<CharacterWithDetail>(
-        queryKeys.characters.detail(characterId),
-      )
-      patchCharacterStatsInCache(queryClient, characterId, {
-        comment_count: (detail?.comment_count ?? 0) + 1,
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.characters.detail(characterId),
+      })
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.characters.list(),
       })
     },
   })

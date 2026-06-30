@@ -81,6 +81,11 @@ export function countSubtree(comment: CharacterComment): number {
   );
 }
 
+/** 댓글 트리 전체 개수 (top-level + 답글) */
+export function countCommentsInTree(comments: CharacterComment[]): number {
+  return comments.reduce((sum, comment) => sum + countSubtree(comment), 0);
+}
+
 /** 트리에서 commentId로 댓글 찾기 */
 export function findInTree(
   comments: CharacterComment[],
