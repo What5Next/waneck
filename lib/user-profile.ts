@@ -20,6 +20,9 @@ export type ProfileSummary = {
     profile_image_url: string | null;
     tag: string | null;
     created_at: string;
+    message_count: number;
+    like_count: number;
+    comment_count: number;
   }>;
 };
 

@@ -18,7 +18,6 @@ import {
 import { RowPanel } from "@/components/ui/list";
 import { Row } from "@/components/ui/row";
 import { UnderlineTabs } from "@/components/ui/underline-tabs";
-import type { Character } from "@/lib/types";
 import type { ProfileSummary, ProfileTab } from "@/lib/user-profile";
 import { getProfileInitials } from "@/lib/user-profile";
 import { cn } from "@/lib/utils";
@@ -124,7 +123,7 @@ export function ProfileView() {
       <div className="scroll-hide min-h-0 flex-1 overflow-y-auto">
         {/* 프로필 헤더 */}
         <div className="px-5 pb-4 pt-5">
-          <div className="flex items-start gap-4">
+          <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16">
               {profile.avatar_url ? (
                 <AvatarImage src={profile.avatar_url} alt="" />
@@ -239,7 +238,7 @@ export function ProfileView() {
                   {sortedCharacters.map((character) => (
                     <CharacterGridCard
                       key={character.id}
-                      character={character as Character}
+                      character={character}
                     />
                   ))}
                 </div>

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 
+import { enrichCharactersWithStats } from '@/lib/api/character-list-stats'
 import { requireAuthenticatedUser } from '@/lib/api/character-stats-auth'
 import { supabaseAdmin } from '@/lib/supabase.server'
 
@@ -31,7 +32,9 @@ export async function GET() {
       })
       .filter((character): character is NonNullable<typeof character> => character !== null)
 
-    return NextResponse.json(characters)
+    const enrichedCharacters = await enrichCharactersWithStats(characters)
+
+    return NextResponse.json(enrichedCharacters)
   } catch (err) {
     console.error('[/api/characters/liked GET]', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

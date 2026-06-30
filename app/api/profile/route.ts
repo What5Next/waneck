@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { enrichCharactersWithStats } from "@/lib/api/character-list-stats";
 import {
   getProfileHandle,
   getProfileName,
@@ -28,7 +29,9 @@ export async function GET() {
           .maybeSingle(),
         supabaseAdmin
           .from("characters")
-          .select("id, name, short_intro, profile_image_url, tag, created_at")
+          .select(
+            "id, name, short_intro, profile_image_url, tag, created_at, message_count, like_count, comment_count",
+          )
           .eq("created_by", user.id)
           .eq("is_public", true)
           .order("created_at", { ascending: false }),
@@ -42,6 +45,8 @@ export async function GET() {
     const avatarUrl =
       (user.user_metadata?.avatar_url as string | undefined) ?? null;
 
+    const enrichedCharacters = await enrichCharactersWithStats(characters ?? []);
+
     const summary: ProfileSummary = {
       id: user.id,
       display_name: displayName,
@@ -51,9 +56,9 @@ export async function GET() {
       follower_count: 0,
       following_count: 0,
       wons_received_30d: 0,
-      public_character_count: characters?.length ?? 0,
+      public_character_count: enrichedCharacters.length,
       chat_count: chatCount ?? 0,
-      characters: characters ?? [],
+      characters: enrichedCharacters,
     };
 
     return NextResponse.json(summary);

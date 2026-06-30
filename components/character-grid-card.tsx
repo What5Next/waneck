@@ -3,14 +3,27 @@ import { CharacterThumbnailCard } from '@/components/characters/character-thumbn
 import type { Character } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
+/** 그리드 카드에 실제로 쓰이는 캐릭터 필드만 */
+export type CharacterGridCardData = Pick<
+  Character,
+  | 'id'
+  | 'name'
+  | 'short_intro'
+  | 'profile_image_url'
+  | 'tag'
+  | 'message_count'
+  | 'like_count'
+  | 'comment_count'
+>
+
 interface CharacterGridCardProps {
-  character: Character
+  character: CharacterGridCardData
   rank?: number
   className?: string
 }
 
 export function CharacterGridCard({ character, rank, className }: CharacterGridCardProps) {
-  const creatorLabel = character.tag?.trim() || null
+  const creatorHandle = character.tag?.trim() || null
 
   return (
     <CharacterDetailLink
@@ -40,8 +53,10 @@ export function CharacterGridCard({ character, rank, className }: CharacterGridC
         <p className="mt-0.5 line-clamp-2 text-[10px] leading-tight text-muted-foreground">
           {character.short_intro}
         </p>
-        {creatorLabel ? (
-          <p className="mt-1 line-clamp-1 text-[9px] text-muted-foreground/60">{creatorLabel}</p>
+        {creatorHandle ? (
+          <p className="mt-1 line-clamp-1 text-[9px] text-muted-foreground/60">
+            @{creatorHandle}
+          </p>
         ) : null}
       </div>
     </CharacterDetailLink>
