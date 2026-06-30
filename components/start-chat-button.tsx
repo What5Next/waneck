@@ -7,7 +7,16 @@ import { LoginModal } from '@/components/auth/login-modal'
 import { useAuth } from '@/hooks/use-auth'
 import { useStartChat } from '@/hooks/mutations/use-start-chat'
 
-export function StartChatButton({ characterId }: { characterId: string }) {
+type StartChatButtonProps = {
+  characterId: string
+  /** 채팅 시작 직전 호출 (예: 상세 모달 닫기) */
+  onBeforeNavigate?: () => void
+}
+
+export function StartChatButton({
+  characterId,
+  onBeforeNavigate,
+}: StartChatButtonProps) {
   const { isAuthenticated } = useAuth()
   const startChatMutation = useStartChat()
   const [showLogin, setShowLogin] = useState(false)
@@ -18,12 +27,14 @@ export function StartChatButton({ characterId }: { characterId: string }) {
       return
     }
 
+    onBeforeNavigate?.()
+
     try {
       await startChatMutation.mutateAsync(characterId)
     } catch (error) {
       console.error(error)
     }
-  }, [characterId, isAuthenticated, startChatMutation])
+  }, [characterId, isAuthenticated, onBeforeNavigate, startChatMutation])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
