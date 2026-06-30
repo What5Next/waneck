@@ -30,6 +30,7 @@ export type ChatComposerProps = {
   disabled?: boolean;
   model: ModelId;
   onModelChange: (model: ModelId) => void;
+  showModelSelector?: boolean;
   /** 캐릭터 추천 대화 — 추천 답변 메뉴에 표시 */
   suggestions?: string[];
 };
@@ -100,6 +101,7 @@ export function ChatComposer({
   disabled = false,
   model,
   onModelChange,
+  showModelSelector = true,
   suggestions = [],
 }: ChatComposerProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -198,7 +200,9 @@ export function ChatComposer({
                 />
               </PopoverMenu>
 
-              <ModelSelector value={model} onChange={onModelChange} compact />
+              {showModelSelector && (
+                <ModelSelector value={model} onChange={onModelChange} compact />
+              )}
             </div>
             <Button
               type="button"
