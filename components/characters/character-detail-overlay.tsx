@@ -12,7 +12,7 @@ import {
 
 import { CharacterDetailModal } from '@/components/character-detail-modal'
 import { PageLoading } from '@/components/ui/page-loading'
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { useCharacterQuery } from '@/hooks/queries/use-character-query'
 import { useIsDesktop } from '@/hooks/use-media-query'
 
@@ -93,6 +93,9 @@ function CharacterDetailOverlayHost() {
       <Dialog open onOpenChange={(open) => !open && closeCharacter()}>
         <DialogContent showClose className="max-w-sm">
           <DialogTitle className="sr-only">Loading character</DialogTitle>
+          <DialogDescription className="sr-only">
+            Loading character details
+          </DialogDescription>
           <PageLoading />
         </DialogContent>
       </Dialog>
