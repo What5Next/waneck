@@ -11,6 +11,7 @@ interface PageNavBarProps {
   onBack: () => void
   className?: string
   titleClassName?: string
+  trailing?: ReactNode
 }
 
 /** 서브페이지 상단 뒤로가기 + 제목 바 */
@@ -19,6 +20,7 @@ export function PageNavBar({
   onBack,
   className,
   titleClassName,
+  trailing,
 }: PageNavBarProps) {
   return (
     <div
@@ -31,16 +33,24 @@ export function PageNavBar({
         size="md"
         shape="square"
         onClick={onBack}
-        className="text-foreground"
+        className="shrink-0 text-foreground"
         aria-label="Go back"
       >
         <ChevronLeft className="h-5 w-5" />
       </IconButton>
       {title != null && title !== '' ? (
-        <span className={cn('text-sm text-muted-foreground', titleClassName)}>
+        <span
+          className={cn(
+            'min-w-0 flex-1 truncate text-sm text-muted-foreground',
+            titleClassName,
+          )}
+        >
           {title}
         </span>
-      ) : null}
+      ) : (
+        <span className="min-w-0 flex-1" />
+      )}
+      {trailing}
     </div>
   )
 }
