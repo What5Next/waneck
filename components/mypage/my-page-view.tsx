@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import {
   Ban,
   Bot,
@@ -29,7 +30,11 @@ import { PageLoading } from "@/components/ui/page-loading";
 import { PageNavBar } from "@/components/ui/page-nav-bar";
 import { List, RowPanel } from "@/components/ui/list";
 import { Row, RowLink } from "@/components/ui/row";
+import { SettingsDialog } from "@/components/ui/settings-dialog";
 import { Switch } from "@/components/ui/switch";
+import { PersonaSettings } from "@/components/persona/persona-settings";
+import { PromptSettings } from "@/components/prompt/prompt-settings";
+import { UserNotesSettings } from "@/components/user-notes/user-notes-settings";
 import {
   DISCORD_URL,
   SUPPORT_EMAIL,
@@ -41,6 +46,14 @@ import { useLikedCharactersQuery } from "@/hooks/queries/use-liked-characters-qu
 import { useSignOut } from "@/hooks/mutations/use-sign-out";
 import { useSafetyFilter, useResolvedDefaultModel } from "@/hooks/use-user-settings";
 import { useAiModelsQuery } from "@/hooks/queries/use-ai-models-query";
+
+type DefaultSettingModal = "prompt" | "persona" | "notes";
+
+const DEFAULT_SETTING_TITLES: Record<DefaultSettingModal, string> = {
+  prompt: "Prompt",
+  persona: "Persona",
+  notes: "User notes",
+};
 
 export function MyPageView() {
   const router = useRouter();
@@ -54,6 +67,8 @@ export function MyPageView() {
     useSafetyFilter();
   const { modelId: defaultModelId } = useResolvedDefaultModel();
   const { data: aiModels = [] } = useAiModelsQuery();
+  const [defaultSettingModal, setDefaultSettingModal] =
+    useState<DefaultSettingModal | null>(null);
 
   const defaultModel = findAiModelById(aiModels, defaultModelId);
   const defaultModelLabel = defaultModel
@@ -70,6 +85,10 @@ export function MyPageView() {
 
   async function handleSignOut() {
     await signOutMutation.mutateAsync();
+  }
+
+  function handleDefaultSettingOpenChange(open: boolean) {
+    if (!open) setDefaultSettingModal(null);
   }
 
   if (loading || !profile) {
@@ -137,7 +156,7 @@ export function MyPageView() {
             />
           </RowPanel>
 
-          <List title="Quick settings">
+          <List title="Default settings">
             <Row
               icon={<Bot className="h-4 w-4" />}
               label="Model"
@@ -147,16 +166,19 @@ export function MyPageView() {
               icon={<FileText className="h-4 w-4" />}
               label="Prompt"
               value="Default prompt"
+              onClick={() => setDefaultSettingModal("prompt")}
             />
             <Row
               icon={<CircleUser className="h-4 w-4" />}
               label="Persona"
               value={profile.display_name}
+              onClick={() => setDefaultSettingModal("persona")}
             />
             <Row
               icon={<NotebookText className="h-4 w-4" />}
               label="User notes"
               value="No notes yet"
+              onClick={() => setDefaultSettingModal("notes")}
             />
           </List>
 
@@ -258,6 +280,26 @@ export function MyPageView() {
           </div>
         </section>
       </div>
+
+      <SettingsDialog
+        open={defaultSettingModal !== null}
+        onOpenChange={handleDefaultSettingOpenChange}
+        title={
+          defaultSettingModal
+            ? DEFAULT_SETTING_TITLES[defaultSettingModal]
+            : ""
+        }
+      >
+        {defaultSettingModal === "prompt" ? (
+          <PromptSettings initialView="editor" hideLabel />
+        ) : null}
+        {defaultSettingModal === "persona" ? (
+          <PersonaSettings hideLabel />
+        ) : null}
+        {defaultSettingModal === "notes" ? (
+          <UserNotesSettings hideLabel />
+        ) : null}
+      </SettingsDialog>
     </div>
   );
 }
