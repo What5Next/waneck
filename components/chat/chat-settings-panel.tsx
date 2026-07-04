@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   BookOpen,
   ChevronDown,
@@ -13,37 +13,32 @@ import {
   FlaskConical,
   Gem,
   History,
-  ImagePlus,
   Info,
   Moon,
   NotebookText,
   Palette,
   Pencil,
   SlidersHorizontal,
-  Star,
   Sun,
-  Trash2,
   UserRound,
 } from "lucide-react";
 import { useThemeReady } from "@/hooks/use-theme-ready";
 import { toast } from "sonner";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
-import { Input } from "@/components/ui/input";
 import {
   PopoverMenuGroup,
   PopoverMenuItem,
   PopoverMenuPanel,
 } from "@/components/ui/popover-menu";
-import { Textarea } from "@/components/ui/textarea";
 import { ChatRoomSettingsView } from "@/components/chat/chat-room-settings-view";
 import { ChatAdvancedSettingsView } from "@/components/chat/chat-advanced-settings-view";
+import { PersonaSettings } from "@/components/persona/persona-settings";
+import { PromptSettings } from "@/components/prompt/prompt-settings";
+import { UserNotesSettings } from "@/components/user-notes/user-notes-settings";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Switch } from "@/components/ui/switch";
 import { useChatRoomName } from "@/hooks/use-user-settings";
-import { getProfileInitials } from "@/lib/user-profile";
 import { cn } from "@/lib/utils";
 
 type SettingsTab = "memory" | "persona" | "notes" | "output" | "settings";
@@ -66,38 +61,7 @@ const MOCK_MEMORY_TURNS: MemoryTurn[] = [
   },
 ];
 
-type Persona = {
-  id: string;
-  name: string;
-  description: string;
-  imageUrl: string | null;
-  isDefault: boolean;
-};
-
-// Mock persona data for UI preview before API integration
-const MOCK_PERSONAS: Persona[] = [
-  {
-    id: "default",
-    name: "Jin Choi",
-    description: "",
-    imageUrl: null,
-    isDefault: true,
-  },
-];
-
-const PERSONA_NAME_MAX = 50;
-const PERSONA_DESC_MAX = 4000;
-
-// Mock session note for UI preview before API integration
-const SESSION_NOTE_MAX = 2000;
-const MOCK_SESSION_NOTE = "";
-
 // Mock output settings for UI preview before API integration
-const MOCK_OUTPUT_PROMPT = {
-  title: "Elin Prompt V5",
-  description: "[V5] A default prompt suitable for all chats.",
-};
-
 const MOCK_OUTPUT_MODEL = {
   name: "2.5 Pro",
   description:
@@ -364,334 +328,6 @@ function MemoryTabContent() {
   );
 }
 
-function PersonaTabContent() {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const previewObjectUrlRef = useRef<string | null>(null);
-
-  const [personas, setPersonas] = useState<Persona[]>(() =>
-    MOCK_PERSONAS.map((persona) => ({ ...persona })),
-  );
-  const [activePersonaId, setActivePersonaId] = useState(MOCK_PERSONAS[0].id);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [draftName, setDraftName] = useState(MOCK_PERSONAS[0].name);
-  const [draftDescription, setDraftDescription] = useState(
-    MOCK_PERSONAS[0].description,
-  );
-  const [draftImageUrl, setDraftImageUrl] = useState<string | null>(
-    MOCK_PERSONAS[0].imageUrl,
-  );
-
-  const activePersona =
-    personas.find((persona) => persona.id === activePersonaId) ?? personas[0];
-
-  // Sync edit fields only when the active persona changes
-  useEffect(() => {
-    const persona = personas.find((item) => item.id === activePersonaId);
-    if (!persona) return;
-
-    setDraftName(persona.name);
-    setDraftDescription(persona.description);
-    setDraftImageUrl(persona.imageUrl);
-  }, [activePersonaId, personas]);
-
-  // Prevent object URL memory leaks
-  useEffect(() => {
-    return () => {
-      if (previewObjectUrlRef.current) {
-        URL.revokeObjectURL(previewObjectUrlRef.current);
-      }
-    };
-  }, []);
-
-  function revokePreviewUrl() {
-    if (previewObjectUrlRef.current) {
-      URL.revokeObjectURL(previewObjectUrlRef.current);
-      previewObjectUrlRef.current = null;
-    }
-  }
-
-  function handleSelectPersona(personaId: string) {
-    setActivePersonaId(personaId);
-    setIsDropdownOpen(false);
-  }
-
-  function handleImageSelect(event: React.ChangeEvent<HTMLInputElement>) {
-    const selectedFile = event.target.files?.[0];
-    if (!selectedFile) return;
-
-    if (!selectedFile.type.startsWith("image/")) {
-      toast.error("Image file only.");
-      event.target.value = "";
-      return;
-    }
-
-    revokePreviewUrl();
-    const objectUrl = URL.createObjectURL(selectedFile);
-    previewObjectUrlRef.current = objectUrl;
-    setDraftImageUrl(objectUrl);
-    event.target.value = "";
-  }
-
-  function handleSave() {
-    const trimmedName = draftName.trim();
-    if (!trimmedName) {
-      toast.error("Name is required.");
-      return;
-    }
-
-    if (!activePersona) return;
-
-    setPersonas((prevPersonas) =>
-      prevPersonas.map((persona) =>
-        persona.id === activePersona.id
-          ? {
-              ...persona,
-              name: trimmedName,
-              description: draftDescription,
-              imageUrl: draftImageUrl,
-            }
-          : persona,
-      ),
-    );
-    toast.success("Persona saved.");
-  }
-
-  function handleSetAsDefault() {
-    if (!activePersona) return;
-
-    if (activePersona.isDefault) {
-      toast.message("Already set as default.");
-      return;
-    }
-
-    setPersonas((prevPersonas) =>
-      prevPersonas.map((persona) => ({
-        ...persona,
-        isDefault: persona.id === activePersona.id,
-      })),
-    );
-    toast.success("Set as default.");
-  }
-
-  function handleDelete() {
-    if (!activePersona) return;
-
-    if (personas.length <= 1) {
-      toast.error("At least one persona is required.");
-      return;
-    }
-
-    const remainingPersonas = personas.filter(
-      (persona) => persona.id !== activePersona.id,
-    );
-
-    if (activePersona.isDefault && remainingPersonas.length > 0) {
-      remainingPersonas[0] = { ...remainingPersonas[0], isDefault: true };
-    }
-
-    setPersonas(remainingPersonas);
-    setActivePersonaId(remainingPersonas[0].id);
-    toast.success("Persona deleted.");
-  }
-
-  if (!activePersona) return null;
-
-  const personaInitials = getProfileInitials(draftName || activePersona.name);
-  const dropdownLabel = activePersona.isDefault
-    ? "Default"
-    : activePersona.name;
-
-  return (
-    <div className="w-full min-w-0 space-y-2.5 pb-1">
-      <p className="text-[11px] text-muted-foreground">Persona</p>
-
-      <div className="relative rounded-xl bg-muted/25 px-3 py-2.5">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex min-w-0 items-center gap-2">
-            <Avatar className="h-8 w-8">
-              {draftImageUrl ? (
-                <AvatarImage src={draftImageUrl} alt={draftName} />
-              ) : null}
-              <AvatarFallback className="bg-primary/15 text-xs font-semibold text-primary">
-                {personaInitials}
-              </AvatarFallback>
-            </Avatar>
-            <span className="truncate text-[13px] font-medium text-foreground">
-              {draftName || activePersona.name}
-            </span>
-          </div>
-
-          <div className="relative shrink-0">
-            <button
-              type="button"
-              onClick={() => setIsDropdownOpen((open) => !open)}
-              className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
-              aria-expanded={isDropdownOpen}
-              aria-haspopup="listbox"
-            >
-              {dropdownLabel}
-              <ChevronDown className="h-3 w-3" />
-            </button>
-
-            {isDropdownOpen ? (
-              <div
-                className="absolute right-0 z-10 mt-1 min-w-[120px] rounded-lg border border-border bg-card py-1 shadow-lg"
-                role="listbox"
-              >
-                {personas.map((persona) => (
-                  <button
-                    key={persona.id}
-                    type="button"
-                    role="option"
-                    aria-selected={persona.id === activePersonaId}
-                    onClick={() => handleSelectPersona(persona.id)}
-                    className={cn(
-                      "block w-full px-3 py-2 text-left text-[12px] transition-colors hover:bg-muted/40",
-                      persona.id === activePersonaId
-                        ? "font-medium text-foreground"
-                        : "text-muted-foreground",
-                    )}
-                  >
-                    {persona.isDefault ? "Default" : persona.name}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-          </div>
-        </div>
-      </div>
-
-      <div className="flex justify-center">
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-border text-muted-foreground transition-colors hover:border-muted-foreground/50 hover:bg-muted/20 hover:text-foreground"
-          aria-label="Upload profile image"
-        >
-          {draftImageUrl ? (
-            <Avatar className="h-full w-full">
-              <AvatarImage src={draftImageUrl} alt="" />
-              <AvatarFallback className="bg-primary/15 text-primary">
-                {personaInitials}
-              </AvatarFallback>
-            </Avatar>
-          ) : (
-            <ImagePlus className="h-6 w-6" />
-          )}
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          className="sr-only"
-          onChange={handleImageSelect}
-        />
-      </div>
-
-      <div className="relative">
-        <Input
-          value={draftName}
-          onChange={(event) => setDraftName(event.target.value)}
-          maxLength={PERSONA_NAME_MAX}
-          className="pr-12 text-[13px]"
-          aria-label="Persona name"
-        />
-        <span className="pointer-events-none absolute right-3 bottom-3 text-[10px] text-muted-foreground">
-          {draftName.length}/{PERSONA_NAME_MAX}
-        </span>
-      </div>
-
-      <div className="relative">
-        <Textarea
-          value={draftDescription}
-          onChange={(event) => setDraftDescription(event.target.value)}
-          placeholder="Enter description..."
-          maxLength={PERSONA_DESC_MAX}
-          rows={3}
-          className="min-h-[88px] pb-6 text-[13px]"
-          aria-label="Persona description"
-        />
-        <span className="pointer-events-none absolute right-3 bottom-3 text-[10px] text-muted-foreground">
-          {draftDescription.length.toLocaleString("en-US")}/
-          {PERSONA_DESC_MAX.toLocaleString("en-US")}
-        </span>
-      </div>
-
-      <Button
-        type="button"
-        variant="secondary"
-        className="h-10 w-full rounded-xl text-[13px]"
-        onClick={handleSave}
-      >
-        Save
-      </Button>
-
-      <div className="flex items-center justify-center gap-3">
-        <button
-          type="button"
-          onClick={handleSetAsDefault}
-          disabled={activePersona.isDefault}
-          className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <Star className="h-3.5 w-3.5" />
-          Set as Default
-        </button>
-        <span className="h-3.5 w-px bg-border" aria-hidden />
-        <button
-          type="button"
-          onClick={handleDelete}
-          disabled={personas.length <= 1}
-          className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-          Delete
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function NotesTabContent() {
-  const [sessionNote, setSessionNote] = useState(MOCK_SESSION_NOTE);
-  const [draftNote, setDraftNote] = useState(MOCK_SESSION_NOTE);
-
-  function handleEditSave() {
-    setSessionNote(draftNote);
-    toast.success("Note saved.");
-  }
-
-  return (
-    <div className="w-full min-w-0 space-y-3 pb-1">
-      <p className="text-[11px] text-muted-foreground">Session Note</p>
-
-      <div className="relative">
-        <Textarea
-          value={draftNote}
-          onChange={(event) => setDraftNote(event.target.value)}
-          placeholder="Please provide user note."
-          maxLength={SESSION_NOTE_MAX}
-          rows={5}
-          className="min-h-[120px] pb-6 text-[13px]"
-          aria-label="Session note"
-        />
-        <span className="pointer-events-none absolute right-3 bottom-3 text-[10px] text-muted-foreground">
-          {draftNote.length.toLocaleString("en-US")}/
-          {SESSION_NOTE_MAX.toLocaleString("en-US")}
-        </span>
-      </div>
-
-      <Button
-        type="button"
-        variant="secondary"
-        className="h-10 w-full rounded-xl text-[13px]"
-        onClick={handleEditSave}
-      >
-        Edit Save
-      </Button>
-    </div>
-  );
-}
-
 function OutputSectionLabel({
   children,
   trailing,
@@ -791,90 +427,86 @@ function OutputTabContent() {
   const [awkwardOutputCorrectionEnabled, setAwkwardOutputCorrectionEnabled] =
     useState(false);
 
+  // Prompt 2depth: editor 진입 시 아래 섹션은 secondarySections로 숨김
   return (
-    <div className="w-full min-w-0 space-y-4 pb-1">
-      <div className="space-y-2">
-        <OutputSectionLabel>Prompt</OutputSectionLabel>
-        <OutputLinkCard
-          title={MOCK_OUTPUT_PROMPT.title}
-          description={MOCK_OUTPUT_PROMPT.description}
-          onClick={() => toast.message("Prompt settings are coming soon.")}
-        />
-      </div>
+    <PromptSettings
+      secondarySections={
+        <>
+          <div className="space-y-2">
+            <OutputSectionLabel>
+              Chat Model &amp; Output Settings
+            </OutputSectionLabel>
+            <OutputLinkCard
+              badge={
+                <span className="rounded bg-primary px-1 py-0.5 text-[9px] font-bold uppercase text-primary-foreground">
+                  Pro
+                </span>
+              }
+              title={MOCK_OUTPUT_MODEL.name}
+              description={MOCK_OUTPUT_MODEL.description}
+              trailing={
+                <span className="inline-flex items-center gap-0.5 text-[11px] font-medium text-muted-foreground">
+                  <Gem className="h-3 w-3 text-primary" aria-hidden />
+                  {MOCK_OUTPUT_MODEL.cost}
+                </span>
+              }
+              onClick={() => toast.message("Model settings are coming soon.")}
+            />
+          </div>
 
-      <div className="space-y-2">
-        <OutputSectionLabel>
-          Chat Model &amp; Output Settings
-        </OutputSectionLabel>
-        <OutputLinkCard
-          badge={
-            <span className="rounded bg-primary px-1 py-0.5 text-[9px] font-bold uppercase text-primary-foreground">
-              Pro
-            </span>
-          }
-          title={MOCK_OUTPUT_MODEL.name}
-          description={MOCK_OUTPUT_MODEL.description}
-          trailing={
-            <span className="inline-flex items-center gap-0.5 text-[11px] font-medium text-muted-foreground">
-              <Gem className="h-3 w-3 text-primary" aria-hidden />
-              {MOCK_OUTPUT_MODEL.cost}
-            </span>
-          }
-          onClick={() => toast.message("Model settings are coming soon.")}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <OutputSectionLabel
-          trailing={
-            <button
-              type="button"
-              className="text-muted-foreground transition-colors hover:text-foreground"
-              aria-label="Billing information"
-              onClick={() => toast.message("Billing info is coming soon.")}
+          <div className="space-y-2">
+            <OutputSectionLabel
+              trailing={
+                <button
+                  type="button"
+                  className="text-muted-foreground transition-colors hover:text-foreground"
+                  aria-label="Billing information"
+                  onClick={() => toast.message("Billing info is coming soon.")}
+                >
+                  <Info className="h-3 w-3" />
+                </button>
+              }
             >
-              <Info className="h-3 w-3" />
-            </button>
-          }
-        >
-          Billing
-        </OutputSectionLabel>
-        <SegmentedControl
-          value={billingPlan}
-          onValueChange={setBillingPlan}
-          layout="equal"
-          columns={2}
-          shape="rounded"
-          size="md"
-          className="w-full"
-          aria-label="Billing plan"
-          options={[
-            { value: "fixed", label: "Fixed plan" },
-            { value: "usage", label: "Usage-based" },
-          ]}
-        />
-      </div>
+              Billing
+            </OutputSectionLabel>
+            <SegmentedControl
+              value={billingPlan}
+              onValueChange={setBillingPlan}
+              layout="equal"
+              columns={2}
+              shape="rounded"
+              size="md"
+              className="w-full"
+              aria-label="Billing plan"
+              options={[
+                { value: "fixed", label: "Fixed plan" },
+                { value: "usage", label: "Usage-based" },
+              ]}
+            />
+          </div>
 
-      <div className="space-y-2">
-        <OutputSectionLabel>Response Settings</OutputSectionLabel>
-        <div className="space-y-3 rounded-xl bg-muted/25 p-3">
-          <OutputToggleRow
-            title="Anti Impersonate"
-            description="Prevents the model from generating responses on the user's behalf."
-            checked={antiImpersonateEnabled}
-            onCheckedChange={setAntiImpersonateEnabled}
-          />
-          <div className="border-t border-border" aria-hidden />
-          <OutputToggleRow
-            title="Awkward output correction"
-            description="Smooths out unnatural Korean from certain models."
-            icon={<FlaskConical className="h-3.5 w-3.5" />}
-            checked={awkwardOutputCorrectionEnabled}
-            onCheckedChange={setAwkwardOutputCorrectionEnabled}
-          />
-        </div>
-      </div>
-    </div>
+          <div className="space-y-2">
+            <OutputSectionLabel>Response Settings</OutputSectionLabel>
+            <div className="space-y-3 rounded-xl bg-muted/25 p-3">
+              <OutputToggleRow
+                title="Anti Impersonate"
+                description="Prevents the model from generating responses on the user's behalf."
+                checked={antiImpersonateEnabled}
+                onCheckedChange={setAntiImpersonateEnabled}
+              />
+              <div className="border-t border-border" aria-hidden />
+              <OutputToggleRow
+                title="Awkward output correction"
+                description="Smooths out unnatural Korean from certain models."
+                icon={<FlaskConical className="h-3.5 w-3.5" />}
+                checked={awkwardOutputCorrectionEnabled}
+                onCheckedChange={setAwkwardOutputCorrectionEnabled}
+              />
+            </div>
+          </div>
+        </>
+      }
+    />
   );
 }
 
@@ -1077,9 +709,9 @@ function ChatSettingsPanelBody({
         ) : activeTab === "memory" ? (
           <MemoryTabContent />
         ) : activeTab === "persona" ? (
-          <PersonaTabContent />
+          <PersonaSettings />
         ) : activeTab === "notes" ? (
-          <NotesTabContent />
+          <UserNotesSettings />
         ) : activeTab === "output" ? (
           <OutputTabContent />
         ) : (
