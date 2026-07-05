@@ -530,6 +530,124 @@ export type Database = {
         };
         Relationships: [];
       };
+      user_personas: {
+        Row: {
+          created_at: string;
+          description: string;
+          id: string;
+          image_url: string | null;
+          is_default: boolean;
+          name: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          description?: string;
+          id?: string;
+          image_url?: string | null;
+          is_default?: boolean;
+          name: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          description?: string;
+          id?: string;
+          image_url?: string | null;
+          is_default?: boolean;
+          name?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_personas_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      user_preferences: {
+        Row: {
+          default_model_id: string | null;
+          session_note: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          default_model_id?: string | null;
+          session_note?: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          default_model_id?: string | null;
+          session_note?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_preferences_default_model_id_fkey";
+            columns: ["default_model_id"];
+            isOneToOne: false;
+            referencedRelation: "ai_models";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "user_preferences_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: true;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      user_prompts: {
+        Row: {
+          content: string;
+          created_at: string;
+          id: string;
+          is_default: boolean;
+          sort_order: number;
+          title: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          content?: string;
+          created_at?: string;
+          id?: string;
+          is_default?: boolean;
+          sort_order?: number;
+          title: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          content?: string;
+          created_at?: string;
+          id?: string;
+          is_default?: boolean;
+          sort_order?: number;
+          title?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_prompts_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
