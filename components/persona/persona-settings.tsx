@@ -1,40 +1,35 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { ChevronDown, ImagePlus, Star, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ChevronDown, ImagePlus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  useDeleteUserPersonaMutation,
+  useSetDefaultUserPersonaMutation,
+  useUpdateUserPersonaMutation,
+} from "@/hooks/mutations/use-user-persona-mutations";
+import { useDefaultSettingsQuery } from "@/hooks/queries/use-default-settings-query";
+import { getDefaultPersona, type UserPersona } from "@/lib/api/user-settings";
+import {
+  PERSONA_DESC_MAX,
+  PERSONA_NAME_MAX,
+} from "@/lib/user-default-settings/constants";
+import {
+  settingsFieldClassName,
+  settingsSaveButtonClassName,
+  settingsTextareaClassName,
+} from "@/components/default-settings/settings-field-classes";
 import { getProfileInitials } from "@/lib/user-profile";
 import { cn } from "@/lib/utils";
 
-export type Persona = {
-  id: string;
-  name: string;
-  description: string;
-  imageUrl: string | null;
-  isDefault: boolean;
-};
-
-// API 연동 전 UI 프리뷰용 mock
-const MOCK_PERSONAS: Persona[] = [
-  {
-    id: "default",
-    name: "Jin Choi",
-    description: "",
-    imageUrl: null,
-    isDefault: true,
-  },
-];
-
-const PERSONA_NAME_MAX = 50;
-const PERSONA_DESC_MAX = 4000;
+export type { UserPersona as Persona };
 
 type PersonaSettingsProps = {
-  /** 모달 타이틀 등과 중복될 때 섹션 라벨 숨김 */
   hideLabel?: boolean;
 };
 
@@ -42,23 +37,49 @@ export function PersonaSettings({ hideLabel = false }: PersonaSettingsProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const previewObjectUrlRef = useRef<string | null>(null);
 
-  const [personas, setPersonas] = useState<Persona[]>(() =>
-    MOCK_PERSONAS.map((persona) => ({ ...persona })),
-  );
-  const [activePersonaId, setActivePersonaId] = useState(MOCK_PERSONAS[0].id);
+  const { data: settings, isPending, isError } = useDefaultSettingsQuery();
+  const updateMutation = useUpdateUserPersonaMutation();
+  const setDefaultMutation = useSetDefaultUserPersonaMutation();
+  const deleteMutation = useDeleteUserPersonaMutation();
+
+  const [selectedPersonaId, setSelectedPersonaId] = useState<string | null>(null);
+  const [isDraftDirty, setIsDraftDirty] = useState(false);
+  const [draftName, setDraftName] = useState("");
+  const [draftDescription, setDraftDescription] = useState("");
+  const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [draftName, setDraftName] = useState(MOCK_PERSONAS[0].name);
-  const [draftDescription, setDraftDescription] = useState(
-    MOCK_PERSONAS[0].description,
-  );
-  const [draftImageUrl, setDraftImageUrl] = useState<string | null>(
-    MOCK_PERSONAS[0].imageUrl,
-  );
+
+  const personas = useMemo(() => settings?.personas ?? [], [settings?.personas]);
+
+  const defaultPersonaId = settings
+    ? (getDefaultPersona(settings)?.id ?? personas[0]?.id ?? null)
+    : null;
+  const effectivePersonaId = selectedPersonaId ?? defaultPersonaId;
 
   const activePersona =
-    personas.find((persona) => persona.id === activePersonaId) ?? personas[0];
+    personas.find((persona) => persona.id === effectivePersonaId) ?? personas[0];
 
-  // object URL 메모리 누수 방지
+  const displayName = isDraftDirty ? draftName : (activePersona?.name ?? "");
+  const displayDescription = isDraftDirty
+    ? draftDescription
+    : (activePersona?.description ?? "");
+  const displayImageUrl = localPreviewUrl ?? activePersona?.imageUrl ?? null;
+
+  function clearLocalPreview() {
+    if (previewObjectUrlRef.current) {
+      URL.revokeObjectURL(previewObjectUrlRef.current);
+      previewObjectUrlRef.current = null;
+    }
+    setLocalPreviewUrl(null);
+  }
+
+  function resetDraftState() {
+    setIsDraftDirty(false);
+    setDraftName("");
+    setDraftDescription("");
+    clearLocalPreview();
+  }
+
   useEffect(() => {
     return () => {
       if (previewObjectUrlRef.current) {
@@ -67,49 +88,57 @@ export function PersonaSettings({ hideLabel = false }: PersonaSettingsProps) {
     };
   }, []);
 
-  function applyPersonaToDraft(persona: Persona) {
-    setDraftName(persona.name);
-    setDraftDescription(persona.description);
-    setDraftImageUrl(persona.imageUrl);
-  }
-
-  function revokePreviewUrl() {
-    if (previewObjectUrlRef.current) {
-      URL.revokeObjectURL(previewObjectUrlRef.current);
-      previewObjectUrlRef.current = null;
-    }
-  }
-
   function handleSelectPersona(personaId: string) {
     const selectedPersona = personas.find(
       (persona) => persona.id === personaId,
     );
     if (!selectedPersona) return;
 
-    setActivePersonaId(personaId);
-    applyPersonaToDraft(selectedPersona);
+    setSelectedPersonaId(personaId);
+    resetDraftState();
     setIsDropdownOpen(false);
+
+    // 드롭다운 선택 = default persona 즉시 전환
+    if (!selectedPersona.isDefault) {
+      setDefaultMutation.mutate(personaId);
+    }
+  }
+
+  function handleNameChange(nextName: string) {
+    if (!isDraftDirty && activePersona) {
+      setDraftName(nextName);
+      setDraftDescription(activePersona.description);
+      setIsDraftDirty(true);
+      return;
+    }
+    setDraftName(nextName);
+  }
+
+  function handleDescriptionChange(nextDescription: string) {
+    if (!isDraftDirty && activePersona) {
+      setDraftName(activePersona.name);
+      setDraftDescription(nextDescription);
+      setIsDraftDirty(true);
+      return;
+    }
+    setDraftDescription(nextDescription);
   }
 
   function handleImageSelect(event: React.ChangeEvent<HTMLInputElement>) {
-    const selectedFile = event.target.files?.[0];
-    if (!selectedFile) return;
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-    if (!selectedFile.type.startsWith("image/")) {
-      toast.error("Image file only.");
-      event.target.value = "";
-      return;
-    }
+    clearLocalPreview();
 
-    revokePreviewUrl();
-    const objectUrl = URL.createObjectURL(selectedFile);
+    const objectUrl = URL.createObjectURL(file);
     previewObjectUrlRef.current = objectUrl;
-    setDraftImageUrl(objectUrl);
+    setLocalPreviewUrl(objectUrl);
     event.target.value = "";
   }
 
   function handleSave() {
-    const trimmedName = draftName.trim();
+    const trimmedName = (isDraftDirty ? draftName : activePersona?.name ?? "")
+      .trim();
     if (!trimmedName) {
       toast.error("Name is required.");
       return;
@@ -117,39 +146,29 @@ export function PersonaSettings({ hideLabel = false }: PersonaSettingsProps) {
 
     if (!activePersona) return;
 
-    setPersonas((prevPersonas) =>
-      prevPersonas.map((persona) =>
-        persona.id === activePersona.id
-          ? {
-              ...persona,
-              name: trimmedName,
-              description: draftDescription,
-              imageUrl: draftImageUrl,
-            }
-          : persona,
-      ),
+    const descriptionToSave = isDraftDirty
+      ? draftDescription
+      : activePersona.description;
+
+    updateMutation.mutate(
+      {
+        personaId: activePersona.id,
+        name: trimmedName,
+        description: descriptionToSave,
+      },
+      {
+        onSuccess: (saved) => {
+          resetDraftState();
+          // P0: image_url 미저장 — 저장 후 DB null이면 로컬 프리뷰 초기화
+          if (!saved.imageUrl) {
+            clearLocalPreview();
+          }
+        },
+      },
     );
-    toast.success("Persona saved.");
   }
 
-  function handleSetAsDefault() {
-    if (!activePersona) return;
-
-    if (activePersona.isDefault) {
-      toast.message("Already set as default.");
-      return;
-    }
-
-    setPersonas((prevPersonas) =>
-      prevPersonas.map((persona) => ({
-        ...persona,
-        isDefault: persona.id === activePersona.id,
-      })),
-    );
-    toast.success("Set as default.");
-  }
-
-  function handleDelete() {
+  async function handleDelete() {
     if (!activePersona) return;
 
     if (personas.length <= 1) {
@@ -157,27 +176,45 @@ export function PersonaSettings({ hideLabel = false }: PersonaSettingsProps) {
       return;
     }
 
+    await deleteMutation.mutateAsync(activePersona.id);
+
     const remainingPersonas = personas.filter(
       (persona) => persona.id !== activePersona.id,
     );
+    const nextPersona =
+      remainingPersonas.find((persona) => persona.isDefault) ??
+      remainingPersonas[0];
 
-    if (activePersona.isDefault && remainingPersonas.length > 0) {
-      remainingPersonas[0] = { ...remainingPersonas[0], isDefault: true };
+    if (nextPersona) {
+      setSelectedPersonaId(nextPersona.id);
+      resetDraftState();
     }
-
-    const nextPersona = remainingPersonas[0];
-    setPersonas(remainingPersonas);
-    setActivePersonaId(nextPersona.id);
-    applyPersonaToDraft(nextPersona);
-    toast.success("Persona deleted.");
   }
 
-  if (!activePersona) return null;
+  if (isPending) {
+    return (
+      <div className="w-full min-w-0 space-y-2.5 pb-1">
+        <div className="h-16 animate-pulse rounded-xl bg-muted/30" />
+        <div className="h-20 animate-pulse rounded-full bg-muted/30 mx-auto w-20" />
+      </div>
+    );
+  }
 
-  const personaInitials = getProfileInitials(draftName || activePersona.name);
-  const dropdownLabel = activePersona.isDefault
-    ? "Default"
-    : activePersona.name;
+  if (isError || !activePersona) {
+    return (
+      <p className="text-[13px] text-muted-foreground">
+        Failed to load personas.
+      </p>
+    );
+  }
+
+  const isSaving =
+    updateMutation.isPending ||
+    setDefaultMutation.isPending ||
+    deleteMutation.isPending;
+
+  const personaInitials = getProfileInitials(displayName || activePersona.name);
+  const dropdownLabel = displayName || activePersona.name;
 
   return (
     <div className="w-full min-w-0 space-y-2.5 pb-1">
@@ -189,15 +226,15 @@ export function PersonaSettings({ hideLabel = false }: PersonaSettingsProps) {
         <div className="flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
             <Avatar className="h-8 w-8">
-              {draftImageUrl ? (
-                <AvatarImage src={draftImageUrl} alt={draftName} />
+              {displayImageUrl ? (
+                <AvatarImage src={displayImageUrl} alt={displayName} />
               ) : null}
               <AvatarFallback className="bg-primary/15 text-xs font-semibold text-primary">
                 {personaInitials}
               </AvatarFallback>
             </Avatar>
             <span className="truncate text-[13px] font-medium text-foreground">
-              {draftName || activePersona.name}
+              {displayName || activePersona.name}
             </span>
           </div>
 
@@ -223,16 +260,16 @@ export function PersonaSettings({ hideLabel = false }: PersonaSettingsProps) {
                     key={persona.id}
                     type="button"
                     role="option"
-                    aria-selected={persona.id === activePersonaId}
+                    aria-selected={persona.id === effectivePersonaId}
                     onClick={() => handleSelectPersona(persona.id)}
                     className={cn(
                       "block w-full px-3 py-2 text-left text-[12px] transition-colors hover:bg-muted/40",
-                      persona.id === activePersonaId
+                      persona.id === effectivePersonaId
                         ? "font-medium text-foreground"
                         : "text-muted-foreground",
                     )}
                   >
-                    {persona.isDefault ? "Default" : persona.name}
+                    {persona.name}
                   </button>
                 ))}
               </div>
@@ -248,9 +285,9 @@ export function PersonaSettings({ hideLabel = false }: PersonaSettingsProps) {
           className="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-muted/25 text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
           aria-label="Upload profile image"
         >
-          {draftImageUrl ? (
+          {displayImageUrl ? (
             <Avatar className="h-full w-full">
-              <AvatarImage src={draftImageUrl} alt="" />
+              <AvatarImage src={displayImageUrl} alt="" />
               <AvatarFallback className="bg-primary/15 text-primary">
                 {personaInitials}
               </AvatarFallback>
@@ -270,29 +307,29 @@ export function PersonaSettings({ hideLabel = false }: PersonaSettingsProps) {
 
       <div className="relative">
         <Input
-          value={draftName}
-          onChange={(event) => setDraftName(event.target.value)}
+          value={displayName}
+          onChange={(event) => handleNameChange(event.target.value)}
           maxLength={PERSONA_NAME_MAX}
-          className="border-0 pr-12 text-[13px]"
+          className={cn(settingsFieldClassName, "pr-12")}
           aria-label="Persona name"
         />
         <span className="pointer-events-none absolute right-3 bottom-3 text-[10px] text-muted-foreground">
-          {draftName.length}/{PERSONA_NAME_MAX}
+          {displayName.length}/{PERSONA_NAME_MAX}
         </span>
       </div>
 
       <div className="relative">
         <Textarea
-          value={draftDescription}
-          onChange={(event) => setDraftDescription(event.target.value)}
+          value={displayDescription}
+          onChange={(event) => handleDescriptionChange(event.target.value)}
           placeholder="Enter description..."
           maxLength={PERSONA_DESC_MAX}
           rows={3}
-          className="min-h-[88px] border-0 pb-6 text-[13px]"
+          className={cn(settingsTextareaClassName, "min-h-[88px] pb-6")}
           aria-label="Persona description"
         />
         <span className="pointer-events-none absolute right-3 bottom-3 text-[10px] text-muted-foreground">
-          {draftDescription.length.toLocaleString("en-US")}/
+          {displayDescription.length.toLocaleString("en-US")}/
           {PERSONA_DESC_MAX.toLocaleString("en-US")}
         </span>
       </div>
@@ -300,27 +337,18 @@ export function PersonaSettings({ hideLabel = false }: PersonaSettingsProps) {
       <Button
         type="button"
         variant="secondary"
-        className="h-10 w-full rounded-xl border-0 text-[13px]"
+        className={settingsSaveButtonClassName}
         onClick={handleSave}
+        disabled={isSaving}
       >
         Save
       </Button>
 
-      <div className="flex items-center justify-center gap-3">
+      <div className="flex items-center justify-center">
         <button
           type="button"
-          onClick={handleSetAsDefault}
-          disabled={activePersona.isDefault}
-          className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <Star className="h-3.5 w-3.5" />
-          Set as Default
-        </button>
-        <span className="h-3.5 w-px bg-border" aria-hidden />
-        <button
-          type="button"
-          onClick={handleDelete}
-          disabled={personas.length <= 1}
+          onClick={() => void handleDelete()}
+          disabled={personas.length <= 1 || isSaving}
           className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Trash2 className="h-3.5 w-3.5" />

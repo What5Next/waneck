@@ -1,29 +1,56 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-
-// API 연동 전 UI 프리뷰용 mock
-const SESSION_NOTE_MAX = 2000;
-const MOCK_SESSION_NOTE = "";
+import { useUpdateUserPreferencesMutation } from "@/hooks/mutations/use-user-preferences-mutation";
+import { useDefaultSettingsQuery } from "@/hooks/queries/use-default-settings-query";
+import { SESSION_NOTE_MAX } from "@/lib/user-default-settings/constants";
+import { settingsSaveButtonClassName, settingsTextareaClassName } from "@/components/default-settings/settings-field-classes";
+import { cn } from "@/lib/utils";
 
 type UserNotesSettingsProps = {
-  /** 모달 타이틀 등과 중복될 때 섹션 라벨 숨김 */
   hideLabel?: boolean;
 };
 
 export function UserNotesSettings({
   hideLabel = false,
 }: UserNotesSettingsProps) {
-  const [sessionNote, setSessionNote] = useState(MOCK_SESSION_NOTE);
-  const [draftNote, setDraftNote] = useState(MOCK_SESSION_NOTE);
+  const { data: settings, isPending, isError } = useDefaultSettingsQuery();
+  const updateMutation = useUpdateUserPreferencesMutation();
+  const [draftNote, setDraftNote] = useState("");
+
+  useEffect(() => {
+    if (settings) {
+      setDraftNote(settings.preferences.sessionNote);
+    }
+  }, [settings]);
 
   function handleEditSave() {
-    setSessionNote(draftNote);
-    toast.success("Note saved.");
+    updateMutation.mutate(
+      { session_note: draftNote },
+      {
+        onSuccess: () => {
+          toast.success("Note saved.");
+        },
+      },
+    );
+  }
+
+  if (isPending) {
+    return (
+      <div className="w-full min-w-0 space-y-3 pb-1">
+        <div className="h-[120px] animate-pulse rounded-xl bg-muted/30" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <p className="text-[13px] text-muted-foreground">Failed to load notes.</p>
+    );
   }
 
   return (
@@ -39,7 +66,7 @@ export function UserNotesSettings({
           placeholder="Please provide user note."
           maxLength={SESSION_NOTE_MAX}
           rows={5}
-          className="min-h-[120px] border-0 pb-6 text-[13px]"
+          className={cn(settingsTextareaClassName, "min-h-[120px] pb-6")}
           aria-label="Session note"
         />
         <span className="pointer-events-none absolute right-3 bottom-3 text-[10px] text-muted-foreground">
@@ -51,8 +78,9 @@ export function UserNotesSettings({
       <Button
         type="button"
         variant="secondary"
-        className="h-10 w-full rounded-xl border-0 text-[13px]"
+        className={settingsSaveButtonClassName}
         onClick={handleEditSave}
+        disabled={updateMutation.isPending}
       >
         Edit Save
       </Button>

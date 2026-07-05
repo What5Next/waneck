@@ -1,42 +1,39 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
-import { ChevronLeft, ChevronRight, Star, Trash2 } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InputDropdown } from "@/components/ui/input-dropdown";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  useCreateUserPromptMutation,
+  useDeleteUserPromptMutation,
+  useSetDefaultUserPromptMutation,
+  useUpdateUserPromptMutation,
+} from "@/hooks/mutations/use-user-prompt-mutations";
+import { useDefaultSettingsQuery } from "@/hooks/queries/use-default-settings-query";
+import { PROMPT_CONTENT_MAX, PROMPT_TITLE_MAX } from "@/lib/user-default-settings/constants";
+import {
+  settingsFieldClassName,
+  settingsSaveButtonClassName,
+  settingsTextareaClassName,
+} from "@/components/default-settings/settings-field-classes";
+import {
+  getDefaultPrompt,
+  type UserPrompt,
+} from "@/lib/api/user-settings";
+import { cn } from "@/lib/utils";
 
-export type UserPrompt = {
-  id: string;
-  title: string;
-  content: string;
-  isDefault: boolean;
-};
-
-// API 연동 전 UI 프리뷰용 mock
-const MOCK_PROMPTS: UserPrompt[] = [
-  {
-    id: "default",
-    title: "Prompt V5",
-    content: "[V5] A default prompt suitable for all chats.",
-    isDefault: true,
-  },
-];
-
-const PROMPT_TITLE_MAX = 50;
-const PROMPT_CONTENT_MAX = 8000;
+export type { UserPrompt };
 
 type PromptView = "summary" | "editor";
 
 type PromptSettingsProps = {
-  /** summary: 카드 → 편집 2depth, editor: 편집 화면만 (mypage 등) */
   initialView?: PromptView;
-  /** summary일 때 카드 아래에 렌더 (Output 탭의 모델/빌링 등) */
   secondarySections?: ReactNode;
-  /** 모달 타이틀 등과 중복될 때 섹션 라벨 숨김 */
   hideLabel?: boolean;
 };
 
@@ -45,20 +42,48 @@ export function PromptSettings({
   secondarySections,
   hideLabel = false,
 }: PromptSettingsProps) {
+  const { data: settings, isPending, isError } = useDefaultSettingsQuery();
+  const createMutation = useCreateUserPromptMutation();
+  const updateMutation = useUpdateUserPromptMutation();
+  const setDefaultMutation = useSetDefaultUserPromptMutation();
+  const deleteMutation = useDeleteUserPromptMutation();
+
   const [view, setView] = useState<PromptView>(initialView);
-  const [prompts, setPrompts] = useState<UserPrompt[]>(() =>
-    MOCK_PROMPTS.map((prompt) => ({ ...prompt })),
-  );
-  const [activePromptId, setActivePromptId] = useState(MOCK_PROMPTS[0].id);
-  const [draftTitle, setDraftTitle] = useState(MOCK_PROMPTS[0].title);
-  const [draftContent, setDraftContent] = useState(MOCK_PROMPTS[0].content);
+  const [activePromptId, setActivePromptId] = useState<string | null>(null);
+  const [draftTitle, setDraftTitle] = useState("");
+  const [draftContent, setDraftContent] = useState("");
+
+  const prompts = settings?.prompts ?? [];
+
+  useEffect(() => {
+    if (!settings || prompts.length === 0) {
+      return;
+    }
+
+    const currentExists = activePromptId
+      ? prompts.some((prompt) => prompt.id === activePromptId)
+      : false;
+
+    if (currentExists) {
+      return;
+    }
+
+    const initialPrompt = getDefaultPrompt(settings);
+    if (!initialPrompt) {
+      return;
+    }
+
+    setActivePromptId(initialPrompt.id);
+    setDraftTitle(initialPrompt.title);
+    setDraftContent(initialPrompt.content);
+  }, [settings, prompts, activePromptId]);
 
   const activePrompt =
     prompts.find((prompt) => prompt.id === activePromptId) ?? prompts[0];
 
   const promptOptions = prompts.map((prompt) => ({
     value: prompt.id,
-    label: prompt.isDefault ? `${prompt.title} (Default)` : prompt.title,
+    label: prompt.title,
     description: prompt.content || undefined,
   }));
 
@@ -73,6 +98,11 @@ export function PromptSettings({
 
     setActivePromptId(promptId);
     applyPromptToDraft(selectedPrompt);
+
+    // 드롭다운 선택 = default prompt 즉시 전환
+    if (!selectedPrompt.isDefault) {
+      setDefaultMutation.mutate(promptId);
+    }
   }
 
   function handleSave() {
@@ -84,38 +114,14 @@ export function PromptSettings({
 
     if (!activePrompt) return;
 
-    setPrompts((prevPrompts) =>
-      prevPrompts.map((prompt) =>
-        prompt.id === activePrompt.id
-          ? {
-              ...prompt,
-              title: trimmedTitle,
-              content: draftContent,
-            }
-          : prompt,
-      ),
-    );
-    toast.success("Prompt saved.");
+    updateMutation.mutate({
+      promptId: activePrompt.id,
+      title: trimmedTitle,
+      content: draftContent,
+    });
   }
 
-  function handleSetAsDefault() {
-    if (!activePrompt) return;
-
-    if (activePrompt.isDefault) {
-      toast.message("Already set as default.");
-      return;
-    }
-
-    setPrompts((prevPrompts) =>
-      prevPrompts.map((prompt) => ({
-        ...prompt,
-        isDefault: prompt.id === activePrompt.id,
-      })),
-    );
-    toast.success("Set as default.");
-  }
-
-  function handleDelete() {
+  async function handleDelete() {
     if (!activePrompt) return;
 
     if (prompts.length <= 1) {
@@ -123,39 +129,50 @@ export function PromptSettings({
       return;
     }
 
+    await deleteMutation.mutateAsync(activePrompt.id);
+
     const remainingPrompts = prompts.filter(
       (prompt) => prompt.id !== activePrompt.id,
     );
+    const nextPrompt =
+      remainingPrompts.find((prompt) => prompt.isDefault) ?? remainingPrompts[0];
 
-    // 기본 프롬프트를 지우면 남은 첫 항목을 기본으로 승격
-    if (activePrompt.isDefault && remainingPrompts.length > 0) {
-      remainingPrompts[0] = { ...remainingPrompts[0], isDefault: true };
+    if (nextPrompt) {
+      setActivePromptId(nextPrompt.id);
+      applyPromptToDraft(nextPrompt);
     }
-
-    const nextPrompt = remainingPrompts[0];
-    setPrompts(remainingPrompts);
-    setActivePromptId(nextPrompt.id);
-    applyPromptToDraft(nextPrompt);
-    toast.success("Prompt deleted.");
   }
 
-  function handleCreate() {
-    const newPrompt: UserPrompt = {
-      id: `prompt-${Date.now()}`,
-      title: "New prompt",
-      content: "",
-      isDefault: false,
-    };
-
-    setPrompts((prevPrompts) => [...prevPrompts, newPrompt]);
-    setActivePromptId(newPrompt.id);
-    applyPromptToDraft(newPrompt);
+  async function handleCreate() {
+    const created = await createMutation.mutateAsync();
+    setActivePromptId(created.id);
+    applyPromptToDraft(created);
     setView("editor");
   }
 
-  if (!activePrompt) return null;
+  if (isPending) {
+    return (
+      <div className="w-full min-w-0 space-y-2.5 pb-1">
+        <div className="h-10 animate-pulse rounded-xl bg-muted/30" />
+        <div className="h-24 animate-pulse rounded-xl bg-muted/30" />
+      </div>
+    );
+  }
 
-  // depth 2: 타이틀/본문 편집
+  if (isError || !activePrompt) {
+    return (
+      <p className="text-[13px] text-muted-foreground">
+        Failed to load prompts.
+      </p>
+    );
+  }
+
+  const isSaving =
+    updateMutation.isPending ||
+    setDefaultMutation.isPending ||
+    deleteMutation.isPending ||
+    createMutation.isPending;
+
   if (view === "editor") {
     return (
       <div className="w-full min-w-0 space-y-2.5 pb-1">
@@ -173,14 +190,14 @@ export function PromptSettings({
         )}
 
         <InputDropdown
-          value={activePromptId}
+          value={activePromptId ?? activePrompt.id}
           options={promptOptions}
           onValueChange={handleSelectPrompt}
           aria-label="Select prompt"
-          triggerClassName="border-0"
+          triggerClassName={settingsFieldClassName}
           footerAction={{
             label: "+ New prompt",
-            onClick: handleCreate,
+            onClick: () => void handleCreate(),
           }}
         />
 
@@ -190,7 +207,7 @@ export function PromptSettings({
             onChange={(event) => setDraftTitle(event.target.value)}
             maxLength={PROMPT_TITLE_MAX}
             placeholder="Title"
-            className="border-0 pr-12 text-[13px]"
+            className={cn(settingsFieldClassName, "pr-12")}
             aria-label="Prompt title"
           />
           <span className="pointer-events-none absolute right-3 bottom-3 text-[10px] text-muted-foreground">
@@ -205,7 +222,7 @@ export function PromptSettings({
             placeholder="Enter prompt..."
             maxLength={PROMPT_CONTENT_MAX}
             rows={6}
-            className="min-h-[140px] border-0 pb-6 text-[13px]"
+            className={cn(settingsTextareaClassName, "min-h-[140px] pb-6")}
             aria-label="Prompt content"
           />
           <span className="pointer-events-none absolute right-3 bottom-3 text-[10px] text-muted-foreground">
@@ -217,27 +234,18 @@ export function PromptSettings({
         <Button
           type="button"
           variant="secondary"
-          className="h-10 w-full rounded-xl border-0 text-[13px]"
+          className={settingsSaveButtonClassName}
           onClick={handleSave}
+          disabled={isSaving}
         >
           Save
         </Button>
 
-        <div className="flex items-center justify-center gap-3">
+        <div className="flex items-center justify-center">
           <button
             type="button"
-            onClick={handleSetAsDefault}
-            disabled={activePrompt.isDefault}
-            className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            <Star className="h-3.5 w-3.5" />
-            Set as Default
-          </button>
-          <span className="h-3.5 w-px bg-border" aria-hidden />
-          <button
-            type="button"
-            onClick={handleDelete}
-            disabled={prompts.length <= 1}
+            onClick={() => void handleDelete()}
+            disabled={prompts.length <= 1 || isSaving}
             className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -248,7 +256,6 @@ export function PromptSettings({
     );
   }
 
-  // depth 1: 현재 프롬프트 요약 카드
   return (
     <div className="w-full min-w-0 space-y-4 pb-1">
       <div className="space-y-2">
