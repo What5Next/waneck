@@ -1,7 +1,6 @@
 import { getStorageItem } from '@/lib/stores/local-storage-store'
 
 export const SAFETY_FILTER_KEY = 'waneck-safety-filter'
-export const DEFAULT_MODEL_KEY = 'waneck-default-model'
 export const BROWSE_VIEW_STORAGE_KEY = 'waneck-browse-view'
 export const CHAT_ROOM_NAME_KEY_PREFIX = 'waneck-chat-room-name:'
 export const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed'
