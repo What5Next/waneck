@@ -15,8 +15,8 @@ export { COMMENT_SELECT };
 export type CommentRow = {
   id: string;
   content: string;
-  created_at: string;
-  updated_at: string;
+  created_at: string | null;
+  updated_at: string | null;
   user_id: string;
   parent_id: string | null;
   author:
@@ -28,11 +28,14 @@ export type CommentRow = {
 /** DB row → API CharacterComment (like 필드는 enrich 전 기본값) */
 export function mapCommentRow(row: CommentRow): CharacterComment {
   const author = Array.isArray(row.author) ? row.author[0] : row.author;
+  const createdAt = row.created_at ?? row.updated_at ?? "1970-01-01T00:00:00.000Z";
+  const updatedAt = row.updated_at ?? createdAt;
+
   return {
     id: row.id,
     content: row.content,
-    created_at: row.created_at,
-    updated_at: row.updated_at,
+    created_at: createdAt,
+    updated_at: updatedAt,
     parent_id: row.parent_id ?? null,
     author: {
       id: row.user_id,

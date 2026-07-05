@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Copy, Gem, Scan, Search, SlidersHorizontal } from "lucide-react";
+import {
+  ChevronLeft,
+  Copy,
+  Gem,
+  Scan,
+  Search,
+  SlidersHorizontal,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { ChatSettingsPanel } from "@/components/chat/chat-settings-panel";
@@ -70,8 +77,20 @@ export function ChatHeader({
       className="sticky top-0 z-10 shrink-0 bg-background backdrop-blur-sm"
     >
       <header className="flex h-14 items-center justify-between px-5">
-      {/* 좌측: 캐릭터명 + 유틸 */}
-      <div className="flex min-w-0 items-center gap-0.5">
+      {/* 모바일: 뒤로가기 + 캐릭터명 */}
+      <Link
+        href={`/characters/${characterId}`}
+        className="flex min-w-0 items-center gap-0.5 sm:hidden"
+        aria-label={`Back to ${characterName}`}
+      >
+        <ChevronLeft className="h-5 w-5 shrink-0 text-foreground" aria-hidden />
+        <h1 className="min-w-0 truncate text-[15px] font-semibold text-foreground">
+          {characterName}
+        </h1>
+      </Link>
+
+      {/* 데스크톱: 캐릭터명 + 유틸 */}
+      <div className="hidden min-w-0 items-center gap-0.5 sm:flex">
         <h1 className="min-w-0 truncate pr-1 text-[15px] font-semibold">
           <Link
             href={`/characters/${characterId}`}
@@ -94,7 +113,6 @@ export function ChatHeader({
           aria-label={focusMode ? "Exit focus mode" : "Focus mode"}
           onClick={handleFocusMode}
           className={cn(
-            "hidden sm:flex",
             focusMode &&
               "bg-primary text-primary-foreground hover:text-primary-foreground",
           )}
