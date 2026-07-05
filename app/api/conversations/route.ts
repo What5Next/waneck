@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase.server'
+import { seedConversationSettingsFromDefaults } from '@/lib/api/conversation-settings-server'
 
 export async function GET() {
   try {
@@ -78,6 +79,8 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (error) throw new Error(error.message)
+
+    await seedConversationSettingsFromDefaults(data.id, user.id, user)
 
     // 인트로 메시지를 초기 메시지로 삽입
     const { data: introDialogues, error: introFetchError } = await supabaseAdmin
