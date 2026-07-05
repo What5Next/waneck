@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
   BookOpen,
   ChevronDown,
@@ -421,7 +421,11 @@ function OutputToggleRow({
   );
 }
 
-function OutputTabContent() {
+function OutputTabContent({
+  conversationId,
+}: {
+  conversationId?: string | null;
+}) {
   const [billingPlan, setBillingPlan] = useState<BillingPlan>("fixed");
   const [antiImpersonateEnabled, setAntiImpersonateEnabled] = useState(false);
   const [awkwardOutputCorrectionEnabled, setAwkwardOutputCorrectionEnabled] =
@@ -430,6 +434,8 @@ function OutputTabContent() {
   // Prompt 2depth: editor 진입 시 아래 섹션은 secondarySections로 숨김
   return (
     <PromptSettings
+      scope="conversation"
+      conversationId={conversationId}
       secondarySections={
         <>
           <div className="space-y-2">
@@ -532,13 +538,6 @@ function ChatSettingsPanelBody({
     conversationId,
   );
 
-  // Reset settings subview when switching to another tab
-  useEffect(() => {
-    if (activeTab !== "settings") {
-      setSettingsSubview("menu");
-    }
-  }, [activeTab]);
-
   const isSettingsDrillDownOpen =
     activeTab === "settings" && settingsSubview !== "menu";
 
@@ -593,7 +592,12 @@ function ChatSettingsPanelBody({
                 <button
                   key={tab.id}
                   type="button"
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    if (tab.id !== "settings") {
+                      setSettingsSubview("menu");
+                    }
+                  }}
                   className={cn(
                     "flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-lg px-0.5 py-1.5 text-[10px] leading-none font-medium transition-colors",
                     isActive
@@ -709,11 +713,17 @@ function ChatSettingsPanelBody({
         ) : activeTab === "memory" ? (
           <MemoryTabContent />
         ) : activeTab === "persona" ? (
-          <PersonaSettings />
+          <PersonaSettings
+            scope="conversation"
+            conversationId={conversationId}
+          />
         ) : activeTab === "notes" ? (
-          <UserNotesSettings />
+          <UserNotesSettings
+            scope="conversation"
+            conversationId={conversationId}
+          />
         ) : activeTab === "output" ? (
-          <OutputTabContent />
+          <OutputTabContent conversationId={conversationId} />
         ) : (
           <PlaceholderTab />
         )}

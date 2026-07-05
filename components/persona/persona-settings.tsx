@@ -13,8 +13,11 @@ import {
   useSetDefaultUserPersonaMutation,
   useUpdateUserPersonaMutation,
 } from "@/hooks/mutations/use-user-persona-mutations";
+import { useUpdateConversationSettingsMutation } from "@/hooks/mutations/use-update-conversation-settings-mutation";
+import { useConversationSettingsQuery } from "@/hooks/queries/use-conversation-settings-query";
 import { useDefaultSettingsQuery } from "@/hooks/queries/use-default-settings-query";
 import { getDefaultPersona, type UserPersona } from "@/lib/api/user-settings";
+import type { ConversationSettings } from "@/lib/api/conversation-settings";
 import {
   PERSONA_DESC_MAX,
   PERSONA_NAME_MAX,
@@ -31,9 +34,181 @@ export type { UserPersona as Persona };
 
 type PersonaSettingsProps = {
   hideLabel?: boolean;
+  scope?: "global" | "conversation";
+  conversationId?: string | null;
 };
 
-export function PersonaSettings({ hideLabel = false }: PersonaSettingsProps) {
+export function PersonaSettings({
+  hideLabel = false,
+  scope = "global",
+  conversationId = null,
+}: PersonaSettingsProps) {
+  if (scope === "conversation") {
+    return (
+      <ConversationPersonaSettings
+        hideLabel={hideLabel}
+        conversationId={conversationId}
+      />
+    );
+  }
+
+  return <GlobalPersonaSettings hideLabel={hideLabel} />;
+}
+
+function ConversationPersonaSettings({
+  hideLabel = false,
+  conversationId,
+}: {
+  hideLabel?: boolean;
+  conversationId?: string | null;
+}) {
+  const { data: settings, isPending, isError } =
+    useConversationSettingsQuery(conversationId);
+
+  if (isPending) {
+    return (
+      <div className="w-full min-w-0 space-y-2.5 pb-1">
+        <div className="h-16 animate-pulse rounded-xl bg-muted/30" />
+        <div className="h-20 animate-pulse rounded-full bg-muted/30 mx-auto w-20" />
+      </div>
+    );
+  }
+
+  if (isError || !settings) {
+    return (
+      <p className="text-[13px] text-muted-foreground">
+        Failed to load persona.
+      </p>
+    );
+  }
+
+  return (
+    <ConversationPersonaEditor
+      key={settings.conversationId}
+      hideLabel={hideLabel}
+      conversationId={conversationId}
+      settings={settings}
+    />
+  );
+}
+
+function ConversationPersonaEditor({
+  hideLabel,
+  conversationId,
+  settings,
+}: {
+  hideLabel: boolean;
+  conversationId?: string | null;
+  settings: ConversationSettings;
+}) {
+  const updateMutation = useUpdateConversationSettingsMutation(conversationId);
+  const [draftName, setDraftName] = useState(() => settings.personaName);
+  const [draftDescription, setDraftDescription] = useState(
+    () => settings.personaDescription,
+  );
+
+  function handleSave() {
+    const trimmedName = draftName.trim();
+    if (!trimmedName) {
+      toast.error("Name is required.");
+      return;
+    }
+
+    updateMutation.mutate(
+      {
+        persona_name: trimmedName,
+        persona_description: draftDescription,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Persona saved for this chat.");
+        },
+      },
+    );
+  }
+
+  const personaInitials = getProfileInitials(draftName || settings.personaName);
+
+  return (
+    <div className="w-full min-w-0 space-y-2.5 pb-1">
+      {hideLabel ? null : (
+        <p className="text-[11px] text-muted-foreground">This chat persona</p>
+      )}
+
+      <div className="relative rounded-xl bg-muted/25 px-3 py-2.5">
+        <div className="flex min-w-0 items-center gap-2">
+          <Avatar className="h-8 w-8">
+            {settings.personaImageUrl ? (
+              <AvatarImage src={settings.personaImageUrl} alt={draftName} />
+            ) : null}
+            <AvatarFallback className="bg-primary/15 text-xs font-semibold text-primary">
+              {personaInitials}
+            </AvatarFallback>
+          </Avatar>
+          <span className="truncate text-[13px] font-medium text-foreground">
+            {draftName || settings.personaName}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex justify-center">
+        <div className="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-muted/25 text-muted-foreground">
+          {settings.personaImageUrl ? (
+            <Avatar className="h-full w-full">
+              <AvatarImage src={settings.personaImageUrl} alt="" />
+              <AvatarFallback className="bg-primary/15 text-primary">
+                {personaInitials}
+              </AvatarFallback>
+            </Avatar>
+          ) : (
+            <ImagePlus className="h-6 w-6" />
+          )}
+        </div>
+      </div>
+
+      <div className="relative">
+        <Input
+          value={draftName}
+          onChange={(event) => setDraftName(event.target.value)}
+          maxLength={PERSONA_NAME_MAX}
+          className={cn(settingsFieldClassName, "pr-12")}
+          aria-label="Persona name"
+        />
+        <span className="pointer-events-none absolute right-3 bottom-3 text-[10px] text-muted-foreground">
+          {draftName.length}/{PERSONA_NAME_MAX}
+        </span>
+      </div>
+
+      <div className="relative">
+        <Textarea
+          value={draftDescription}
+          onChange={(event) => setDraftDescription(event.target.value)}
+          placeholder="Enter description..."
+          maxLength={PERSONA_DESC_MAX}
+          rows={3}
+          className={cn(settingsTextareaClassName, "min-h-[88px] pb-6")}
+          aria-label="Persona description"
+        />
+        <span className="pointer-events-none absolute right-3 bottom-3 text-[10px] text-muted-foreground">
+          {draftDescription.length.toLocaleString("en-US")}/
+          {PERSONA_DESC_MAX.toLocaleString("en-US")}
+        </span>
+      </div>
+
+      <Button
+        type="button"
+        variant="secondary"
+        className={settingsSaveButtonClassName}
+        onClick={handleSave}
+        disabled={updateMutation.isPending}
+      >
+        Save
+      </Button>
+    </div>
+  );
+}
+
+function GlobalPersonaSettings({ hideLabel = false }: { hideLabel?: boolean }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const previewObjectUrlRef = useRef<string | null>(null);
 

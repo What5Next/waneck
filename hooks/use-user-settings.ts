@@ -5,7 +5,9 @@ import { useCallback } from 'react'
 import type { ModelId } from '@/components/chat/model-selector'
 import type { BrowseViewMode } from '@/components/characters/character-browse-toolbar'
 import { useAuth } from '@/hooks/use-auth'
+import { useUpdateConversationSettingsMutation } from '@/hooks/mutations/use-update-conversation-settings-mutation'
 import { useUpdateUserPreferencesMutation } from '@/hooks/mutations/use-user-preferences-mutation'
+import { useConversationSettingsQuery } from '@/hooks/queries/use-conversation-settings-query'
 import { useDefaultSettingsQuery } from '@/hooks/queries/use-default-settings-query'
 import { useAiModelsQuery } from '@/hooks/queries/use-ai-models-query'
 import { resolveStoredModelId } from '@/lib/ai-models'
@@ -64,6 +66,38 @@ export function useResolvedDefaultModel() {
       updatePreferences.mutate({ default_model_id: nextModelId })
     },
     [isAuthenticated, updatePreferences],
+  )
+
+  return { modelId: resolvedModelId, setModelId }
+}
+
+/**
+ * 채팅방별 모델 — conversation_settings.model_id + ai_models fallback.
+ * 마이페이지 default model과 독립적으로 해당 대화 snapshot만 수정한다.
+ */
+export function useResolvedConversationModel(
+  conversationId: string | null | undefined,
+) {
+  const { isAuthenticated } = useAuth()
+  const { data: settings } = useConversationSettingsQuery(conversationId, {
+    enabled: isAuthenticated,
+  })
+  const { data: models = [] } = useAiModelsQuery()
+  const updateSettings = useUpdateConversationSettingsMutation(conversationId)
+
+  const dbModelId = settings?.modelId ?? null
+  const resolvedModelId =
+    resolveStoredModelId(dbModelId, models) ?? models[0]?.id ?? ''
+
+  const setModelId = useCallback(
+    (nextModelId: ModelId) => {
+      if (!nextModelId || !conversationId || !isAuthenticated) {
+        return
+      }
+
+      updateSettings.mutate({ model_id: nextModelId })
+    },
+    [conversationId, isAuthenticated, updateSettings],
   )
 
   return { modelId: resolvedModelId, setModelId }
