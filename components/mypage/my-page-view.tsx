@@ -42,10 +42,15 @@ import {
 import { getProfileInitials } from "@/lib/user-profile";
 import { cn } from "@/lib/utils";
 import { useProfileQuery } from "@/hooks/queries/use-profile-query";
+import { useDefaultSettingsQuery } from "@/hooks/queries/use-default-settings-query";
 import { useLikedCharactersQuery } from "@/hooks/queries/use-liked-characters-query";
 import { useSignOut } from "@/hooks/mutations/use-sign-out";
 import { useSafetyFilter, useResolvedDefaultModel } from "@/hooks/use-user-settings";
 import { useAiModelsQuery } from "@/hooks/queries/use-ai-models-query";
+import {
+  getDefaultPersona,
+  getDefaultPrompt,
+} from "@/lib/api/user-settings";
 
 type DefaultSettingModal = "prompt" | "persona" | "notes";
 
@@ -60,6 +65,8 @@ export function MyPageView() {
   const signOutMutation = useSignOut();
   const { themeLabel, toggleTheme } = useThemeReady();
   const { data: profile, isPending: loading } = useProfileQuery();
+  const { data: defaultSettings, isPending: settingsLoading } =
+    useDefaultSettingsQuery({ enabled: !!profile });
   const { data: likedCharacters = [] } = useLikedCharactersQuery({
     enabled: !!profile,
   });
@@ -74,6 +81,27 @@ export function MyPageView() {
   const defaultModelLabel = defaultModel
     ? getModelShortName(defaultModel.display_name)
     : "...";
+
+  const defaultPrompt = defaultSettings
+    ? getDefaultPrompt(defaultSettings)
+    : null;
+  const defaultPersona = defaultSettings
+    ? getDefaultPersona(defaultSettings)
+    : null;
+  const sessionNote = defaultSettings?.preferences.sessionNote ?? "";
+  const settingsSummaryLoading = settingsLoading;
+
+  const promptSummaryLabel = settingsSummaryLoading
+    ? "..."
+    : (defaultPrompt?.title ?? "...");
+  const personaSummaryLabel = settingsSummaryLoading
+    ? "..."
+    : (defaultPersona?.name ?? "...");
+  const notesSummaryLabel = settingsSummaryLoading
+    ? "..."
+    : sessionNote.trim()
+      ? sessionNote.trim()
+      : "No notes yet";
 
   function handleSafetyFilterChange(enabled: boolean) {
     setSafetyFilterEnabled(enabled);
@@ -165,19 +193,19 @@ export function MyPageView() {
             <Row
               icon={<FileText className="h-4 w-4" />}
               label="Prompt"
-              value="Default prompt"
+              value={promptSummaryLabel}
               onClick={() => setDefaultSettingModal("prompt")}
             />
             <Row
               icon={<CircleUser className="h-4 w-4" />}
               label="Persona"
-              value={profile.display_name}
+              value={personaSummaryLabel}
               onClick={() => setDefaultSettingModal("persona")}
             />
             <Row
               icon={<NotebookText className="h-4 w-4" />}
               label="User notes"
-              value="No notes yet"
+              value={notesSummaryLabel}
               onClick={() => setDefaultSettingModal("notes")}
             />
           </List>
