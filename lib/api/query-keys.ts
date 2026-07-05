@@ -35,4 +35,9 @@ export const queryKeys = {
     /** 활성 AI 모델 목록 */
     list: () => [...queryKeys.aiModels.all, "list"] as const,
   },
+  userSettings: {
+    all: ["user-settings"] as const,
+    defaultSettings: () =>
+      [...queryKeys.userSettings.all, "default-settings"] as const,
+  },
 } as const;
