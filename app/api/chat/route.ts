@@ -1,3 +1,12 @@
+/**
+ * @deprecated 미사용. 실시간 추론은 socket.io `chat:send`
+ * (외부 CHAT_API_URL 서버)로 처리된다.
+ *
+ * 이 REST 라우트는 conversation_settings snapshot을 반영하지 않으며
+ * 유지보수 대상이 아니다. 재사용 시
+ * `getOrInitConversationSettings()`와 `buildConversationSystemInstruction()`로
+ * persona/prompt/note/model snapshot을 먼저 반영할 것.
+ */
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { generateText, type ModelMessage } from "ai";
 import { NextRequest, NextResponse } from "next/server";

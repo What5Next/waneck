@@ -11,7 +11,7 @@ import { ChatThread } from '@/components/chat/chat-thread'
 import { ChatComposer } from '@/components/chat/chat-composer'
 import { LoginModal } from '@/components/auth/login-modal'
 import { useAuth } from '@/hooks/use-auth'
-import { useResolvedDefaultModel } from '@/hooks/use-user-settings'
+import { useResolvedConversationModel } from '@/hooks/use-user-settings'
 import { useAiModelsQuery } from '@/hooks/queries/use-ai-models-query'
 import { resolveModelName } from '@/lib/ai-models'
 import { bumpCharacterMessageCountInCache } from '@/lib/api/character-stats-cache'
@@ -102,10 +102,10 @@ export default function ChatWindow({
   const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [isLoading, setIsLoading] = useState(false)
   const [draft, setDraft] = useState('')
-  // P5: mypage 모델 설정과 storage 연동
-  const { modelId, setModelId: setModel } = useResolvedDefaultModel()
-  const { data: aiModels = [] } = useAiModelsQuery()
   const [conversationId] = useState<string | null>(initialConversationId)
+  const { modelId, setModelId: setModel } =
+    useResolvedConversationModel(conversationId)
+  const { data: aiModels = [] } = useAiModelsQuery()
   // P1: 채팅 전송 전 로그인 여부 확인용
   const { isAuthenticated } = useAuth()
   const [showLoginModal, setShowLoginModal] = useState(false)

@@ -29,10 +29,18 @@ export const queryKeys = {
     all: ["conversations"] as const,
     /** 사이드바 최근 대화 목록 */
     list: () => [...queryKeys.conversations.all, "list"] as const,
+    /** 대화별 설정 snapshot */
+    settings: (id: string) =>
+      [...queryKeys.conversations.all, "settings", id] as const,
   },
   aiModels: {
     all: ["ai-models"] as const,
     /** 활성 AI 모델 목록 */
     list: () => [...queryKeys.aiModels.all, "list"] as const,
+  },
+  userSettings: {
+    all: ["user-settings"] as const,
+    defaultSettings: () =>
+      [...queryKeys.userSettings.all, "default-settings"] as const,
   },
 } as const;

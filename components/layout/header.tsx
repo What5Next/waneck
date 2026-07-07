@@ -12,6 +12,7 @@ import { useSidebar } from '@/components/layout/sidebar-context'
 import { IconButton, headerIconClass } from '@/components/ui/icon-button'
 import { SearchInput } from '@/components/ui/search-input'
 import { useProfileQuery } from '@/hooks/queries/use-profile-query'
+import { useAuth } from '@/hooks/use-auth'
 import { cn } from '@/lib/utils'
 
 function SidebarToggleButton({
@@ -47,7 +48,8 @@ export function Header({ className }: { className?: string }) {
   const [committedUrlQuery, setCommittedUrlQuery] = useState(urlQuery)
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const { collapsed, mobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar()
-  const { data: profile } = useProfileQuery()
+  const { isAuthenticated } = useAuth()
+  const { data: profile } = useProfileQuery({ enabled: isAuthenticated })
 
   // URL 검색어가 바뀌면 입력창 동기화 (React 권장 derived state 패턴)
   if (committedUrlQuery !== urlQuery) {
@@ -101,16 +103,22 @@ export function Header({ className }: { className?: string }) {
           open={mobileSearchOpen}
           onOpenChange={setMobileSearchOpen}
         />
-        <NotificationButton className="sm:hidden" />
+        {isAuthenticated ? (
+          <NotificationButton className="sm:hidden" />
+        ) : null}
 
-        <Link
-          href="/won"
-          className="flex h-9 items-center gap-1.5 rounded-full px-2 text-foreground transition-colors hover:bg-muted"
-          aria-label="Top up won"
-        >
-          <Gem className="h-4 w-4 text-primary" aria-hidden />
-          <span className="text-sm font-medium tabular-nums">{(profile?.token_balance ?? 0).toLocaleString("ko-KR")}</span>
-        </Link>
+        {isAuthenticated ? (
+          <Link
+            href="/won"
+            className="flex h-9 items-center gap-1.5 rounded-full px-2 text-foreground transition-colors hover:bg-muted"
+            aria-label="Top up won"
+          >
+            <Gem className="h-4 w-4 text-primary" aria-hidden />
+            <span className="text-sm font-medium tabular-nums">
+              {(profile?.token_balance ?? 0).toLocaleString('ko-KR')}
+            </span>
+          </Link>
+        ) : null}
 
         {/* 데스크톱: 검색창 + 알림 + 프로필 */}
         <form onSubmit={handleSearch} className="mr-1 hidden min-w-0 sm:block">
@@ -122,9 +130,11 @@ export function Header({ className }: { className?: string }) {
           />
         </form>
 
-        <NotificationButton className="hidden sm:block" />
+        {isAuthenticated ? (
+          <NotificationButton className="hidden sm:block" />
+        ) : null}
 
-        <div className="hidden shrink-0 sm:flex">
+        <div className="flex shrink-0">
           <UserButton />
         </div>
       </div>
