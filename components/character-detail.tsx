@@ -155,7 +155,6 @@ export function CharacterDetail({
               <CharacterSimilarSection
                 characterId={characterData.id}
                 createdBy={characterData.created_by}
-                layout="horizontal"
               />
             </>
           ) : (
