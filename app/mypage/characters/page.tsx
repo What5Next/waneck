@@ -1,0 +1,73 @@
+'use client'
+
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { ChevronLeft } from 'lucide-react'
+
+import { CharacterListCard } from '@/components/characters/character-list-card'
+import { MobileShell } from '@/components/mobile-shell'
+import { EmptyState } from '@/components/ui/empty-state'
+import { PageLoading } from '@/components/ui/page-loading'
+import { PageNavBar } from '@/components/ui/page-nav-bar'
+import { useMyCharactersQuery } from '@/hooks/queries/use-my-characters-query'
+
+export default function MyCharactersPage() {
+  const router = useRouter()
+  const { data: characters = [], isPending } = useMyCharactersQuery()
+
+  return (
+    <MobileShell>
+      <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background">
+        <header className="sticky top-0 z-20 hidden shrink-0 border-b border-border bg-background/95 backdrop-blur-sm sm:block">
+          <div className="mx-auto flex h-14 max-w-3xl items-center px-2">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="rounded-md p-2 hover:bg-muted/50"
+              aria-label="Go back"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <h1 className="px-1 text-base font-semibold">My characters</h1>
+          </div>
+        </header>
+
+        <div className="scroll-hide min-h-0 flex-1 overflow-y-auto pb-8">
+          <PageNavBar
+            title="My characters"
+            onBack={() => router.back()}
+            titleClassName="font-semibold text-foreground"
+            className="sm:hidden"
+          />
+
+          <div className="mx-auto max-w-3xl space-y-4 px-4 py-4">
+            {isPending ? (
+              <PageLoading />
+            ) : characters.length === 0 ? (
+              <EmptyState
+                message="아직 만든 캐릭터가 없습니다."
+                className="min-h-[200px]"
+              />
+            ) : (
+              characters.map((character) => (
+                <CharacterListCard
+                  key={character.id}
+                  character={character}
+                  href={`/characters/${character.id}/edit`}
+                />
+              ))
+            )}
+
+            {!isPending ? (
+              <p className="text-center text-xs text-muted-foreground">
+                <Link href="/characters/create" className="underline underline-offset-2">
+                  Create a new character
+                </Link>
+              </p>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </MobileShell>
+  )
+}

@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import {
   Hash,
   Heart,
@@ -20,6 +21,8 @@ const MAX_VISIBLE_TAGS = 2
 interface CharacterListCardProps {
   character: Character
   className?: string
+  /** 지정 시 상세 오버레이 대신 일반 링크로 이동 (예: 수정 페이지) */
+  href?: string
 }
 
 function buildTagLabels(character: Character): string[] {
@@ -36,7 +39,7 @@ function buildTagLabels(character: Character): string[] {
   return Array.from(labels)
 }
 
-export function CharacterListCard({ character, className }: CharacterListCardProps) {
+export function CharacterListCard({ character, className, href }: CharacterListCardProps) {
   const creatorHandle = CHARACTER_CREATOR_LABEL
   const tagLabels = buildTagLabels(character)
   const visibleTags = tagLabels.slice(0, MAX_VISIBLE_TAGS)
@@ -44,14 +47,13 @@ export function CharacterListCard({ character, className }: CharacterListCardPro
   const likeCount = character.like_count ?? 0
   const imageCount = getCharacterImageCountValue(character.id)
 
-  return (
-    <CharacterDetailLink
-      characterId={character.id}
-      className={cn(
-        'group flex w-full min-w-0 cursor-pointer gap-4 overflow-hidden',
-        className,
-      )}
-    >
+  const wrapperClassName = cn(
+    'group flex w-full min-w-0 cursor-pointer gap-4 overflow-hidden',
+    className,
+  )
+
+  const content = (
+    <>
       <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-lg bg-muted sm:h-36 sm:w-36">
         {character.profile_image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -120,6 +122,20 @@ export function CharacterListCard({ character, className }: CharacterListCardPro
           </div>
         </div>
       </div>
+    </>
+  )
+
+  if (href) {
+    return (
+      <Link href={href} className={wrapperClassName}>
+        {content}
+      </Link>
+    )
+  }
+
+  return (
+    <CharacterDetailLink characterId={character.id} className={wrapperClassName}>
+      {content}
     </CharacterDetailLink>
   )
 }

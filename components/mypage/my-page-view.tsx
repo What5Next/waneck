@@ -9,6 +9,7 @@ import {
   Heart,
   LogOut,
   NotebookText,
+  Pencil,
   Shield,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -31,6 +32,7 @@ import { cn } from "@/lib/utils";
 import { useProfileQuery } from "@/hooks/queries/use-profile-query";
 import { useDefaultSettingsQuery } from "@/hooks/queries/use-default-settings-query";
 import { useLikedCharactersQuery } from "@/hooks/queries/use-liked-characters-query";
+import { useMyCharactersQuery } from "@/hooks/queries/use-my-characters-query";
 import { useSignOut } from "@/hooks/mutations/use-sign-out";
 import { useSafetyFilter } from "@/hooks/use-user-settings";
 import { getDefaultPersona } from "@/lib/api/user-settings";
@@ -54,6 +56,9 @@ export function MyPageView() {
   const { data: defaultSettings, isPending: settingsLoading } =
     useDefaultSettingsQuery({ enabled: !!profile });
   const { data: likedCharacters = [] } = useLikedCharactersQuery({
+    enabled: !!profile,
+  });
+  const { data: myCharacters = [] } = useMyCharactersQuery({
     enabled: !!profile,
   });
   const { enabled: safetyFilterEnabled, setEnabled: setSafetyFilterEnabled } =
@@ -163,6 +168,12 @@ export function MyPageView() {
           </List>
 
           <List title="MY">
+            <RowLink
+              href="/mypage/characters"
+              icon={<Pencil className="h-4 w-4" />}
+              label="My characters"
+              value={String(myCharacters.length)}
+            />
             <RowLink
               href="/mypage/liked"
               icon={<Heart className="h-4 w-4" />}

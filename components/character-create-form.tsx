@@ -6,9 +6,11 @@ import { ChevronLeft, Plus, Upload, User, X } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { CHARACTER_GENRE_OPTIONS } from '@/lib/character-genres'
+import type { CharacterWithDetail } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Field, TextInput, TextArea } from '@/components/ui/form-field'
 import { useCreateCharacter } from '@/hooks/mutations/use-create-character'
+import { useUpdateCharacter } from '@/hooks/mutations/use-update-character'
 
 // ─── 탭 정의 ───────────────────────────────────────────────────────────────
 
@@ -55,6 +57,32 @@ const DEFAULT_FORM: FormState = {
   mood: '',
   desc: '',
   suggestions: ['', '', ''],
+}
+
+function toFormState(character: CharacterWithDetail): FormState {
+  const suggestions = Array.isArray(character.suggestions)
+    ? character.suggestions.filter((s): s is string => typeof s === 'string')
+    : []
+
+  return {
+    imageUrl: character.profile_image_url ?? '',
+    emoji: '',
+    name: character.name,
+    tagline: character.short_intro ?? '',
+    introTurns:
+      character.intro_messages.length > 0
+        ? character.intro_messages.map((m) => ({
+            role: m.role === 'user' ? 'user' : 'model',
+            text: m.content,
+          }))
+        : [{ role: 'model', text: '' }],
+    system: character.system_prompt,
+    tag: character.tag ?? '',
+    genres: character.genres ?? [],
+    mood: character.mood ?? '',
+    desc: character.description ?? '',
+    suggestions: [suggestions[0] ?? '', suggestions[1] ?? '', suggestions[2] ?? ''],
+  }
 }
 
 // ─── 탭 1: 캐릭터 설정 ────────────────────────────────────────────────────
@@ -438,11 +466,24 @@ function DetailTab({
 
 // ─── 메인 폼 ──────────────────────────────────────────────────────────────
 
-export function CharacterCreateForm() {
+type CharacterCreateFormProps = {
+  mode?: 'create' | 'edit'
+  characterId?: string
+  initialData?: CharacterWithDetail
+}
+
+export function CharacterCreateForm({
+  mode = 'create',
+  characterId,
+  initialData,
+}: CharacterCreateFormProps = {}) {
   const router = useRouter()
   const createCharacterMutation = useCreateCharacter()
+  const updateCharacterMutation = useUpdateCharacter(characterId ?? '')
   const [activeTab, setActiveTab] = useState<TabId>('settings')
-  const [form, setForm] = useState<FormState>(DEFAULT_FORM)
+  const [form, setForm] = useState<FormState>(() =>
+    initialData ? toFormState(initialData) : DEFAULT_FORM,
+  )
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -470,12 +511,15 @@ export function CharacterCreateForm() {
     setSubmitting(true)
     setError(null)
     try {
-      let profileImageUrl: string | null = null
+      // undefined = 이미지 변경 없음(기존 값 유지), null = 사용자가 이미지를 제거함
+      let profileImageUrl: string | null | undefined
       if (imageFile) {
         profileImageUrl = await uploadImage(imageFile)
+      } else if (mode === 'edit' && !form.imageUrl) {
+        profileImageUrl = null
       }
 
-      const data = await createCharacterMutation.mutateAsync({
+      const payload = {
         name: form.name,
         short_intro: form.tagline,
         system_prompt: form.system,
@@ -485,9 +529,18 @@ export function CharacterCreateForm() {
         description: form.desc,
         suggestions: form.suggestions.filter(Boolean),
         introTurns: form.introTurns,
-        profile_image_url: profileImageUrl,
-      })
-      router.push(`/characters/${data.id}`)
+        ...(profileImageUrl !== undefined
+          ? { profile_image_url: profileImageUrl }
+          : {}),
+      }
+
+      if (mode === 'edit' && characterId) {
+        await updateCharacterMutation.mutateAsync(payload)
+        router.push(`/characters/${characterId}`)
+      } else {
+        const data = await createCharacterMutation.mutateAsync(payload)
+        router.push(`/characters/${data.id}`)
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to save')
     } finally {
@@ -524,7 +577,9 @@ export function CharacterCreateForm() {
         >
           <ChevronLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-base font-semibold text-foreground">Create character</h1>
+        <h1 className="text-base font-semibold text-foreground">
+          {mode === 'edit' ? 'Edit character' : 'Create character'}
+        </h1>
         <div className="h-10 w-10" />
       </header>
 
@@ -575,7 +630,7 @@ export function CharacterCreateForm() {
           disabled={!canNext || submitting}
           className="w-full rounded-xl py-3 text-base font-semibold"
         >
-          {submitting ? 'Saving…' : isLast ? 'Done' : 'Next'}
+          {submitting ? 'Saving…' : isLast ? (mode === 'edit' ? 'Save' : 'Done') : 'Next'}
         </Button>
       </div>
     </div>
