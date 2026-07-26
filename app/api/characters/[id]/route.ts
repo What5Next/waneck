@@ -11,6 +11,7 @@ import {
   requireAuthenticatedUser,
 } from "@/lib/api/character-stats-auth";
 import { normalizeCharacterGenres } from "@/lib/character-genres";
+import { deleteS3ObjectByUrl } from "@/lib/s3";
 
 export async function GET(
   _req: Request,
@@ -182,6 +183,20 @@ export async function PATCH(
           { status: 500 },
         );
       }
+    }
+  }
+
+  // 캐릭터 정보 변경이 모두 성공한 뒤에만 기존 S3 이미지 삭제 (실패해도 응답에는 영향 없음)
+  const oldImageUrl = character.profile_image_url;
+  if (
+    body.profile_image_url !== undefined &&
+    oldImageUrl &&
+    oldImageUrl !== body.profile_image_url
+  ) {
+    try {
+      await deleteS3ObjectByUrl(oldImageUrl);
+    } catch (err) {
+      console.error("[PATCH /api/characters/:id] old image delete failed:", err);
     }
   }
 
