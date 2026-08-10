@@ -1,13 +1,13 @@
 import type { LucideIcon } from 'lucide-react'
-import { Ghost } from 'lucide-react'
 import type { ReactNode } from 'react'
 
+import { Logo } from '@/components/ui/logo'
 import { cn } from '@/lib/utils'
 
 interface EmptyStateProps {
   /** 빈 상태 안내 문구 */
   message: ReactNode
-  /** 아이콘 (미지정 시 Ghost) */
+  /** 아이콘 (미지정 시 whatsnext 로고) */
   icon?: LucideIcon
   className?: string
   iconClassName?: string
@@ -16,7 +16,7 @@ interface EmptyStateProps {
 
 export function EmptyState({
   message,
-  icon: Icon = Ghost,
+  icon: Icon,
   className,
   iconClassName,
   messageClassName,
@@ -29,10 +29,14 @@ export function EmptyState({
         className,
       )}
     >
-      <Icon
-        className={cn('h-8 w-8 shrink-0 text-muted-foreground/50', iconClassName)}
-        aria-hidden
-      />
+      {Icon ? (
+        <Icon
+          className={cn('h-8 w-8 shrink-0 text-muted-foreground/50', iconClassName)}
+          aria-hidden
+        />
+      ) : (
+        <Logo className={cn('h-20 w-20 shrink-0 fill-muted-foreground/50', iconClassName)} />
+      )}
       <div
         className={cn(
           'max-w-xs px-3 text-[12px] leading-tight text-muted-foreground',

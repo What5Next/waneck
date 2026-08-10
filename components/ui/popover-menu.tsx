@@ -221,6 +221,10 @@ interface PopoverMenuItemProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   trailing?: ReactNode
   showChevron?: boolean
   selected?: boolean
+  /** 기본 라벨 색상/굵기를 오버라이드 (예: Sign out처럼 낮은 강조가 필요할 때) */
+  labelClassName?: string
+  /** 기본 아이콘 색상을 오버라이드 (labelClassName과 함께 짝을 맞출 때) */
+  iconClassName?: string
 }
 
 /** chat-settings SettingsMenuRow 스타일 */
@@ -232,6 +236,8 @@ export function PopoverMenuItem({
   showChevron = false,
   selected = false,
   className,
+  labelClassName,
+  iconClassName,
   type = 'button',
   ...props
 }: PopoverMenuItemProps) {
@@ -246,10 +252,17 @@ export function PopoverMenuItem({
     >
       <div className="flex min-w-0 flex-1 items-center gap-2">
         {icon ? (
-          <span className="shrink-0 text-muted-foreground">{icon}</span>
+          <span className={cn('shrink-0 text-muted-foreground', iconClassName)}>
+            {icon}
+          </span>
         ) : null}
         <div className="min-w-0">
-          <span className="block truncate text-[13px] font-medium text-foreground/90">
+          <span
+            className={cn(
+              'block truncate text-[13px] font-medium text-foreground/90',
+              labelClassName,
+            )}
+          >
             {label}
           </span>
           {description ? (
