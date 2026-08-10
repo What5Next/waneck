@@ -413,10 +413,11 @@ export function parsePersonaPatch(
     )
   }
 
+  // 빈 이름 허용 — "퍼소나 없음" 상태를 표현하기 위한 초기화(reset)에 사용된다
   const trimmedName = name.trim()
-  if (!trimmedName || trimmedName.length > PERSONA_NAME_MAX) {
+  if (trimmedName.length > PERSONA_NAME_MAX) {
     return NextResponse.json(
-      { error: `name must be 1-${PERSONA_NAME_MAX} characters` },
+      { error: `name must be at most ${PERSONA_NAME_MAX} characters` },
       { status: 400 },
     )
   }

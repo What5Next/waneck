@@ -3,7 +3,6 @@
 import { useCallback } from 'react'
 
 import type { ModelId } from '@/components/chat/model-selector'
-import type { BrowseViewMode } from '@/components/characters/character-browse-toolbar'
 import { useAuth } from '@/hooks/use-auth'
 import { useUpdateConversationSettingsMutation } from '@/hooks/mutations/use-update-conversation-settings-mutation'
 import { useUpdateUserPreferencesMutation } from '@/hooks/mutations/use-user-preferences-mutation'
@@ -17,7 +16,6 @@ import {
   subscribeStorageKey,
 } from '@/lib/stores/local-storage-store'
 import {
-  BROWSE_VIEW_STORAGE_KEY,
   getChatRoomNameStorageKey,
   readSafetyFilterFromStorage,
   SAFETY_FILTER_KEY,
@@ -109,23 +107,6 @@ export function useDefaultModel() {
 }
 
 /**
- * 탐색 페이지 list/grid 뷰 모드.
- */
-export function useBrowseViewMode() {
-  const viewMode = useSyncExternalStore(
-    (onStoreChange) => subscribeStorageKey(BROWSE_VIEW_STORAGE_KEY, onStoreChange),
-    readBrowseViewModeFromStorage,
-    () => 'list' as BrowseViewMode,
-  )
-
-  const setViewMode = useCallback((nextViewMode: BrowseViewMode) => {
-    setStorageItem(BROWSE_VIEW_STORAGE_KEY, nextViewMode)
-  }, [])
-
-  return { viewMode, setViewMode }
-}
-
-/**
  * 동적 storageKey 기반 문자열 설정 (채팅방 이름 등).
  */
 export function useStoredString(storageKey: string, fallback: string) {
@@ -160,9 +141,4 @@ export function useChatRoomName(
 ) {
   const storageKey = getChatRoomNameStorageKey(characterId, conversationId)
   return useStoredString(storageKey, characterName)
-}
-
-function readBrowseViewModeFromStorage(): BrowseViewMode {
-  const stored = getStorageItem(BROWSE_VIEW_STORAGE_KEY)
-  return stored === 'grid' ? 'grid' : 'list'
 }
