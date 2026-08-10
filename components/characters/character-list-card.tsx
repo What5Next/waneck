@@ -11,6 +11,8 @@ import {
   formatCompactCount,
   getCharacterImageCountValue,
 } from '@/lib/character-display'
+import { toHomeCategoryLabel } from '@/lib/character-genres'
+import { CHARACTER_CREATOR_LABEL } from '@/lib/site-config'
 import { cn } from '@/lib/utils'
 
 const MAX_VISIBLE_TAGS = 2
@@ -25,17 +27,17 @@ function buildTagLabels(character: Character): string[] {
 
   for (const genre of character.genres ?? []) {
     const trimmed = genre.trim()
-    if (trimmed) labels.add(trimmed)
+    if (trimmed) labels.add(toHomeCategoryLabel(trimmed))
   }
 
   const tag = character.tag?.trim()
-  if (tag) labels.add(tag)
+  if (tag) labels.add(toHomeCategoryLabel(tag))
 
   return Array.from(labels)
 }
 
 export function CharacterListCard({ character, className }: CharacterListCardProps) {
-  const creatorHandle = character.tag?.trim()
+  const creatorHandle = CHARACTER_CREATOR_LABEL
   const tagLabels = buildTagLabels(character)
   const visibleTags = tagLabels.slice(0, MAX_VISIBLE_TAGS)
   const hiddenTagCount = Math.max(0, tagLabels.length - MAX_VISIBLE_TAGS)
@@ -71,12 +73,12 @@ export function CharacterListCard({ character, className }: CharacterListCardPro
           <h3 className="truncate text-base font-bold text-foreground sm:text-lg">
             {character.name}
           </h3>
-          <p className="mt-1 line-clamp-2 text-xs text-muted-foreground sm:text-sm">
+          <p className="mt-1 line-clamp-2 text-[11px] text-muted-foreground sm:text-xs">
             {character.short_intro}
           </p>
         </div>
 
-        <div className="mt-1 space-y-1">
+        <div className="mt-1 space-y-1.5">
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
               <MessageCircle className="size-3" aria-hidden />
@@ -92,26 +94,24 @@ export function CharacterListCard({ character, className }: CharacterListCardPro
             </div>
           </div>
 
-          <div className="flex flex-nowrap items-center gap-2 overflow-hidden">
-            {creatorHandle && (
-              <div className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
-                <span>@{creatorHandle}</span>
-              </div>
-            )}
+          <div className="flex flex-nowrap items-center gap-3 overflow-hidden">
+            <div className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
+              <span>@{creatorHandle}</span>
+            </div>
 
             {visibleTags.length > 0 && (
               <div className="flex min-w-0 flex-nowrap items-center gap-1 overflow-hidden">
                 {visibleTags.map((label) => (
                   <span
                     key={label}
-                    className="inline-flex h-5 shrink-0 items-center rounded-full border px-1.5 text-[0.65rem] font-semibold text-foreground"
+                    className="inline-flex h-5 shrink-0 items-center rounded-[4px] border px-1.5 text-[0.65rem] font-semibold text-foreground"
                   >
                     <Hash className="mr-0.5 size-2" aria-hidden />
                     {label}
                   </span>
                 ))}
                 {hiddenTagCount > 0 && (
-                  <span className="inline-flex h-5 shrink-0 items-center rounded-full border px-1.5 text-[0.65rem] text-muted-foreground">
+                  <span className="inline-flex h-5 shrink-0 items-center rounded-[4px] border px-1.5 text-[0.65rem] text-muted-foreground">
                     +{hiddenTagCount}
                   </span>
                 )}

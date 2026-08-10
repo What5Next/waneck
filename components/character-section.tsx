@@ -25,7 +25,8 @@ interface CharacterSectionProps {
   className?: string
 }
 
-const CHARACTER_CARD_WIDTH_CLASS = 'w-[calc(50%-4px)] shrink-0 xs:w-[calc(33.333%-6px)]'
+const CHARACTER_CARD_WIDTH_CLASS =
+  'w-[calc(50%-4px)] shrink-0 xs:w-[calc(33.333%-5.333px)] sm:w-[calc(25%-6px)] lg:w-[calc(20%-6.4px)]'
 
 function HorizontalSlider({
   characters,
@@ -68,7 +69,7 @@ function HorizontalSlider({
 
   if (!loading && characters.length === 0) {
     return (
-      <div className="flex justify-center px-4 pb-1">
+      <div className="flex justify-center px-4 sm:px-6 lg:px-8 pb-1">
         <EmptyState
           message={emptyMessage}
           className={cn('aspect-3/4 rounded-xl', CHARACTER_CARD_WIDTH_CLASS)}
@@ -79,52 +80,69 @@ function HorizontalSlider({
 
   return (
     <div className="relative">
-      {canScrollLeft && (
-        <IconButton
-          type="button"
-          variant="floating"
-          size="sm"
-          onClick={() => slide('left')}
-          className="absolute left-1 top-[40%] z-10 -translate-y-1/2"
-          aria-label="Previous"
-        >
-          <ChevronLeft />
-        </IconButton>
-      )}
+      {/* content-edge 래퍼: 카드는 overflow-hidden으로 안쪽에서 정확히 잘림 */}
+      <div className="relative mx-4 sm:mx-6 lg:mx-8">
+        {/* 카드 이미지(aspect-[3/4])와 동일한 너비·비율의 투명 sizer — 화살표를 "사진 영역" 세로 중앙에 정확히 맞추기 위함.
+            화면 폭이 좁을 때 화살표가 콘텐츠 밖으로 잘리는 문제가 있어 카드 이미지 안쪽(우측 상단 겹침)으로 배치 */}
+        {canScrollLeft && (
+          <div
+            className={cn('pointer-events-none absolute left-0 top-0 z-10 aspect-[3/4]', CHARACTER_CARD_WIDTH_CLASS)}
+            aria-hidden
+          >
+            <IconButton
+              type="button"
+              variant="floating"
+              size="sm"
+              onClick={() => slide('left')}
+              className="pointer-events-auto absolute left-1 top-1/2 -translate-y-1/2 bg-white/25 text-black hover:bg-white/40"
+              aria-label="Previous"
+            >
+              <ChevronLeft />
+            </IconButton>
+          </div>
+        )}
 
-      {canScrollRight && (
-        <IconButton
-          type="button"
-          variant="floating"
-          size="sm"
-          onClick={() => slide('right')}
-          className="absolute right-1 top-[40%] z-10 -translate-y-1/2"
-          aria-label="Next"
-        >
-          <ChevronRight />
-        </IconButton>
-      )}
+        {canScrollRight && (
+          <div
+            className={cn('pointer-events-none absolute right-0 top-0 z-10 aspect-[3/4]', CHARACTER_CARD_WIDTH_CLASS)}
+            aria-hidden
+          >
+            <IconButton
+              type="button"
+              variant="floating"
+              size="sm"
+              onClick={() => slide('right')}
+              className="pointer-events-auto absolute right-1 top-1/2 -translate-y-1/2 bg-white/25 text-black hover:bg-white/40"
+              aria-label="Next"
+            >
+              <ChevronRight />
+            </IconButton>
+          </div>
+        )}
 
-      <div
-        ref={sliderRef}
-        onScroll={updateScrollState}
-        className="scroll-hide flex gap-2 overflow-x-auto scroll-smooth px-4 pb-1"
-      >
-        {loading
-          ? Array.from({ length: 4 }).map((_, index) => (
-              <CharacterCardSkeleton
-                key={index}
-                className={CHARACTER_CARD_WIDTH_CLASS}
-              />
-            ))
-          : characters.map((character, index) => (
-              <CharacterGridCard
-                key={character.id}
-                character={character}
-                rank={showRank ? index + 1 : undefined}
-                className={CHARACTER_CARD_WIDTH_CLASS}
-              />
-            ))}
+        <div className="overflow-hidden">
+          <div
+            ref={sliderRef}
+            onScroll={updateScrollState}
+            className="scroll-hide flex gap-2 overflow-x-auto scroll-smooth pb-1"
+          >
+            {loading
+              ? Array.from({ length: 4 }).map((_, index) => (
+                  <CharacterCardSkeleton
+                    key={index}
+                    className={CHARACTER_CARD_WIDTH_CLASS}
+                  />
+                ))
+              : characters.map((character, index) => (
+                  <CharacterGridCard
+                    key={character.id}
+                    character={character}
+                    rank={showRank ? index + 1 : undefined}
+                    className={CHARACTER_CARD_WIDTH_CLASS}
+                  />
+                ))}
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -154,20 +172,20 @@ export function CharacterSection({
           emptyMessage={emptyMessage}
         />
       ) : loading ? (
-        <div className="grid grid-cols-2 gap-x-2 gap-y-4 px-4 xs:grid-cols-3">
+        <div className="grid grid-cols-2 gap-x-2 gap-y-10 px-4 xs:grid-cols-3 sm:px-6 sm:grid-cols-4 lg:px-8 lg:grid-cols-5">
           {Array.from({ length: 6 }).map((_, index) => (
             <CharacterCardSkeleton key={index} />
           ))}
         </div>
       ) : characters.length === 0 ? (
-        <div className="flex justify-center px-4">
+        <div className="flex justify-center px-4 sm:px-6 lg:px-8">
           <EmptyState
             message={emptyMessage}
             className={cn('aspect-3/4 rounded-xl', CHARACTER_CARD_WIDTH_CLASS)}
           />
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-x-2 gap-y-4 px-4 xs:grid-cols-3">
+        <div className="grid grid-cols-2 gap-x-2 gap-y-10 px-4 xs:grid-cols-3 sm:px-6 sm:grid-cols-4 lg:px-8 lg:grid-cols-5">
           {characters.map((character, index) => (
             <CharacterGridCard
               key={character.id}
