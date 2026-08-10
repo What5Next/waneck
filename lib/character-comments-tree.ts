@@ -104,12 +104,16 @@ export function findInTree(
 /** top-level만 정렬 (replies는 각각 ASC 유지) */
 export function sortTopLevelComments(
   comments: CharacterComment[],
-  sort: "newest" | "oldest",
+  sort: "newest" | "oldest" | "popular",
 ): CharacterComment[] {
   const sorted = [...comments];
   sorted.sort((a, b) => {
     const aTime = new Date(a.created_at).getTime();
     const bTime = new Date(b.created_at).getTime();
+    if (sort === "popular") {
+      const likeDiff = (b.like_count ?? 0) - (a.like_count ?? 0);
+      return likeDiff !== 0 ? likeDiff : bTime - aTime;
+    }
     return sort === "newest" ? bTime - aTime : aTime - bTime;
   });
   return sorted.map((comment) => ({

@@ -1,7 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Gem, Heart, Loader2, Lock, MoreHorizontal, Send } from "lucide-react";
+import {
+  ChevronDown,
+  Gem,
+  Loader2,
+  Lock,
+  MoreHorizontal,
+  Send,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { LoginModal } from "@/components/auth/login-modal";
@@ -10,26 +17,36 @@ import {
   PopoverMenu,
   PopoverMenuContent,
   PopoverMenuItem,
+  PopoverMenuTextOption,
   PopoverMenuTrigger,
 } from "@/components/ui/popover-menu";
 import { useAuth } from "@/hooks/use-auth";
 import { useCreateCharacterComment } from "@/hooks/mutations/use-create-character-comment";
 import { useDeleteCharacterComment } from "@/hooks/mutations/use-delete-character-comment";
-import { useToggleCharacterCommentLike } from "@/hooks/mutations/use-toggle-character-comment-like";
 import { useUpdateCharacterComment } from "@/hooks/mutations/use-update-character-comment";
 import { useCharacterCommentsQuery } from "@/hooks/queries/use-character-comments-query";
-import { sortTopLevelComments } from "@/lib/character-comments-tree";
-import { formatRelativeCommentTime } from "@/lib/character-detail";
-import { getProfileInitials } from "@/lib/user-profile";
+import {
+  countCommentsInTree,
+  sortTopLevelComments,
+} from "@/lib/character-comments-tree";
+import { getProfileInitials, getProfileName } from "@/lib/user-profile";
 import type { CharacterComment } from "@/lib/types";
 import { cn } from "@/lib/utils";
+
+const TOP_LEVEL_COMMENT_MAX = 3000;
 
 type CharacterCommentsPanelProps = {
   characterId: string;
   enabled?: boolean;
 };
 
-type CommentSort = "newest" | "oldest";
+type CommentSort = "popular" | "newest" | "oldest";
+
+const SORT_LABELS: Record<CommentSort, string> = {
+  popular: "Popular",
+  newest: "Newest",
+  oldest: "Oldest",
+};
 
 function getAuthorName(comment: CharacterComment): string {
   return comment.author.display_name?.trim() || "Anonymous";
@@ -148,43 +165,75 @@ function CommentComposer({
   );
 }
 
-function CommentLikeButton({
-  comment,
-  onLike,
-  disabled,
+function TopLevelComposer({
+  authorName,
+  draft,
+  onDraftChange,
+  onSubmit,
+  isBusy,
 }: {
-  comment: CharacterComment;
-  onLike: () => void;
-  disabled?: boolean;
+  authorName: string;
+  draft: string;
+  onDraftChange: (value: string) => void;
+  onSubmit: () => void;
+  isBusy: boolean;
 }) {
-  const isLiked = comment.is_liked ?? false;
-  const likeCount = comment.like_count ?? 0;
+  const isSubmitEnabled = draft.trim().length > 0 && !isBusy;
 
   return (
-    <button
-      type="button"
-      onClick={onLike}
-      disabled={disabled}
-      className={cn(
-        "inline-flex items-center gap-1 transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
-        isLiked && "text-primary",
-      )}
-      aria-label={isLiked ? "Unlike comment" : "Like comment"}
-    >
-      <Heart
-        className={cn(
-          "h-3.5 w-3.5",
-          isLiked && "fill-primary text-primary",
-        )}
-      />
-      <span>{likeCount}</span>
-    </button>
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2.5">
+        <Avatar className="h-9 w-9 shrink-0">
+          <AvatarFallback className="bg-muted text-xs font-semibold text-muted-foreground">
+            {getProfileInitials(authorName)}
+          </AvatarFallback>
+        </Avatar>
+        <span className="truncate text-sm font-semibold text-foreground">
+          {authorName}
+        </span>
+      </div>
+
+      <div className="rounded-2xl bg-muted/40 px-4 pb-2 pt-2.5">
+        <textarea
+          value={draft}
+          onChange={(event) => onDraftChange(event.target.value)}
+          placeholder="Leave a comment..."
+          maxLength={TOP_LEVEL_COMMENT_MAX}
+          rows={2}
+          className="w-full resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+              event.preventDefault();
+              onSubmit();
+            }
+          }}
+        />
+        <div className="flex justify-end pb-0.5">
+          <button
+            type="button"
+            onClick={onSubmit}
+            disabled={!isSubmitEnabled}
+            className={cn(
+              "rounded-[8px] px-3 py-1.5 text-xs font-semibold transition-colors",
+              isSubmitEnabled
+                ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                : "bg-muted text-muted-foreground opacity-60",
+            )}
+          >
+            {isBusy ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              "Post"
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
 function CommentListItem({
   comment,
-  depth,
   isOwn,
   isEditing,
   editDraft,
@@ -193,14 +242,10 @@ function CommentListItem({
   onEditCancel,
   onEdit,
   onDelete,
-  onReply,
-  onLike,
   isDeleting,
   isBusy,
-  showReplyButton,
 }: {
   comment: CharacterComment;
-  depth: "top" | "reply";
   isOwn: boolean;
   isEditing: boolean;
   editDraft: string;
@@ -209,24 +254,14 @@ function CommentListItem({
   onEditCancel: () => void;
   onEdit: () => void;
   onDelete: () => void;
-  onReply?: () => void;
-  onLike: () => void;
   isDeleting?: boolean;
   isBusy: boolean;
-  showReplyButton: boolean;
 }) {
   const authorName = getAuthorName(comment);
 
   return (
-    <article
-      className={cn(
-        "flex gap-3 border-b border-border/40 py-4 last:border-b-0",
-        depth === "reply" && "border-b-0 py-3",
-      )}
-    >
-      <Avatar
-        className={cn("shrink-0", depth === "top" ? "h-9 w-9" : "h-7 w-7")}
-      >
+    <article className="flex gap-3 border-b border-border/40 py-4 last:border-b-0">
+      <Avatar className="h-9 w-9 shrink-0">
         <AvatarFallback className="bg-muted text-xs font-semibold text-muted-foreground">
           {getProfileInitials(authorName)}
         </AvatarFallback>
@@ -238,9 +273,6 @@ function CommentListItem({
             <span className="truncate text-sm font-semibold text-foreground">
               {authorName}
             </span>
-            <time className="shrink-0 text-xs text-muted-foreground">
-              {formatRelativeCommentTime(comment.created_at)}
-            </time>
           </div>
 
           {isOwn && !isEditing ? (
@@ -251,13 +283,17 @@ function CommentListItem({
               >
                 <MoreHorizontal className="h-4 w-4" />
               </PopoverMenuTrigger>
-              <PopoverMenuContent align="end" side="bottom" width="sm">
-                <PopoverMenuItem label="Edit" onClick={onEdit} />
+              <PopoverMenuContent align="end" side="bottom" width="auto">
+                <PopoverMenuItem
+                  label="Edit"
+                  className="whitespace-nowrap px-2.5 py-2"
+                  onClick={onEdit}
+                />
                 <PopoverMenuItem
                   label="Delete"
+                  className="whitespace-nowrap px-2.5 py-2 text-destructive focus:text-destructive"
                   onClick={onDelete}
                   disabled={isDeleting}
-                  className="text-destructive focus:text-destructive"
                 />
               </PopoverMenuContent>
             </PopoverMenu>
@@ -283,30 +319,6 @@ function CommentListItem({
             {comment.content}
           </p>
         )}
-
-        {!isEditing ? (
-          <div
-            className={cn(
-              "mt-2.5 flex items-center gap-4 text-xs text-muted-foreground",
-              depth === "reply" && "mt-2",
-            )}
-          >
-            <CommentLikeButton
-              comment={comment}
-              onLike={onLike}
-              disabled={isBusy}
-            />
-            {showReplyButton && onReply ? (
-              <button
-                type="button"
-                onClick={onReply}
-                className="font-medium transition-colors hover:text-foreground"
-              >
-                Reply
-              </button>
-            ) : null}
-          </div>
-        ) : null}
       </div>
     </article>
   );
@@ -322,13 +334,6 @@ function CommentThread({
   onEditCancel,
   onStartEdit,
   onDelete,
-  onReply,
-  onLike,
-  replyingToId,
-  replyDraft,
-  onReplyDraftChange,
-  onReplySubmit,
-  onReplyCancel,
   isDeletingId,
   isBusy,
 }: {
@@ -341,81 +346,25 @@ function CommentThread({
   onEditCancel: () => void;
   onStartEdit: (comment: CharacterComment) => void;
   onDelete: (commentId: string) => void;
-  onReply: (commentId: string) => void;
-  onLike: (comment: CharacterComment) => void;
-  replyingToId: string | null;
-  replyDraft: string;
-  onReplyDraftChange: (value: string) => void;
-  onReplySubmit: () => void;
-  onReplyCancel: () => void;
   isDeletingId: string | null;
   isBusy: boolean;
 }) {
   const isEditingTop = editingCommentId === comment.id;
 
   return (
-    <div>
-      <CommentListItem
-        comment={comment}
-        depth="top"
-        isOwn={Boolean(userId && comment.author.id === userId)}
-        isEditing={isEditingTop}
-        editDraft={editDraft}
-        onEditDraftChange={onEditDraftChange}
-        onEditSubmit={() => onEditSubmit(comment.id)}
-        onEditCancel={onEditCancel}
-        onEdit={() => onStartEdit(comment)}
-        onDelete={() => onDelete(comment.id)}
-        onReply={() => onReply(comment.id)}
-        onLike={() => onLike(comment)}
-        isDeleting={isDeletingId === comment.id}
-        isBusy={isBusy}
-        showReplyButton
-      />
-
-      {replyingToId === comment.id ? (
-        <div className="mb-2 ml-12">
-          <CommentComposer
-            draft={replyDraft}
-            onDraftChange={onReplyDraftChange}
-            onSubmit={onReplySubmit}
-            onCancel={onReplyCancel}
-            isBusy={isBusy}
-            isEditing={false}
-            showComposer
-            compact
-            placeholder="Write a reply..."
-          />
-        </div>
-      ) : null}
-
-      {(comment.replies ?? []).length > 0 ? (
-        <div className="ml-12 border-l border-border/50 pl-4">
-          {(comment.replies ?? []).map((reply) => {
-            const isEditingReply = editingCommentId === reply.id;
-            return (
-              <CommentListItem
-                key={reply.id}
-                comment={reply}
-                depth="reply"
-                isOwn={Boolean(userId && reply.author.id === userId)}
-                isEditing={isEditingReply}
-                editDraft={editDraft}
-                onEditDraftChange={onEditDraftChange}
-                onEditSubmit={() => onEditSubmit(reply.id)}
-                onEditCancel={onEditCancel}
-                onEdit={() => onStartEdit(reply)}
-                onDelete={() => onDelete(reply.id)}
-                onLike={() => onLike(reply)}
-                isDeleting={isDeletingId === reply.id}
-                isBusy={isBusy}
-                showReplyButton={false}
-              />
-            );
-          })}
-        </div>
-      ) : null}
-    </div>
+    <CommentListItem
+      comment={comment}
+      isOwn={Boolean(userId && comment.author.id === userId)}
+      isEditing={isEditingTop}
+      editDraft={editDraft}
+      onEditDraftChange={onEditDraftChange}
+      onEditSubmit={() => onEditSubmit(comment.id)}
+      onEditCancel={onEditCancel}
+      onEdit={() => onStartEdit(comment)}
+      onDelete={() => onDelete(comment.id)}
+      isDeleting={isDeletingId === comment.id}
+      isBusy={isBusy}
+    />
   );
 }
 
@@ -426,9 +375,8 @@ export function CharacterCommentsPanel({
   const { isAuthenticated, user } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
   const [draft, setDraft] = useState("");
-  const [sort, setSort] = useState<CommentSort>("newest");
-  const [replyingToId, setReplyingToId] = useState<string | null>(null);
-  const [replyDraft, setReplyDraft] = useState("");
+  const [sort, setSort] = useState<CommentSort>("popular");
+  const [sortMenuOpen, setSortMenuOpen] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState("");
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(
@@ -441,18 +389,21 @@ export function CharacterCommentsPanel({
   const createComment = useCreateCharacterComment(characterId);
   const updateComment = useUpdateCharacterComment(characterId);
   const deleteComment = useDeleteCharacterComment(characterId);
-  const toggleCommentLike = useToggleCharacterCommentLike(characterId);
 
   const isBusy =
     createComment.isPending ||
     updateComment.isPending ||
-    deleteComment.isPending ||
-    toggleCommentLike.isPending;
+    deleteComment.isPending;
 
   const displayComments = useMemo(
     () => sortTopLevelComments(comments, sort),
     [comments, sort],
   );
+  const totalCommentCount = useMemo(
+    () => countCommentsInTree(comments),
+    [comments],
+  );
+  const composerAuthorName = user ? getProfileName(user, null) : "You";
 
   function requireAuth(action: () => void) {
     if (!isAuthenticated) {
@@ -471,32 +422,12 @@ export function CharacterCommentsPanel({
         await createComment.mutateAsync({ content: trimmed });
         setDraft("");
       } catch {
-        toast.error("댓글 저장에 실패했습니다.");
-      }
-    });
-  }
-
-  async function handleReplySubmit() {
-    const trimmed = replyDraft.trim();
-    if (!trimmed || !replyingToId || isBusy) return;
-
-    requireAuth(async () => {
-      try {
-        await createComment.mutateAsync({
-          content: trimmed,
-          parentId: replyingToId,
-        });
-        setReplyDraft("");
-        setReplyingToId(null);
-      } catch {
-        toast.error("답글 저장에 실패했습니다.");
+        toast.error("Failed to save comment.");
       }
     });
   }
 
   function handleStartEdit(comment: CharacterComment) {
-    setReplyingToId(null);
-    setReplyDraft("");
     setEditingCommentId(comment.id);
     setEditDraft(comment.content);
   }
@@ -511,7 +442,7 @@ export function CharacterCommentsPanel({
         setEditingCommentId(null);
         setEditDraft("");
       } catch {
-        toast.error("댓글 수정에 실패했습니다.");
+        toast.error("Failed to update comment.");
       }
     });
   }
@@ -527,85 +458,63 @@ export function CharacterCommentsPanel({
           setEditingCommentId(null);
           setEditDraft("");
         }
-        if (replyingToId === commentId) {
-          setReplyingToId(null);
-          setReplyDraft("");
-        }
       } catch {
-        toast.error("댓글 삭제에 실패했습니다.");
+        toast.error("Failed to delete comment.");
       } finally {
         setDeletingCommentId(null);
       }
     });
   }
 
-  function handleReply(commentId: string) {
-    requireAuth(() => {
-      setEditingCommentId(null);
-      setEditDraft("");
-      setReplyingToId((prev) => (prev === commentId ? null : commentId));
-      setReplyDraft("");
-    });
-  }
-
-  async function handleLike(comment: CharacterComment) {
-    if (isBusy) return;
-
-    requireAuth(async () => {
-      try {
-        await toggleCommentLike.mutateAsync({
-          commentId: comment.id,
-          isLiked: comment.is_liked ?? false,
-        });
-      } catch {
-        toast.error("좋아요 처리에 실패했습니다.");
-      }
-    });
-  }
-
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       <LoginModal
         open={showLogin}
         onOpenChange={setShowLogin}
         redirectPath={`/characters/${characterId}`}
       />
 
-      <CommentComposer
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold text-foreground">
+          Comments {totalCommentCount}
+        </h2>
+
+        <PopoverMenu open={sortMenuOpen} onOpenChange={setSortMenuOpen}>
+          <PopoverMenuTrigger className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground">
+            {SORT_LABELS[sort]}
+            <ChevronDown
+              className={cn(
+                "h-3.5 w-3.5 transition-transform",
+                sortMenuOpen && "rotate-180",
+              )}
+              aria-hidden
+            />
+          </PopoverMenuTrigger>
+
+          <PopoverMenuContent side="bottom" align="end" width="sm">
+            {(Object.keys(SORT_LABELS) as CommentSort[]).map((option) => (
+              <PopoverMenuTextOption
+                key={option}
+                selected={sort === option}
+                onClick={() => {
+                  setSort(option);
+                  setSortMenuOpen(false);
+                }}
+              >
+                {SORT_LABELS[option]}
+              </PopoverMenuTextOption>
+            ))}
+          </PopoverMenuContent>
+        </PopoverMenu>
+      </div>
+
+      <TopLevelComposer
+        authorName={composerAuthorName}
         draft={draft}
         onDraftChange={setDraft}
         onSubmit={handleSubmitTopLevel}
         isBusy={isBusy}
-        isEditing={false}
-        showComposer
       />
-
-      <div className="flex items-center justify-end gap-3 text-xs font-medium">
-        <button
-          type="button"
-          onClick={() => setSort("newest")}
-          className={cn(
-            "transition-colors",
-            sort === "newest"
-              ? "text-foreground"
-              : "text-muted-foreground hover:text-foreground",
-          )}
-        >
-          Newest
-        </button>
-        <button
-          type="button"
-          onClick={() => setSort("oldest")}
-          className={cn(
-            "transition-colors",
-            sort === "oldest"
-              ? "text-foreground"
-              : "text-muted-foreground hover:text-foreground",
-          )}
-        >
-          Oldest
-        </button>
-      </div>
 
       {isLoadingComments ? (
         <div className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
@@ -614,7 +523,7 @@ export function CharacterCommentsPanel({
         </div>
       ) : displayComments.length === 0 ? (
         <p className="py-6 text-center text-sm text-muted-foreground">
-          아직 댓글이 없습니다.
+          No comments yet.
         </p>
       ) : (
         <div>
@@ -633,16 +542,6 @@ export function CharacterCommentsPanel({
               }}
               onStartEdit={handleStartEdit}
               onDelete={handleDelete}
-              onReply={handleReply}
-              onLike={handleLike}
-              replyingToId={replyingToId}
-              replyDraft={replyDraft}
-              onReplyDraftChange={setReplyDraft}
-              onReplySubmit={handleReplySubmit}
-              onReplyCancel={() => {
-                setReplyingToId(null);
-                setReplyDraft("");
-              }}
               isDeletingId={deletingCommentId}
               isBusy={isBusy}
             />

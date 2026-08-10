@@ -1,50 +1,42 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { Heart, MessageCircle, MessageSquare } from 'lucide-react'
+import { MessageCircle } from 'lucide-react'
 
 import { formatCompactCount } from '@/lib/character-display'
 import { cn } from '@/lib/utils'
 
 type CharacterThumbnailStatsProps = {
   messageCount: number
-  likeCount: number
-  commentCount: number
   size?: 'sm' | 'md'
   className?: string
 }
 
 function CharacterThumbnailStats({
   messageCount,
-  likeCount,
-  commentCount,
   size = 'md',
   className,
 }: CharacterThumbnailStatsProps) {
   const isSmall = size === 'sm'
-
-  const stats = [
-    { key: 'messages', icon: MessageCircle, value: messageCount },
-    { key: 'likes', icon: Heart, value: likeCount },
-    { key: 'comments', icon: MessageSquare, value: commentCount },
-  ] as const
 
   return (
     <div
       className={cn(
         'absolute z-2 flex items-center rounded-full bg-black/55 font-medium text-white backdrop-blur-sm',
         isSmall
-          ? 'bottom-1.5 right-1.5 gap-1.5 px-1.5 py-0.5 text-[9px]'
-          : 'bottom-3 right-3 gap-2.5 px-3 py-1.5 text-xs',
+          ? 'bottom-1.5 right-1.5 gap-1 px-1.5 py-0.5 text-[10px]'
+          : 'bottom-3 right-3 gap-1.5 px-3 py-1.5 text-xs',
         className,
       )}
     >
-      {stats.map(({ key, icon: Icon, value }) => (
-        <span key={key} className="flex items-center gap-1">
-          <Icon className={cn(isSmall ? 'size-2.5' : 'h-3.5 w-3.5')} aria-hidden />
-          {formatCompactCount(value)}
-        </span>
-      ))}
+      <span className="flex items-center gap-1">
+        <MessageCircle
+          className={cn(isSmall ? 'size-3' : 'h-3.5 w-3.5')}
+          fill="currentColor"
+          aria-hidden
+        />
+        {formatCompactCount(messageCount)}
+      </span>
     </div>
   )
 }
@@ -53,8 +45,6 @@ export type CharacterThumbnailCardProps = {
   imageUrl: string | null
   name: string
   messageCount?: number
-  likeCount?: number
-  commentCount?: number
   showStats?: boolean
   /** 기본 square — 리스트 카드는 aspect-[3/4] */
   aspectClassName?: string
@@ -69,8 +59,6 @@ export function CharacterThumbnailCard({
   imageUrl,
   name,
   messageCount = 0,
-  likeCount = 0,
-  commentCount = 0,
   showStats = true,
   aspectClassName = 'aspect-square',
   className,
@@ -107,12 +95,7 @@ export function CharacterThumbnailCard({
             )}
           />
           {showStats ? (
-            <CharacterThumbnailStats
-              messageCount={messageCount}
-              likeCount={likeCount}
-              commentCount={commentCount}
-              size={statsSize}
-            />
+            <CharacterThumbnailStats messageCount={messageCount} size={statsSize} />
           ) : null}
         </>
       ) : (

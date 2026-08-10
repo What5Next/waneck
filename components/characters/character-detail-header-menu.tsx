@@ -33,7 +33,7 @@ function CharacterDetailHeaderMenuPanel({
     try {
       if (navigator.share) {
         await navigator.share({
-          title: `${characterName} | Waneck`,
+          title: `${characterName} | whatsnext`,
           url: shareUrl,
         })
         setOpen(false)
@@ -88,12 +88,12 @@ export function CharacterDetailHeaderMenu({
     <PopoverMenu className={cn('shrink-0 -mr-0.5', className)}>
       <PopoverMenuTrigger asChild>
         <IconButton
-          size="md"
+          size="lg"
           shape="square"
           aria-label="More options"
           className="shrink-0 text-foreground"
         >
-          <MoreVertical className="h-5 w-5" />
+          <MoreVertical className="h-6 w-6" />
         </IconButton>
       </PopoverMenuTrigger>
       <CharacterDetailHeaderMenuPanel

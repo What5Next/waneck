@@ -1,3 +1,5 @@
+import { toHomeCategoryLabel } from '@/lib/character-genres'
+
 /** 인트로 프리뷰용 타임스탬프 포맷 (예: 2023. 11. 03. 15:19) */
 export function formatIntroTimestamp(isoDate: string): string {
   const date = new Date(isoDate)
@@ -51,12 +53,12 @@ export function formatRelativeCommentTime(isoDate: string): string {
   return `${month}.${day}`
 }
 
-/** genres + tag 병합 후 중복 제거 */
+/** genres + tag 병합 후 홈 카테고리 라벨로 정규화, 중복 제거 */
 export function getCharacterHashtags(genres: string[], tag: string | null): string[] {
   const hashtags = [
     ...genres.map((genre) => genre.trim()).filter(Boolean),
     ...(tag?.trim() ? [tag.trim()] : []),
-  ]
+  ].map(toHomeCategoryLabel)
 
   return [...new Set(hashtags)]
 }
