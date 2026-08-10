@@ -2,8 +2,8 @@ import type { ReactNode } from 'react'
 import { Suspense } from 'react'
 
 export const metadata = {
-  title: 'Characters | Waneck',
-  description: 'Discover AI characters on Waneck',
+  title: 'Characters | whatsnext',
+  description: 'Discover AI characters on whatsnext',
 }
 
 export default function CharactersLayout({ children }: { children: ReactNode }) {

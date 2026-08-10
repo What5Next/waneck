@@ -3,13 +3,14 @@
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { FormEvent, useState } from 'react'
-import { PanelLeft, PanelLeftClose, Search, Gem } from 'lucide-react'
+import { Menu, Search, Gem } from 'lucide-react'
 
 import { MobileSearchDialog } from '@/components/layout/mobile-search-dialog'
 import { NotificationButton } from '@/components/layout/notification-button'
 import { UserButton } from '@/components/auth/user-button'
 import { useSidebar } from '@/components/layout/sidebar-context'
 import { IconButton, headerIconClass } from '@/components/ui/icon-button'
+import { Logo } from '@/components/ui/logo'
 import { SearchInput } from '@/components/ui/search-input'
 import { useProfileQuery } from '@/hooks/queries/use-profile-query'
 import { useAuth } from '@/hooks/use-auth'
@@ -31,11 +32,7 @@ function SidebarToggleButton({
       aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
       aria-expanded={!collapsed}
     >
-      {collapsed ? (
-        <PanelLeft className={headerIconClass} />
-      ) : (
-        <PanelLeftClose className={headerIconClass} />
-      )}
+      <Menu className="size-8 shrink-0 text-white" />
     </IconButton>
   )
 }
@@ -85,8 +82,9 @@ export function Header({ className }: { className?: string }) {
           onClick={toggleMobileSidebar}
           className="sm:hidden"
         />
-        <Link href="/" className="text-lg font-bold tracking-tight text-foreground">
-          Waneck
+        <Link href="/" className="flex items-center gap-0.5 text-lg font-bold tracking-tight text-foreground">
+          <Logo />
+          whatsnext
         </Link>
       </div>
 
@@ -107,20 +105,7 @@ export function Header({ className }: { className?: string }) {
           <NotificationButton className="sm:hidden" />
         ) : null}
 
-        {isAuthenticated ? (
-          <Link
-            href="/won"
-            className="flex h-9 items-center gap-1.5 rounded-full px-2 text-foreground transition-colors hover:bg-muted"
-            aria-label="Top up won"
-          >
-            <Gem className="h-4 w-4 text-primary" aria-hidden />
-            <span className="text-sm font-medium tabular-nums">
-              {(profile?.token_balance ?? 0).toLocaleString('ko-KR')}
-            </span>
-          </Link>
-        ) : null}
-
-        {/* 데스크톱: 검색창 + 알림 + 프로필 */}
+        {/* 데스크톱: 검색창 + Nex + 알림 + 프로필 */}
         <form onSubmit={handleSearch} className="mr-1 hidden min-w-0 sm:block">
           <SearchInput
             value={query}
@@ -129,6 +114,19 @@ export function Header({ className }: { className?: string }) {
             aria-label="Search characters"
           />
         </form>
+
+        {isAuthenticated ? (
+          <Link
+            href="/nex"
+            className="flex h-9 items-center gap-1.5 rounded-full px-2 text-foreground transition-colors hover:bg-muted"
+            aria-label="Top up Nex"
+          >
+            <Gem className="h-4 w-4 text-primary" aria-hidden />
+            <span className="text-sm font-medium tabular-nums">
+              {(profile?.token_balance ?? 0).toLocaleString('en-US')}
+            </span>
+          </Link>
+        ) : null}
 
         {isAuthenticated ? (
           <NotificationButton className="hidden sm:block" />

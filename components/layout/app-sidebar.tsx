@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { Compass, Home, MessageSquare, Plus } from "lucide-react";
+import { Home, LayoutGrid, Plus } from "lucide-react";
 
 import { useSidebar } from "@/components/layout/sidebar-context";
 import { useAuth } from "@/hooks/use-auth";
@@ -16,7 +16,7 @@ const NAV_ITEMS = [
   {
     href: "/characters",
     label: "Explore",
-    icon: Compass,
+    icon: LayoutGrid,
     match: (path: string) =>
       path === "/characters" ||
       (path.startsWith("/characters/") &&
@@ -69,35 +69,36 @@ function SidebarNav({
               onClick={onNavigate}
               title={collapsed ? item.label : undefined}
               className={cn(
-                "flex items-center rounded-xl py-2.5 text-sm font-medium transition-colors",
+                "flex items-center rounded-xl py-2.5 text-base font-medium transition-colors",
                 collapsed ? "justify-center px-0" : "gap-3 px-3",
                 isActive
                   ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground/40 hover:bg-muted/50 hover:text-muted-foreground/65",
+                  : "text-white/90 hover:bg-muted/50 hover:text-white",
               )}
             >
-              <Icon className="h-[18px] w-[18px] shrink-0" />
+              <Icon className="h-[18px] w-[18px] shrink-0" fill="currentColor" />
               {!collapsed ? item.label : null}
             </Link>
           );
         })}
       </nav>
 
+      <div className={cn("mt-4 shrink-0 border-t border-border/40", collapsed ? "mx-2" : "mx-3")} />
+
       <div
         className={cn(
-          "mt-5 flex min-h-0 flex-1 flex-col",
+          "mt-4 flex min-h-0 flex-1 flex-col",
           collapsed ? "px-2" : "px-3",
         )}
       >
         <div
           className={cn(
             "mb-2 flex items-center",
-            collapsed ? "justify-center px-0" : "gap-2 px-3",
+            collapsed ? "justify-center px-0" : "px-3",
           )}
         >
-          <MessageSquare className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
           {!collapsed ? (
-            <span className="text-xs font-semibold text-muted-foreground">
+            <span className="text-sm font-semibold text-white">
               Recent chats
             </span>
           ) : null}
@@ -133,8 +134,8 @@ function SidebarNav({
                           ? "justify-center p-1.5"
                           : "gap-2.5 px-3 py-2",
                         isActive
-                          ? "bg-primary/10 text-primary"
-                          : "text-muted-foreground/40 hover:bg-muted/50 hover:text-muted-foreground/65",
+                          ? "bg-white/10 text-white"
+                          : "text-white/90 hover:bg-muted/50 hover:text-white",
                       )}
                     >
                       {chat.character_image_url ? (
@@ -150,9 +151,16 @@ function SidebarNav({
                         </div>
                       )}
                       {!collapsed ? (
-                        <span className="truncate text-sm">
-                          {chat.character_name}
-                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium">
+                            {chat.character_name}
+                          </p>
+                          {chat.last_message_preview ? (
+                            <p className="truncate text-xs text-muted-foreground">
+                              {chat.last_message_preview}
+                            </p>
+                          ) : null}
+                        </div>
                       ) : null}
                     </Link>
                   </li>
