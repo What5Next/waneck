@@ -5,8 +5,8 @@ import { LogIn } from 'lucide-react'
 
 import { LoginModal } from '@/components/auth/login-modal'
 import { UserMenu } from '@/components/auth/user-menu'
-import { ThemeToggle } from '@/components/chat/theme-toggle'
-import { IconButton, headerIconClass } from '@/components/ui/icon-button'
+import { EditProfileModal } from '@/components/profile/edit-profile-modal'
+import { headerIconClass } from '@/components/ui/icon-button'
 import { PopoverMenu, PopoverMenuTrigger } from '@/components/ui/popover-menu'
 import { useAuth } from '@/hooks/use-auth'
 
@@ -15,6 +15,7 @@ export function UserButton() {
   const { user, isAuthenticated } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
   const [loginOpen, setLoginOpen] = useState(false)
+  const [editProfileOpen, setEditProfileOpen] = useState(false)
 
   // OAuth 로그인 완료 시 열려 있던 로그인 모달 닫기
   useEffect(() => {
@@ -27,14 +28,14 @@ export function UserButton() {
     return (
       <>
         <div className="flex items-center gap-1">
-          <ThemeToggle />
-          <IconButton
+          <button
+            type="button"
             onClick={() => setLoginOpen(true)}
-            active={loginOpen}
-            aria-label="Sign in"
+            className="flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted"
           >
-            <LogIn className={headerIconClass} />
-          </IconButton>
+            <LogIn className={headerIconClass} aria-hidden />
+            Sign in
+          </button>
         </div>
         <LoginModal open={loginOpen} onOpenChange={setLoginOpen} />
       </>
@@ -52,30 +53,41 @@ export function UserButton() {
     '?'
 
   return (
-    <PopoverMenu open={menuOpen} onOpenChange={setMenuOpen} className="z-[100]">
-      <PopoverMenuTrigger asChild>
-        <button
-          type="button"
-          className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-muted text-sm font-bold text-foreground"
-          aria-haspopup="menu"
-          aria-label="Profile menu"
-        >
-          {user.user_metadata?.avatar_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={user.user_metadata.avatar_url as string}
-              alt=""
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            initials
-          )}
-        </button>
-      </PopoverMenuTrigger>
+    <>
+      <PopoverMenu open={menuOpen} onOpenChange={setMenuOpen} className="z-[100]">
+        <PopoverMenuTrigger asChild>
+          <button
+            type="button"
+            className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-muted text-sm font-bold text-foreground"
+            aria-haspopup="menu"
+            aria-label="Profile menu"
+          >
+            {user.user_metadata?.avatar_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={user.user_metadata.avatar_url as string}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              initials
+            )}
+          </button>
+        </PopoverMenuTrigger>
 
-      {menuOpen ? (
-        <UserMenu user={user} onClose={() => setMenuOpen(false)} />
-      ) : null}
-    </PopoverMenu>
+        {menuOpen ? (
+          <UserMenu
+            user={user}
+            onClose={() => setMenuOpen(false)}
+            onEditProfile={() => setEditProfileOpen(true)}
+          />
+        ) : null}
+      </PopoverMenu>
+
+      <EditProfileModal
+        open={editProfileOpen}
+        onOpenChange={setEditProfileOpen}
+      />
+    </>
   )
 }
