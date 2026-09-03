@@ -120,6 +120,18 @@ export async function setDefaultUserPrompt(promptId: string): Promise<UserPrompt
   return mapPrompt(data)
 }
 
+export async function createUserPersona(payload: {
+  name: string
+  description: string
+}): Promise<UserPersona> {
+  const data = await apiFetch<UserPersonaRow>('/api/user/personas', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  return mapPersona(data)
+}
+
 export async function updateUserPersona(
   personaId: string,
   payload: { name: string; description: string },

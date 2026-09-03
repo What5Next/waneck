@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown, ImagePlus, MoreHorizontal, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import {
+  useCreateUserPersonaMutation,
   useDeleteUserPersonaMutation,
   useSetDefaultUserPersonaMutation,
   useUpdateUserPersonaMutation,
@@ -79,9 +81,9 @@ function ConversationPersonaSettings({
     );
   }
 
-  const persona = defaultSettings ? getDefaultPersona(defaultSettings) : null;
+  const personas = defaultSettings?.personas ?? [];
 
-  if (isError || isDefaultError || !settings || !persona) {
+  if (isError || isDefaultError || !settings || personas.length === 0) {
     return (
       <p className="text-[13px] text-muted-foreground">
         Failed to load persona.
@@ -94,7 +96,7 @@ function ConversationPersonaSettings({
       key={settings.conversationId}
       hideLabel={hideLabel}
       conversationId={conversationId}
-      persona={persona}
+      personas={personas}
     />
   );
 }
@@ -102,68 +104,124 @@ function ConversationPersonaSettings({
 function ConversationPersonaEditor({
   hideLabel,
   conversationId,
-  persona,
+  personas,
 }: {
   hideLabel: boolean;
   conversationId?: string | null;
-  persona: UserPersona;
+  personas: UserPersona[];
 }) {
-  // 마이페이지와 동일한 전역 퍼소나를 원본으로 편집한다 — conversation_settings는
-  // 호환성을 위해 같은 값을 함께 써두는 스냅샷일 뿐, 표시/판단 기준은 항상 persona다.
+  // 마이페이지와 동일한 전역(공통) 퍼소나 목록을 그대로 나열해 편집한다 — conversation_settings는
+  // 호환성을 위해 현재 기본 퍼소나 값을 함께 써두는 스냅샷일 뿐, 표시/판단 기준은 항상 personas다.
   const updatePersonaMutation = useUpdateUserPersonaMutation();
+  const createPersonaMutation = useCreateUserPersonaMutation();
+  const setDefaultPersonaMutation = useSetDefaultUserPersonaMutation();
+  const deletePersonaMutation = useDeleteUserPersonaMutation();
   const updateConversationMutation = useUpdateConversationSettingsMutation(conversationId);
-  const [draftName, setDraftName] = useState(() => persona.name);
-  const [draftDescription, setDraftDescription] = useState(
-    () => persona.description,
-  );
 
-  const hasPersona = persona.name.trim().length > 0;
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formIntent, setFormIntent] = useState<"add" | "edit">("add");
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [editingPersonaId, setEditingPersonaId] = useState<string | null>(null);
+  const [menuAnchor, setMenuAnchor] = useState<{
+    personaId: string;
+    rect: DOMRect;
+  } | null>(null);
+  const [draftName, setDraftName] = useState("");
+  const [draftDescription, setDraftDescription] = useState("");
+
+  const defaultPersonaId =
+    personas.find((item) => item.isDefault)?.id ?? personas[0]?.id ?? null;
+  const editingPersona = editingPersonaId
+    ? (personas.find((item) => item.id === editingPersonaId) ?? null)
+    : null;
+  const activeMenuPersona = menuAnchor
+    ? (personas.find((item) => item.id === menuAnchor.personaId) ?? null)
+    : null;
+
+  // 리스트가 스크롤되거나 창 크기가 바뀌면 fixed 좌표가 어긋나므로 그냥 닫는다
+  useEffect(() => {
+    if (!menuAnchor) return;
+
+    function close() {
+      setMenuAnchor(null);
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") close();
+    }
+
+    window.addEventListener("scroll", close, true);
+    window.addEventListener("resize", close);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("resize", close);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [menuAnchor]);
 
   const trimmedDraftName = draftName.trim();
   const isSaveEnabled =
-    trimmedDraftName.length > 0 &&
-    (trimmedDraftName !== persona.name ||
-      draftDescription !== persona.description);
-
-  const isEditingExisting = hasPersona && formIntent === "edit";
+    formIntent === "add"
+      ? trimmedDraftName.length > 0
+      : trimmedDraftName.length > 0 &&
+        (trimmedDraftName !== editingPersona?.name ||
+          draftDescription !== editingPersona?.description);
 
   function openAddProfile() {
     setDraftName("");
     setDraftDescription("");
     setFormIntent("add");
+    setEditingPersonaId(null);
     setIsFormOpen(true);
-    setIsMenuOpen(false);
+    setMenuAnchor(null);
   }
 
-  function openEditProfile() {
-    setDraftName(persona.name);
-    setDraftDescription(persona.description);
+  function openEditProfile(target: UserPersona) {
+    setDraftName(target.name);
+    setDraftDescription(target.description);
     setFormIntent("edit");
+    setEditingPersonaId(target.id);
     setIsFormOpen(true);
-    setIsMenuOpen(false);
+    setMenuAnchor(null);
   }
 
   function closeForm() {
     setIsFormOpen(false);
   }
 
-  function handleDelete() {
-    setIsMenuOpen(false);
-    updatePersonaMutation.mutate(
-      { personaId: persona.id, name: "", description: "" },
-      {
-        onSuccess: () => {
-          toast.success("Persona removed.");
-          setIsFormOpen(false);
-        },
-      },
-    );
+  function syncConversationSnapshot(target: { name: string; description: string }) {
     updateConversationMutation.mutate({
-      persona_name: "",
-      persona_description: "",
+      persona_name: target.name,
+      persona_description: target.description,
+    });
+  }
+
+  function handleSelect(target: UserPersona) {
+    setMenuAnchor(null);
+    if (target.id === defaultPersonaId) return;
+
+    setDefaultPersonaMutation.mutate(target.id);
+    syncConversationSnapshot(target);
+  }
+
+  function handleDelete(target: UserPersona) {
+    setMenuAnchor(null);
+    if (personas.length <= 1) {
+      toast.error("At least one persona is required.");
+      return;
+    }
+
+    deletePersonaMutation.mutate(target.id, {
+      onSuccess: () => {
+        if (target.id !== defaultPersonaId) return;
+
+        // 서버가 다음 생성순 페르소나를 새 기본값으로 승격하므로, 대화 스냅샷도 맞춰 갱신한다
+        const remaining = personas.filter((item) => item.id !== target.id);
+        const next = remaining.find((item) => item.isDefault) ?? remaining[0];
+        if (next) {
+          syncConversationSnapshot(next);
+        }
+      },
     });
   }
 
@@ -174,26 +232,38 @@ function ConversationPersonaEditor({
       return;
     }
 
+    if (formIntent === "add") {
+      // 새 공통 페르소나를 만들고 바로 기본 페르소나로 전환한다 —
+      // 여기서 만든 페르소나는 마이페이지에도 그대로 나타난다.
+      createPersonaMutation.mutate(
+        { name: trimmedName, description: draftDescription },
+        {
+          onSuccess: (created) => {
+            setDefaultPersonaMutation.mutate(created.id);
+            syncConversationSnapshot({ name: trimmedName, description: draftDescription });
+            setIsFormOpen(false);
+          },
+        },
+      );
+      return;
+    }
+
+    if (!editingPersonaId) return;
+
     updatePersonaMutation.mutate(
-      { personaId: persona.id, name: trimmedName, description: draftDescription },
+      { personaId: editingPersonaId, name: trimmedName, description: draftDescription },
       {
         onSuccess: () => {
-          toast.success(
-            isEditingExisting
-              ? "Persona saved for this chat."
-              : "Persona created for this chat.",
-          );
+          if (editingPersonaId === defaultPersonaId) {
+            syncConversationSnapshot({ name: trimmedName, description: draftDescription });
+          }
           setIsFormOpen(false);
         },
       },
     );
-    updateConversationMutation.mutate({
-      persona_name: trimmedName,
-      persona_description: draftDescription,
-    });
   }
 
-  if (!hasPersona || isFormOpen) {
+  if (isFormOpen) {
     return (
       <div className="w-full min-w-0 space-y-5 pb-1">
         <div className="space-y-1.5">
@@ -235,10 +305,14 @@ function ConversationPersonaEditor({
         </div>
 
         <SettingsFormActions>
-          {hasPersona ? <SettingsCancelButton onClick={closeForm} /> : null}
+          <SettingsCancelButton onClick={closeForm} />
           <SettingsSaveButton
-            label={isEditingExisting ? "Save" : "Add persona"}
-            enabled={isSaveEnabled && !updatePersonaMutation.isPending}
+            label={formIntent === "edit" ? "Save" : "Add persona"}
+            enabled={
+              isSaveEnabled &&
+              !updatePersonaMutation.isPending &&
+              !createPersonaMutation.isPending
+            }
             onClick={handleSave}
           />
         </SettingsFormActions>
@@ -249,54 +323,54 @@ function ConversationPersonaEditor({
   return (
     <div className="w-full min-w-0 space-y-2.5 pb-1">
       {hideLabel ? null : (
-        <p className="text-xs text-muted-foreground">This chat persona</p>
+        <p className="text-xs text-muted-foreground">Persona</p>
       )}
 
-      <div className="flex items-center justify-between gap-2 rounded-xl border border-white/40 bg-muted/25 px-3 py-2.5">
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="shrink-0 rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-black">
-            Current
-          </span>
-          <span className="truncate text-sm font-medium text-foreground">
-            {persona.name}
-          </span>
-        </div>
-        <div className="relative shrink-0">
-          <button
-            type="button"
-            onClick={() => setIsMenuOpen((open) => !open)}
-            className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
-            aria-label="Persona options"
-            aria-haspopup="menu"
-            aria-expanded={isMenuOpen}
-          >
-            <MoreHorizontal className="h-4 w-4" />
-          </button>
+      <div className="max-h-64 divide-y divide-border/50 overflow-y-auto rounded-xl border border-white/40 bg-muted/25">
+        {personas.map((item) => {
+          const isCurrent = item.id === defaultPersonaId;
 
-          {isMenuOpen ? (
+          return (
             <div
-              className="absolute right-0 z-10 mt-1 min-w-[110px] overflow-hidden rounded-lg border border-border bg-card py-1 shadow-lg"
-              role="menu"
+              key={item.id}
+              className="flex items-center justify-between gap-2 px-3 py-2.5"
             >
               <button
                 type="button"
-                role="menuitem"
-                onClick={openEditProfile}
-                className="block w-full px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-muted/40"
+                onClick={() => handleSelect(item)}
+                className="flex min-w-0 flex-1 items-center gap-2 text-left"
               >
-                Edit
+                {isCurrent ? (
+                  <span className="shrink-0 rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-black">
+                    Current
+                  </span>
+                ) : null}
+                <span className="truncate text-sm font-medium text-foreground">
+                  {item.name}
+                </span>
               </button>
               <button
                 type="button"
-                role="menuitem"
-                onClick={handleDelete}
-                className="block w-full px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-muted/40"
+                onClick={(event) => {
+                  if (menuAnchor?.personaId === item.id) {
+                    setMenuAnchor(null);
+                    return;
+                  }
+                  setMenuAnchor({
+                    personaId: item.id,
+                    rect: event.currentTarget.getBoundingClientRect(),
+                  });
+                }}
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+                aria-label="Persona options"
+                aria-haspopup="menu"
+                aria-expanded={menuAnchor?.personaId === item.id}
               >
-                Delete
+                <MoreHorizontal className="h-4 w-4" />
               </button>
             </div>
-          ) : null}
-        </div>
+          );
+        })}
       </div>
 
       <button
@@ -304,8 +378,47 @@ function ConversationPersonaEditor({
         onClick={openAddProfile}
         className="w-full rounded-xl border border-border py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted/30"
       >
-        Add profile
+        Add new persona
       </button>
+
+      {menuAnchor && activeMenuPersona
+        ? createPortal(
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setMenuAnchor(null)}
+                aria-hidden
+              />
+              <div
+                role="menu"
+                className="fixed z-50 min-w-[110px] overflow-hidden rounded-lg border border-border bg-card py-1 shadow-lg"
+                style={{
+                  top: menuAnchor.rect.bottom + 4,
+                  right: Math.max(8, window.innerWidth - menuAnchor.rect.right),
+                }}
+              >
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => openEditProfile(activeMenuPersona)}
+                  className="block w-full px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-muted/40"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => handleDelete(activeMenuPersona)}
+                  disabled={personas.length <= 1}
+                  className="block w-full px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Delete
+                </button>
+              </div>
+            </>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }
@@ -316,11 +429,13 @@ function GlobalPersonaSettings({ hideLabel = false }: { hideLabel?: boolean }) {
 
   const { data: settings, isPending, isError } = useDefaultSettingsQuery();
   const updateMutation = useUpdateUserPersonaMutation();
+  const createMutation = useCreateUserPersonaMutation();
   const setDefaultMutation = useSetDefaultUserPersonaMutation();
   const deleteMutation = useDeleteUserPersonaMutation();
 
   const [selectedPersonaId, setSelectedPersonaId] = useState<string | null>(null);
   const [isDraftDirty, setIsDraftDirty] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const [draftName, setDraftName] = useState("");
   const [draftDescription, setDraftDescription] = useState("");
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
@@ -352,9 +467,19 @@ function GlobalPersonaSettings({ hideLabel = false }: { hideLabel?: boolean }) {
 
   function resetDraftState() {
     setIsDraftDirty(false);
+    setIsCreating(false);
     setDraftName("");
     setDraftDescription("");
     clearLocalPreview();
+  }
+
+  function openCreateForm() {
+    clearLocalPreview();
+    setDraftName("");
+    setDraftDescription("");
+    setIsDraftDirty(true);
+    setIsCreating(true);
+    setIsDropdownOpen(false);
   }
 
   useEffect(() => {
@@ -418,6 +543,20 @@ function GlobalPersonaSettings({ hideLabel = false }: { hideLabel?: boolean }) {
       .trim();
     if (!trimmedName) {
       toast.error("Name is required.");
+      return;
+    }
+
+    if (isCreating) {
+      createMutation.mutate(
+        { name: trimmedName, description: draftDescription },
+        {
+          onSuccess: (created) => {
+            resetDraftState();
+            setSelectedPersonaId(created.id);
+            setDefaultMutation.mutate(created.id);
+          },
+        },
+      );
       return;
     }
 
@@ -487,6 +626,7 @@ function GlobalPersonaSettings({ hideLabel = false }: { hideLabel?: boolean }) {
 
   const isSaving =
     updateMutation.isPending ||
+    createMutation.isPending ||
     setDefaultMutation.isPending ||
     deleteMutation.isPending;
 
@@ -555,6 +695,14 @@ function GlobalPersonaSettings({ hideLabel = false }: { hideLabel?: boolean }) {
                     {persona.name}
                   </button>
                 ))}
+                <div className="my-1 border-t border-border" />
+                <button
+                  type="button"
+                  onClick={openCreateForm}
+                  className="block w-full px-3 py-2 text-left text-[12px] font-medium text-foreground transition-colors hover:bg-muted/40"
+                >
+                  + Add new persona
+                </button>
               </div>
             ) : null}
           </div>
@@ -612,23 +760,29 @@ function GlobalPersonaSettings({ hideLabel = false }: { hideLabel?: boolean }) {
       />
 
       <SettingsFormActions>
+        {isCreating ? (
+          <SettingsCancelButton onClick={resetDraftState} />
+        ) : null}
         <SettingsSaveButton
+          label={isCreating ? "Add persona" : "Save"}
           enabled={isSaveEnabled && !isSaving}
           onClick={handleSave}
         />
       </SettingsFormActions>
 
-      <div className="flex items-center justify-center">
-        <button
-          type="button"
-          onClick={() => void handleDelete()}
-          disabled={personas.length <= 1 || isSaving}
-          className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-          Delete
-        </button>
-      </div>
+      {isCreating ? null : (
+        <div className="flex items-center justify-center">
+          <button
+            type="button"
+            onClick={() => void handleDelete()}
+            disabled={personas.length <= 1 || isSaving}
+            className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Delete
+          </button>
+        </div>
+      )}
     </div>
   );
 }
