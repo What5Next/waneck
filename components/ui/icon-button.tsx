@@ -10,7 +10,7 @@ const iconButtonVariants = cva(
       variant: {
         ghost: 'text-muted-foreground hover:bg-muted hover:text-foreground',
         floating:
-          'bg-background/90 text-foreground shadow-md hover:bg-background',
+          'bg-black/45 text-white shadow-md backdrop-blur-sm hover:bg-black/60',
       },
       size: {
         xs: 'h-6 w-6 [&_svg]:size-3.5',

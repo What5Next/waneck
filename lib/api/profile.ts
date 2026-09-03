@@ -8,3 +8,16 @@ import type { ProfileSummary } from '@/lib/user-profile'
 export async function getProfile(): Promise<ProfileSummary> {
   return apiFetch<ProfileSummary>('/api/profile')
 }
+
+/**
+ * PATCH /api/profile — 표시 이름 수정.
+ */
+export async function updateProfile(payload: {
+  display_name: string
+}): Promise<ProfileSummary> {
+  return apiFetch<ProfileSummary>('/api/profile', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+}

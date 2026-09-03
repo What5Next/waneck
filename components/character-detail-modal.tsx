@@ -63,9 +63,9 @@ export function CharacterDetailModal({
           fadeColor="background"
           className="z-10 shrink-0 bg-background"
         >
-          <header className="flex h-10 items-center pl-5 pr-1.5">
-            <h2 className="min-w-0 flex-1 truncate pr-2 text-sm font-bold text-foreground">
-              {character.name}
+          <header className="flex items-center pl-5 pr-1.5 pt-3 pb-1.5">
+            <h2 className="min-w-0 flex-1 truncate pr-2 text-lg font-bold text-foreground">
+              Character Info
             </h2>
             <CharacterDetailHeaderMenu
               characterId={character.id}

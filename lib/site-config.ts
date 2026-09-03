@@ -1,5 +1,8 @@
 import { SUPPORT_EMAIL } from "@/lib/user-settings";
 
+/** 캐릭터 카드·상세페이지에 표시되는 크리에이터 이름 — 현재 모든 캐릭터가 자체 등록이라 브랜드명으로 고정 */
+export const CHARACTER_CREATOR_LABEL = "whatsnext";
+
 /** 푸터 정책 링크 */
 export const SITE_FOOTER_LINKS = [
   { href: "/policy", label: "Terms of Service" },
@@ -9,7 +12,7 @@ export const SITE_FOOTER_LINKS = [
 
 /** 푸터 사업자·연락처 정보 (환경변수로 덮어쓸 수 있음) */
 export const SITE_COMPANY_INFO = {
-  copyright: `© ${new Date().getFullYear()} Waneck. All Rights Reserved.`,
+  copyright: `© ${new Date().getFullYear()} whatsnext. All Rights Reserved.`,
   address: process.env.NEXT_PUBLIC_COMPANY_ADDRESS,
   businessRegistrationNumber:
     process.env.NEXT_PUBLIC_BUSINESS_REGISTRATION_NUMBER,

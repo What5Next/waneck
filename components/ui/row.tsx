@@ -12,6 +12,8 @@ export interface RowContentProps {
   value?: string
   trailing?: ReactNode
   showChevron?: boolean
+  /** 기본 text-base 라벨 크기를 오버라이드 (예: 좁은 팝오버 메뉴에서 형제 항목과 맞출 때) */
+  labelClassName?: string
 }
 
 function RowContent({
@@ -20,16 +22,19 @@ function RowContent({
   value,
   trailing,
   showChevron = true,
+  labelClassName,
 }: RowContentProps) {
   return (
     <>
       <div className="flex min-w-0 items-center gap-2.5">
         <div className="shrink-0 text-muted-foreground">{icon}</div>
-        <p className="text-sm font-medium text-foreground/90">{label}</p>
+        <p className={cn('text-base font-medium text-foreground/90', labelClassName)}>
+          {label}
+        </p>
       </div>
       <div className="flex shrink-0 items-center gap-2">
         {value ? (
-          <span className="max-w-[140px] truncate text-xs text-muted-foreground/60">
+          <span className="max-w-[140px] truncate text-sm text-muted-foreground/60">
             {value}
           </span>
         ) : null}
@@ -55,6 +60,7 @@ export function Row({
   showChevron = true,
   interactive = true,
   className,
+  labelClassName,
 }: RowContentProps & {
   onClick?: () => void
   /** false면 div (Switch 등 중첩 컨트롤용) */
@@ -68,6 +74,7 @@ export function Row({
       value={value}
       trailing={trailing}
       showChevron={showChevron}
+      labelClassName={labelClassName}
     />
   )
 

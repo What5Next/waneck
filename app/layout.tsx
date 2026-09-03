@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Waneck',
+  title: 'whatsnext',
   description: 'Character chat with AI',
 }
 
@@ -39,7 +39,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body className='overflow-hidden'>
         {/* P0: Theme + Query + Auth Provider (app/providers/app-providers.tsx) */}
         <AppProviders>
-          <Toaster position="top-center" />
+          <Toaster position="top-center" theme="dark" />
           <ConditionalShell>{children}</ConditionalShell>
         </AppProviders>
       </body>

@@ -44,6 +44,27 @@ export async function GET(req: NextRequest) {
 
     if (error) throw new Error(error.message)
 
+    // 각 대화방의 마지막 메시지 미리보기 — created_at 내림차순으로 가져와
+    // conversation_id별 첫 등장(=최신) 메시지만 사용한다
+    const conversationIds = (data ?? []).map((row) => row.id)
+    const lastMessageByConversationId = new Map<string, string>()
+
+    if (conversationIds.length > 0) {
+      const { data: messageRows, error: messagesError } = await supabaseAdmin
+        .from('messages')
+        .select('conversation_id, content, created_at')
+        .in('conversation_id', conversationIds)
+        .order('created_at', { ascending: false })
+
+      if (messagesError) throw new Error(messagesError.message)
+
+      for (const row of messageRows ?? []) {
+        if (!lastMessageByConversationId.has(row.conversation_id)) {
+          lastMessageByConversationId.set(row.conversation_id, row.content)
+        }
+      }
+    }
+
     const recentChats = (data ?? []).map((row) => {
       const character = row.characters as {
         name: string
@@ -56,6 +77,7 @@ export async function GET(req: NextRequest) {
         character_name: character?.name ?? 'Unknown',
         character_image_url: character?.profile_image_url ?? null,
         last_message_at: row.last_message_at,
+        last_message_preview: lastMessageByConversationId.get(row.id) ?? null,
       }
     })
 

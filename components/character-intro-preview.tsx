@@ -1,5 +1,4 @@
 import type { Character, CharacterIntroMessage } from '@/lib/types'
-import { formatIntroTimestamp } from '@/lib/character-detail'
 import { MessageBubble } from '@/components/chat/message-bubble'
 
 interface CharacterIntroPreviewProps {
@@ -19,8 +18,8 @@ export function CharacterIntroPreview({
 
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="text-[15px] font-bold text-foreground">Intro Preview</h2>
-      <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card/50 p-4">
+      <h2 className="text-[19px] font-bold text-foreground">Intro Preview</h2>
+      <div className="flex flex-col gap-3 rounded-[8px] border border-border bg-card/50 px-2.5 py-4">
         {introMessages.map((message, index) => {
           const role = normalizeRole(message.role)
           const previousMessage = index > 0 ? introMessages[index - 1] : undefined
@@ -35,7 +34,6 @@ export function CharacterIntroPreview({
               content={message.content}
               character={character}
               showAvatar={showAvatar}
-              timestamp={formatIntroTimestamp(message.created_at)}
             />
           )
         })}

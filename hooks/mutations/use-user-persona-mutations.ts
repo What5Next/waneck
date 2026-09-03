@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 
 import { queryKeys } from '@/lib/api/query-keys'
 import {
+  createUserPersona,
   deleteUserPersona,
   setDefaultUserPersona,
   updateUserPersona,
@@ -19,6 +20,32 @@ function patchDefaultSettingsCache(
     queryKeys.userSettings.defaultSettings(),
     (current) => (current ? updater(current) : current),
   )
+}
+
+export function useCreateUserPersonaMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: { name: string; description: string }) =>
+      createUserPersona(payload),
+    onSuccess: (created) => {
+      patchDefaultSettingsCache(queryClient, (current) => ({
+        ...current,
+        personas: [...current.personas, created],
+      }))
+      toast.success('Persona created.')
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof ApiError ? error.message : 'Failed to create persona.',
+      )
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.userSettings.defaultSettings(),
+      })
+    },
+  })
 }
 
 export function useUpdateUserPersonaMutation() {

@@ -35,32 +35,32 @@
   --inactive-hover-foreground: 240 3.7% 46.1% / 0.8; /* muted-foreground @ 80% */
 }
 
-/* ─── 다크 테마 (zinc 스케일 기반) ─── */
+/* ─── 다크 테마 (whatsnext Figma 레퍼런스 기반 — near-black 서페이스) ─── */
 .dark {
-  --background: 240 10% 3.9%; /* zinc-950 */
-  --foreground: 0 0% 98%; /* zinc-50 */
-  --card: 240 5.3% 10%; /* zinc-900 */
-  --card-foreground: 0 0% 98%; /* zinc-50 */
-  --popover: 240 10% 3.9%;
+  --background: 240 6% 6%; /* near-black, whatsnext 레퍼런스 */
+  --foreground: 0 0% 98%;
+  --card: 240 5% 12%; /* 살짝 밝은 다크 서페이스 (카드/채팅버블/컴포저) */
+  --card-foreground: 0 0% 98%;
+  --popover: 240 6% 8%;
   --popover-foreground: 0 0% 98%;
   --primary: 262 83% 58%; /* violet-600 #7C3AED */
   --primary-foreground: 0 0% 100%;
-  --secondary: 240 3.7% 16.5%; /* zinc-800 */
+  --secondary: 240 4% 15%;
   --secondary-foreground: 0 0% 98%;
-  --muted: 240 3.7% 16.5%; /* zinc-800 */
-  --muted-foreground: 240 3.7% 65.9%; /* zinc-400 */
-  --accent: 240 3.7% 16.5%; /* zinc-800 */
+  --muted: 240 4% 15%;
+  --muted-foreground: 240 4% 65%;
+  --accent: 240 4% 15%;
   --accent-foreground: 0 0% 98%;
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 0 0% 98%;
-  --border: 240 3.7% 16.5%; /* zinc-800 */
-  --input: 240 3.7% 16.5%; /* zinc-800 */
+  --border: 240 4% 16%;
+  --input: 240 4% 16%;
   --ring: 262 83% 58%; /* violet-600 #7C3AED */
   /* non-active UI (chip, 필터 등) */
-  --inactive: 240 3.7% 16.5% / 0.7; /* muted @ 70% */
-  --inactive-foreground: 240 3.7% 65.9% / 0.6; /* muted-foreground @ 60% */
-  --inactive-hover: 240 3.7% 16.5%; /* muted */
-  --inactive-hover-foreground: 240 3.7% 65.9% / 0.8; /* muted-foreground @ 80% */
+  --inactive: 240 4% 15% / 0.7; /* muted @ 70% */
+  --inactive-foreground: 240 4% 65% / 0.6; /* muted-foreground @ 60% */
+  --inactive-hover: 240 4% 15%; /* muted */
+  --inactive-hover-foreground: 240 4% 65% / 0.8; /* muted-foreground @ 80% */
 }
 
 @theme inline {
@@ -187,6 +187,25 @@
   width: 0;
   height: 0;
   background: transparent;
+}
+
+/* 트랙 배경 없이 얇은 인디케이터만 보이는 스크롤바 */
+.scroll-thumb-only {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border)) transparent;
+}
+
+.scroll-thumb-only::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scroll-thumb-only::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scroll-thumb-only::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--border));
+  border-radius: 9999px;
 }
 
 @layer base {

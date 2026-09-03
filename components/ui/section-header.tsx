@@ -20,12 +20,12 @@ export function SectionHeader({
   return (
     <div
       className={cn(
-        'mb-3 flex items-center justify-between px-4',
+        'mb-3 flex items-center justify-between px-4 sm:px-6 lg:px-8',
         !moreHref && 'justify-start',
         className,
       )}
     >
-      <h2 className="text-[15px] font-bold text-foreground">{title}</h2>
+      <h2 className="text-[19px] font-bold text-foreground">{title}</h2>
       {moreHref ? (
         <Link
           href={moreHref}

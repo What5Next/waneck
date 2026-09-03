@@ -60,7 +60,7 @@ export default function CharacterPage({
               className="z-10 shrink-0 bg-background"
             >
               <PageNavBar
-                title={character.name}
+                title="Character Info"
                 onBack={() => router.back()}
                 titleClassName="truncate text-sm font-semibold text-foreground"
                 className="h-10 min-h-0 border-b-0 py-0 pl-5 pr-2"

@@ -43,6 +43,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           inputSize={size}
           placeholder={placeholder}
           className={cn(
+            'focus:ring-0',
             size === 'sm' && 'w-[240px]',
             size === 'sm' && expandOnFocus && 'transition-[width] focus:w-[280px]',
             className,

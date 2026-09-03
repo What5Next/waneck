@@ -42,7 +42,7 @@ export function AssistantMarkdownBody({ text }: AssistantMarkdownBodyProps) {
   if (text.trim().length === 0) return null
 
   return (
-    <div className="text-sm">
+    <div className="text-[16px]">
       <Markdown rehypePlugins={[rehypeSanitize]} components={markdownComponents}>
         {text}
       </Markdown>

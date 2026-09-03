@@ -1,69 +1,55 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
-  Ban,
-  Bot,
   ChevronLeft,
   ChevronRight,
-  CircleCheckBig,
   CircleUser,
-  FileText,
-  Gem,
   Heart,
-  LifeBuoy,
   LogOut,
-  Mail,
-  MessageCircle,
   NotebookText,
-  Server,
-  Settings,
   Shield,
 } from "lucide-react";
-import { useThemeReady } from "@/hooks/use-theme-ready";
-import { getModelShortName, findAiModelById } from "@/lib/ai-models";
+import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { IconButton } from "@/components/ui/icon-button";
 import { PageLoading } from "@/components/ui/page-loading";
 import { PageNavBar } from "@/components/ui/page-nav-bar";
-import { List, RowPanel } from "@/components/ui/list";
+import { List } from "@/components/ui/list";
 import { Row, RowLink } from "@/components/ui/row";
+import { NexBalanceBar } from "@/components/nex/nex-balance-bar";
 import { SettingsDialog } from "@/components/ui/settings-dialog";
 import { Switch } from "@/components/ui/switch";
 import { PersonaSettings } from "@/components/persona/persona-settings";
-import { PromptSettings } from "@/components/prompt/prompt-settings";
 import { UserNotesSettings } from "@/components/user-notes/user-notes-settings";
-import {
-  DISCORD_URL,
-  SUPPORT_EMAIL,
-} from "@/lib/user-settings";
+import { EditProfileModal } from "@/components/profile/edit-profile-modal";
+import { SiteFooter } from "@/components/layout/site-footer";
+import { settingsIntroDescriptionClassName } from "@/components/default-settings/settings-field-classes";
 import { getProfileInitials } from "@/lib/user-profile";
 import { cn } from "@/lib/utils";
 import { useProfileQuery } from "@/hooks/queries/use-profile-query";
 import { useDefaultSettingsQuery } from "@/hooks/queries/use-default-settings-query";
 import { useLikedCharactersQuery } from "@/hooks/queries/use-liked-characters-query";
 import { useSignOut } from "@/hooks/mutations/use-sign-out";
-import { useSafetyFilter, useResolvedDefaultModel } from "@/hooks/use-user-settings";
-import { useAiModelsQuery } from "@/hooks/queries/use-ai-models-query";
-import {
-  getDefaultPersona,
-  getDefaultPrompt,
-} from "@/lib/api/user-settings";
+import { useSafetyFilter } from "@/hooks/use-user-settings";
+import { getDefaultPersona } from "@/lib/api/user-settings";
 
-type DefaultSettingModal = "prompt" | "persona" | "notes";
+type DefaultSettingModal = "persona" | "notes";
 
 const DEFAULT_SETTING_TITLES: Record<DefaultSettingModal, string> = {
-  prompt: "Prompt",
   persona: "Persona",
   notes: "User notes",
+};
+
+const DEFAULT_SETTING_DESCRIPTIONS: Record<DefaultSettingModal, string> = {
+  persona: "Chat with the character based on your persona.",
+  notes: "Write what you'd like applied whenever you start a new story.",
 };
 
 export function MyPageView() {
   const router = useRouter();
   const signOutMutation = useSignOut();
-  const { themeLabel, toggleTheme } = useThemeReady();
   const { data: profile, isPending: loading } = useProfileQuery();
   const { data: defaultSettings, isPending: settingsLoading } =
     useDefaultSettingsQuery({ enabled: !!profile });
@@ -72,28 +58,16 @@ export function MyPageView() {
   });
   const { enabled: safetyFilterEnabled, setEnabled: setSafetyFilterEnabled } =
     useSafetyFilter();
-  const { modelId: defaultModelId } = useResolvedDefaultModel();
-  const { data: aiModels = [] } = useAiModelsQuery();
   const [defaultSettingModal, setDefaultSettingModal] =
     useState<DefaultSettingModal | null>(null);
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
 
-  const defaultModel = findAiModelById(aiModels, defaultModelId);
-  const defaultModelLabel = defaultModel
-    ? getModelShortName(defaultModel.display_name)
-    : "...";
-
-  const defaultPrompt = defaultSettings
-    ? getDefaultPrompt(defaultSettings)
-    : null;
   const defaultPersona = defaultSettings
     ? getDefaultPersona(defaultSettings)
     : null;
   const sessionNote = defaultSettings?.preferences.sessionNote ?? "";
   const settingsSummaryLoading = settingsLoading;
 
-  const promptSummaryLabel = settingsSummaryLoading
-    ? "..."
-    : (defaultPrompt?.title ?? "...");
   const personaSummaryLabel = settingsSummaryLoading
     ? "..."
     : (defaultPersona?.name ?? "...");
@@ -104,11 +78,11 @@ export function MyPageView() {
       : "No notes yet";
 
   function handleSafetyFilterChange(enabled: boolean) {
+    if (!enabled) {
+      toast.error("This feature isn't supported yet.");
+      return;
+    }
     setSafetyFilterEnabled(enabled);
-  }
-
-  function handleThemeToggle() {
-    toggleTheme();
   }
 
   async function handleSignOut() {
@@ -125,8 +99,8 @@ export function MyPageView() {
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background">
-      <header className="sticky top-0 z-20 hidden shrink-0 border-b border-border bg-background/95 backdrop-blur-sm sm:block">
-        <div className="mx-auto flex h-14 max-w-3xl items-center px-2">
+      <header className="sticky top-0 z-20 hidden shrink-0 bg-background/95 backdrop-blur-sm sm:block">
+        <div className="mx-auto flex h-14 max-w-3xl items-center border-b border-border px-2">
           <IconButton
             onClick={() => router.back()}
             className="hover:bg-muted/50"
@@ -147,9 +121,10 @@ export function MyPageView() {
         />
 
         <section className="mx-auto max-w-3xl space-y-5 px-4 py-4">
-          <Link
-            href="/profile"
-            className="flex items-center gap-3.5 rounded-2xl bg-muted/15 px-4 py-3.5 transition-colors hover:bg-muted/20"
+          <button
+            type="button"
+            onClick={() => setEditProfileOpen(true)}
+            className="flex w-full items-center gap-3.5 rounded-2xl bg-muted/30 px-4 py-3.5 text-left transition-colors hover:bg-muted/40"
           >
             <Avatar className="h-12 w-12">
               {profile.avatar_url ? (
@@ -160,42 +135,19 @@ export function MyPageView() {
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
-              <h2 className="truncate text-sm font-bold">
+              <h2 className="truncate text-base font-bold">
                 {profile.display_name}
               </h2>
-              <p className="truncate text-xs text-muted-foreground/70">
+              <p className="truncate text-sm text-muted-foreground/70">
                 {profile.handle}
               </p>
-              <div className="mt-0.5 flex items-center gap-3 text-xs text-muted-foreground/60">
-                <span>{profile.follower_count} followers</span>
-                <span>{profile.following_count} following</span>
-                <span>{likedCharacters.length} likes</span>
-              </div>
             </div>
             <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
-          </Link>
+          </button>
 
-          <RowPanel>
-            <RowLink
-              href="/won"
-              icon={<Gem className="h-4 w-4 text-primary/80" />}
-              value={(profile.token_balance ?? 0).toLocaleString("ko-KR")}
-              label="won balance"
-            />
-          </RowPanel>
+          <NexBalanceBar href="/nex" balance={profile.token_balance ?? 0} />
 
-          <List title="Default settings">
-            <Row
-              icon={<Bot className="h-4 w-4" />}
-              label="Model"
-              value={defaultModelLabel}
-            />
-            <Row
-              icon={<FileText className="h-4 w-4" />}
-              label="Prompt"
-              value={promptSummaryLabel}
-              onClick={() => setDefaultSettingModal("prompt")}
-            />
+          <List title="Default settings" className="mt-6">
             <Row
               icon={<CircleUser className="h-4 w-4" />}
               label="Persona"
@@ -230,67 +182,6 @@ export function MyPageView() {
                 />
               }
             />
-            <Row
-              icon={<CircleCheckBig className="h-4 w-4" />}
-              label="Verification"
-              showChevron={false}
-              trailing={
-                <span className="text-xs font-medium text-green-500">
-                  Age verified
-                </span>
-              }
-            />
-            <Row
-              icon={<Ban className="h-4 w-4" />}
-              label="Blocked users"
-            />
-          </List>
-
-          <List title="Community">
-            <Row
-              icon={<FileText className="h-4 w-4" />}
-              label="Development updates"
-            />
-            <Row
-              icon={<LifeBuoy className="h-4 w-4" />}
-              label="Live chat"
-            />
-            {DISCORD_URL ? (
-              <RowLink
-                href={DISCORD_URL}
-                external
-                icon={<MessageCircle className="h-4 w-4" />}
-                label="Discord"
-              />
-            ) : (
-              <Row
-                icon={<MessageCircle className="h-4 w-4" />}
-                label="Discord"
-              />
-            )}
-            <RowLink
-              href={`mailto:${SUPPORT_EMAIL}`}
-              icon={<Mail className="h-4 w-4" />}
-              label="Email support"
-            />
-          </List>
-
-          <List title="Settings">
-            <Row
-              icon={<Settings className="h-4 w-4" />}
-              label="Account"
-            />
-            <Row
-              icon={<Server className="h-4 w-4" />}
-              label="Server status"
-            />
-            <Row
-              icon={<Settings className="h-4 w-4" />}
-              label="Theme"
-              value={themeLabel}
-              onClick={handleThemeToggle}
-              showChevron={false}
-            />
           </List>
 
           <div className="pt-2">
@@ -298,8 +189,8 @@ export function MyPageView() {
               type="button"
               onClick={handleSignOut}
               className={cn(
-                "flex w-full items-center justify-center gap-2 rounded-2xl py-2.5 text-sm",
-                "text-destructive/70 transition-colors hover:bg-destructive/10 hover:text-destructive",
+                "flex w-full items-center justify-start gap-2 rounded-2xl px-3 py-2.5 text-sm",
+                "text-white/40 transition-colors hover:bg-muted/30 hover:text-white/70",
               )}
             >
               <LogOut className="h-4 w-4" />
@@ -307,6 +198,8 @@ export function MyPageView() {
             </button>
           </div>
         </section>
+
+        <SiteFooter />
       </div>
 
       <SettingsDialog
@@ -318,8 +211,10 @@ export function MyPageView() {
             : ""
         }
       >
-        {defaultSettingModal === "prompt" ? (
-          <PromptSettings initialView="editor" hideLabel />
+        {defaultSettingModal ? (
+          <p className={cn("mb-5", settingsIntroDescriptionClassName)}>
+            {DEFAULT_SETTING_DESCRIPTIONS[defaultSettingModal]}
+          </p>
         ) : null}
         {defaultSettingModal === "persona" ? (
           <PersonaSettings hideLabel />
@@ -328,6 +223,8 @@ export function MyPageView() {
           <UserNotesSettings hideLabel />
         ) : null}
       </SettingsDialog>
+
+      <EditProfileModal open={editProfileOpen} onOpenChange={setEditProfileOpen} />
     </div>
   );
 }

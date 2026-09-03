@@ -7,6 +7,7 @@ export type RecentConversation = {
   character_name: string
   character_image_url: string | null
   last_message_at: string | null
+  last_message_preview: string | null
 }
 
 /** GET /api/conversations?character_id= 응답 항목 */

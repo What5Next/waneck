@@ -1,6 +1,6 @@
 import type { User as AuthUser } from "@supabase/supabase-js";
 
-export type ProfileTab = "characters" | "followers" | "following";
+export const PROFILE_DISPLAY_NAME_MAX = 30;
 
 export type ProfileSummary = {
   id: string;
@@ -8,22 +8,6 @@ export type ProfileSummary = {
   handle: string;
   avatar_url: string | null;
   token_balance: number;
-  follower_count: number;
-  following_count: number;
-  wons_received_30d: number;
-  public_character_count: number;
-  chat_count: number;
-  characters: Array<{
-    id: string;
-    name: string;
-    short_intro: string | null;
-    profile_image_url: string | null;
-    tag: string | null;
-    created_at: string;
-    message_count: number;
-    like_count: number;
-    comment_count: number;
-  }>;
 };
 
 export function getProfileHandle(

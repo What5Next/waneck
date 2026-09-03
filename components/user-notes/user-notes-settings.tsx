@@ -3,16 +3,17 @@
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { useUpdateConversationSettingsMutation } from "@/hooks/mutations/use-update-conversation-settings-mutation";
 import { useUpdateUserPreferencesMutation } from "@/hooks/mutations/use-user-preferences-mutation";
 import { useConversationSettingsQuery } from "@/hooks/queries/use-conversation-settings-query";
 import { useDefaultSettingsQuery } from "@/hooks/queries/use-default-settings-query";
 import type { ConversationSettings } from "@/lib/api/conversation-settings";
 import { SESSION_NOTE_MAX } from "@/lib/user-default-settings/constants";
-import { settingsSaveButtonClassName, settingsTextareaClassName } from "@/components/default-settings/settings-field-classes";
-import { cn } from "@/lib/utils";
+import { SettingsTextareaField } from "@/components/default-settings/settings-textarea-field";
+import {
+  SettingsFormActions,
+  SettingsSaveButton,
+} from "@/components/default-settings/settings-save-button";
 
 type UserNotesSettingsProps = {
   hideLabel?: boolean;
@@ -57,7 +58,7 @@ function ConversationNotesSettings({
 
   if (isError) {
     return (
-      <p className="text-[13px] text-muted-foreground">Failed to load notes.</p>
+      <p className="text-sm text-muted-foreground">Failed to load notes.</p>
     );
   }
 
@@ -106,6 +107,7 @@ function ConversationNotesEditor({
       onDraftNoteChange={setDraftNote}
       onSave={handleEditSave}
       isSaving={updateMutation.isPending}
+      isDirty={draftNote !== settings.sessionNote}
     />
   );
 }
@@ -123,7 +125,7 @@ function GlobalNotesSettings({ hideLabel = false }: { hideLabel?: boolean }) {
 
   if (isError) {
     return (
-      <p className="text-[13px] text-muted-foreground">Failed to load notes.</p>
+      <p className="text-sm text-muted-foreground">Failed to load notes.</p>
     );
   }
 
@@ -169,6 +171,7 @@ function GlobalNotesEditor({
       onDraftNoteChange={setDraftNote}
       onSave={handleEditSave}
       isSaving={updateMutation.isPending}
+      isDirty={draftNote !== initialNote}
     />
   );
 }
@@ -180,6 +183,7 @@ function NotesEditor({
   onDraftNoteChange,
   onSave,
   isSaving,
+  isDirty,
 }: {
   hideLabel: boolean;
   label: string;
@@ -187,38 +191,28 @@ function NotesEditor({
   onDraftNoteChange: (value: string) => void;
   onSave: () => void;
   isSaving: boolean;
+  isDirty: boolean;
 }) {
   return (
-    <div className="w-full min-w-0 space-y-3 pb-1">
+    <div className="flex w-full min-w-0 flex-col">
       {hideLabel ? null : (
-        <p className="text-[11px] text-muted-foreground">{label}</p>
+        <p className="mb-3 text-[11px] text-muted-foreground">{label}</p>
       )}
 
-      <div className="relative">
-        <Textarea
-          value={draftNote}
-          onChange={(event) => onDraftNoteChange(event.target.value)}
-          placeholder="Please provide user note."
-          maxLength={SESSION_NOTE_MAX}
-          rows={5}
-          className={cn(settingsTextareaClassName, "min-h-[120px] pb-6")}
-          aria-label="Session note"
-        />
-        <span className="pointer-events-none absolute right-3 bottom-3 text-[10px] text-muted-foreground">
-          {draftNote.length.toLocaleString("en-US")}/
-          {SESSION_NOTE_MAX.toLocaleString("en-US")}
-        </span>
-      </div>
+      <SettingsTextareaField
+        value={draftNote}
+        onChange={onDraftNoteChange}
+        maxLength={SESSION_NOTE_MAX}
+        placeholder="Please provide user note."
+        aria-label="Session note"
+      />
 
-      <Button
-        type="button"
-        variant="secondary"
-        className={settingsSaveButtonClassName}
-        onClick={onSave}
-        disabled={isSaving}
-      >
-        Edit Save
-      </Button>
+      <SettingsFormActions>
+        <SettingsSaveButton
+          enabled={isDirty && !isSaving}
+          onClick={onSave}
+        />
+      </SettingsFormActions>
     </div>
   );
 }

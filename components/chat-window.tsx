@@ -9,6 +9,7 @@ import type { Character } from '@/lib/types'
 import type { Message } from '@/lib/types'
 import { ChatThread } from '@/components/chat/chat-thread'
 import { ChatComposer } from '@/components/chat/chat-composer'
+import type { SuggestedReply } from '@/components/chat/suggested-replies'
 import { LoginModal } from '@/components/auth/login-modal'
 import { useAuth } from '@/hooks/use-auth'
 import { useResolvedConversationModel } from '@/hooks/use-user-settings'
@@ -90,6 +91,17 @@ function isRollbackError(code: string) {
   ].includes(code)
 }
 
+/** TODO: 실제 AI 생성 API 연동 전까지 쓰는 목업 — 실제 대화 맥락과 무관 */
+const MOCK_SUGGESTED_REPLIES: SuggestedReply[] = [
+  { narration: '잠시 생각에 잠긴 표정을 짓는다.', dialogue: '음... 그건 나도 잘 모르겠어.' },
+  { narration: '살짝 미소를 지으며 고개를 끄덕인다.', dialogue: '응, 좋아! 그렇게 하자.' },
+  { narration: '눈을 크게 뜨며 놀란 기색을 보인다.', dialogue: '정말? 그게 진짜야?' },
+]
+
+function suggestedReplyToText(item: SuggestedReply): string {
+  return item.narration ? `*${item.narration}* ${item.dialogue}` : item.dialogue
+}
+
 export default function ChatWindow({
   character,
   conversationId: initialConversationId = null,
@@ -102,6 +114,9 @@ export default function ChatWindow({
   const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [isLoading, setIsLoading] = useState(false)
   const [draft, setDraft] = useState('')
+  const [suggestedReplies, setSuggestedReplies] = useState<SuggestedReply[]>([])
+  const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false)
+  const [isAutoPlaying, setIsAutoPlaying] = useState(false)
   const [conversationId] = useState<string | null>(initialConversationId)
   const { modelId, setModelId: setModel } =
     useResolvedConversationModel(conversationId)
@@ -237,8 +252,8 @@ export default function ChatWindow({
     }
   }, [character.id, conversationId, isAuthenticated, queryClient])
 
-  async function sendMessage() {
-    const trimmed = draft.trim()
+  async function sendMessage(overrideText?: string) {
+    const trimmed = (overrideText ?? draft).trim()
     if (!trimmed || isLoading) return
 
     if (!isAuthenticated) {
@@ -260,7 +275,8 @@ export default function ChatWindow({
     const userMsg: Message = { role: 'user', content: trimmed, time: getTime() }
     const next = [...messages, userMsg]
     setMessages(next)
-    setDraft('')
+    setSuggestedReplies([])
+    if (overrideText === undefined) setDraft('')
     setIsLoading(true)
     pendingSendRef.current = {
       content: trimmed,
@@ -275,6 +291,49 @@ export default function ChatWindow({
     })
   }
 
+  function requestSuggestions() {
+    if (isFetchingSuggestions || isLoading) return
+
+    setIsFetchingSuggestions(true)
+    setSuggestedReplies([])
+
+    // TODO: 실제 AI 생성 API·크레딧 차감 연동 전까지 쓰는 목업
+    window.setTimeout(() => {
+      setSuggestedReplies(MOCK_SUGGESTED_REPLIES)
+      setIsFetchingSuggestions(false)
+    }, 600)
+  }
+
+  function selectSuggestedReply(item: SuggestedReply) {
+    setSuggestedReplies([])
+    void sendMessage(suggestedReplyToText(item))
+  }
+
+  function autoPlay() {
+    if (isAutoPlaying || isLoading) return
+
+    if (!isAuthenticated) {
+      setShowLoginModal(true)
+      return
+    }
+
+    setIsAutoPlaying(true)
+    setSuggestedReplies([])
+
+    // TODO: 실제로는 크레딧 차감 + 서버가 대화 맥락 기반으로 스토리를 이어가는 API 연동 필요 — 지금은 목업
+    window.setTimeout(() => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'model',
+          content: '*잠시 정적이 흐른 뒤, 이야기가 스스로 이어진다.*',
+          time: getTime(),
+        },
+      ])
+      setIsAutoPlaying(false)
+    }, 800)
+  }
+
   return (
     <>
       <LoginModal
@@ -285,15 +344,25 @@ export default function ChatWindow({
       <div className="flex h-full flex-col overflow-hidden">
         {/* 채팅 본문 */}
         <div className="flex min-h-0 flex-1 flex-col">
-          <ChatThread messages={messages} isLoading={isLoading} character={character} />
+          <ChatThread
+            messages={messages}
+            isLoading={isLoading}
+            character={character}
+            suggestedReplies={suggestedReplies}
+            onSelectSuggestedReply={selectSuggestedReply}
+          />
           <ChatComposer
             value={draft}
             onChange={setDraft}
-            onSubmit={sendMessage}
+            onSubmit={() => sendMessage()}
             disabled={isLoading}
             model={modelId}
             onModelChange={setModel}
             suggestions={parseCharacterSuggestions(character.suggestions)}
+            onRequestSuggestions={requestSuggestions}
+            isFetchingSuggestions={isFetchingSuggestions}
+            onAutoPlay={autoPlay}
+            isAutoPlaying={isAutoPlaying}
           />
         </div>
       </div>
