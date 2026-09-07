@@ -1,20 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Gem } from "lucide-react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
 import { NexBalanceBar } from "@/components/nex/nex-balance-bar";
+import {
+  useCapturePayPalOrderMutation,
+  useCreatePayPalOrderMutation,
+} from "@/hooks/mutations/use-paypal-checkout";
+import { usePayPalConfigQuery } from "@/hooks/queries/use-paypal-config-query";
 import { useProfileQuery } from "@/hooks/queries/use-profile-query";
 import {
   NEX_PACKAGES,
-  NEX_PAYMENT_METHODS,
   NEX_REFUND_NOTICES,
   type NexPackage,
-  type NexPaymentMethod,
 } from "@/lib/nex-shop";
 import { cn } from "@/lib/utils";
+
+declare global {
+  interface Window {
+    paypal?: {
+      Buttons: (options: {
+        style?: Record<string, string | number | boolean>;
+        createOrder: () => Promise<string>;
+        onApprove: (data: { orderID?: string }) => Promise<void>;
+        onCancel?: () => void;
+        onError?: (error: unknown) => void;
+      }) => {
+        render: (selector: string | HTMLElement) => Promise<void>;
+        close?: () => void;
+      };
+    };
+  }
+}
 
 function formatUsd(amount: number) {
   return `$${amount.toLocaleString("en-US")}`;
@@ -22,23 +41,136 @@ function formatUsd(amount: number) {
 
 export function NexShopView() {
   const { data: profile } = useProfileQuery()
+  const { data: paypalConfig, isLoading: isPayPalConfigLoading } =
+    usePayPalConfigQuery();
+  const createOrderMutation = useCreatePayPalOrderMutation();
+  const captureOrderMutation = useCapturePayPalOrderMutation();
+  const createOrderAsync = createOrderMutation.mutateAsync;
+  const captureOrderAsync = captureOrderMutation.mutateAsync;
+  const paypalButtonsRef = useRef<HTMLDivElement | null>(null);
+  const renderedButtonsRef = useRef<{ close?: () => void } | null>(null);
+  const [sdkReady, setSdkReady] = useState(false);
+  const [sdkError, setSdkError] = useState<string | null>(null);
   const [selectedPackageId, setSelectedPackageId] = useState(
     NEX_PACKAGES.find((item) => item.badge)?.id ?? NEX_PACKAGES[0]?.id ?? "",
   );
-  const [paymentMethod, setPaymentMethod] = useState<NexPaymentMethod>("card");
 
   const selectedPackage =
     NEX_PACKAGES.find((item) => item.id === selectedPackageId) ??
     NEX_PACKAGES[0];
 
-  function handleCheckout() {
+  const createPayPalOrder = useCallback(async () => {
     if (!selectedPackage) {
       toast.error("Please select a package.");
+      throw new Error("Package is required");
+    }
+
+    const result = await createOrderAsync({
+      packageId: selectedPackage.id,
+    });
+
+    return result.orderId;
+  }, [createOrderAsync, selectedPackage]);
+
+  const captureApprovedPayPalOrder = useCallback(
+    async (orderId: string) => {
+      await captureOrderAsync(orderId);
+    },
+    [captureOrderAsync],
+  );
+
+  useEffect(() => {
+    if (!paypalConfig?.enabled || !paypalConfig.clientId) {
       return;
     }
 
-    toast.message("Checkout is coming soon.");
-  }
+    const existingScript = document.querySelector<HTMLScriptElement>(
+      'script[data-paypal-sdk="true"]',
+    );
+
+    if (window.paypal) {
+      queueMicrotask(() => setSdkReady(true));
+      return;
+    }
+
+    if (existingScript) {
+      existingScript.addEventListener("load", () => setSdkReady(true), {
+        once: true,
+      });
+      existingScript.addEventListener(
+        "error",
+        () => setSdkError("PayPal could not be loaded."),
+        { once: true },
+      );
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(
+      paypalConfig.clientId,
+    )}&currency=${encodeURIComponent(paypalConfig.currency)}&intent=capture`;
+    script.async = true;
+    script.dataset.paypalSdk = "true";
+    script.onload = () => setSdkReady(true);
+    script.onerror = () => setSdkError("PayPal could not be loaded.");
+    document.body.appendChild(script);
+  }, [paypalConfig]);
+
+  useEffect(() => {
+    if (
+      !sdkReady ||
+      !window.paypal ||
+      !paypalButtonsRef.current ||
+      !selectedPackage ||
+      !paypalConfig?.enabled
+    ) {
+      return;
+    }
+
+    paypalButtonsRef.current.innerHTML = "";
+    renderedButtonsRef.current?.close?.();
+
+    const buttons = window.paypal.Buttons({
+      style: {
+        layout: "vertical",
+        shape: "rect",
+        label: "paypal",
+      },
+      createOrder: createPayPalOrder,
+      onApprove: async (data) => {
+        if (!data.orderID) {
+          toast.error("PayPal order was not approved.");
+          return;
+        }
+
+        await captureApprovedPayPalOrder(data.orderID);
+      },
+      onCancel: () => {
+        toast.message("Payment was cancelled.");
+      },
+      onError: (error) => {
+        console.error("[PayPal Buttons]", error);
+        toast.error("PayPal checkout failed.");
+      },
+    });
+
+    renderedButtonsRef.current = buttons;
+    void buttons.render(paypalButtonsRef.current);
+
+    return () => {
+      buttons.close?.();
+    };
+  }, [
+    captureApprovedPayPalOrder,
+    createPayPalOrder,
+    paypalConfig?.enabled,
+    sdkReady,
+    selectedPackage,
+  ]);
+
+  const isCheckoutBusy = captureOrderMutation.isPending;
+  const isPayPalUnavailable =
+    !isPayPalConfigLoading && (!paypalConfig?.enabled || Boolean(sdkError));
 
   return (
     <div className="scroll-hide flex h-full min-h-0 flex-col overflow-y-auto bg-background pb-8">
@@ -65,50 +197,25 @@ export function NexShopView() {
 
         <section className="px-4 pt-6">
           <h2 className="mb-3 text-[19px] font-bold text-foreground">
-            Payment method
+            Payment
           </h2>
-          <div className="space-y-2">
-            {NEX_PAYMENT_METHODS.map((method) => {
-              const isSelected = paymentMethod === method.id;
-
-              return (
-                <button
-                  key={method.id}
-                  type="button"
-                  onClick={() => setPaymentMethod(method.id)}
-                  className={cn(
-                    "flex w-full items-center gap-3 rounded-xl border bg-muted/30 px-4 py-3 text-left text-foreground transition-colors",
-                    isSelected
-                      ? "border-primary"
-                      : "border-transparent hover:bg-muted/50",
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "h-4 w-4 shrink-0 rounded-full border-2",
-                      isSelected
-                        ? "border-primary bg-primary"
-                        : "border-muted-foreground/30",
-                    )}
-                    aria-hidden
-                  />
-                  <span className="text-sm font-medium">{method.label}</span>
-                </button>
-              );
-            })}
+          <div className="min-h-[120px]">
+            {isPayPalConfigLoading ? (
+              <div className="flex h-[52px] items-center justify-center rounded-lg bg-muted text-sm text-muted-foreground">
+                Loading PayPal...
+              </div>
+            ) : isPayPalUnavailable ? (
+              <div className="rounded-lg bg-muted px-4 py-3 text-sm text-muted-foreground">
+                PayPal checkout is not configured.
+              </div>
+            ) : isCheckoutBusy ? (
+              <div className="flex h-[52px] items-center justify-center rounded-lg bg-muted text-sm font-medium text-foreground">
+                Processing payment...
+              </div>
+            ) : (
+              <div ref={paypalButtonsRef} />
+            )}
           </div>
-        </section>
-
-        <section className="px-4 pt-6">
-          <Button
-            type="button"
-            className="h-11 w-full rounded-xl text-sm font-semibold"
-            onClick={handleCheckout}
-          >
-            {selectedPackage
-              ? `Pay ${formatUsd(selectedPackage.priceUsd)}`
-              : "Checkout"}
-          </Button>
         </section>
 
         <section className="px-4 pt-8">
