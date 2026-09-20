@@ -3,12 +3,15 @@
 import { useRouter } from 'next/navigation'
 import { useRef, useState } from 'react'
 import { ChevronLeft, Plus, Upload, User, X } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { cn } from '@/lib/utils'
 import { CHARACTER_GENRE_OPTIONS } from '@/lib/character-genres'
+import type { CharacterWithDetail } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Field, TextInput, TextArea } from '@/components/ui/form-field'
 import { useCreateCharacter } from '@/hooks/mutations/use-create-character'
+import { useUpdateCharacter } from '@/hooks/mutations/use-update-character'
 
 // ─── 탭 정의 ───────────────────────────────────────────────────────────────
 
@@ -55,6 +58,32 @@ const DEFAULT_FORM: FormState = {
   mood: '',
   desc: '',
   suggestions: ['', '', ''],
+}
+
+function toFormState(character: CharacterWithDetail): FormState {
+  const suggestions = Array.isArray(character.suggestions)
+    ? character.suggestions.filter((s): s is string => typeof s === 'string')
+    : []
+
+  return {
+    imageUrl: character.profile_image_url ?? '',
+    emoji: '',
+    name: character.name,
+    tagline: character.short_intro ?? '',
+    introTurns:
+      character.intro_messages.length > 0
+        ? character.intro_messages.map((m) => ({
+            role: m.role === 'user' ? 'user' : 'model',
+            text: m.content,
+          }))
+        : [{ role: 'model', text: '' }],
+    system: character.system_prompt,
+    tag: character.tag ?? '',
+    genres: character.genres ?? [],
+    mood: character.mood ?? '',
+    desc: character.description ?? '',
+    suggestions: [suggestions[0] ?? '', suggestions[1] ?? '', suggestions[2] ?? ''],
+  }
 }
 
 // ─── 탭 1: 캐릭터 설정 ────────────────────────────────────────────────────
@@ -438,11 +467,24 @@ function DetailTab({
 
 // ─── 메인 폼 ──────────────────────────────────────────────────────────────
 
-export function CharacterCreateForm() {
+type CharacterCreateFormProps = {
+  mode?: 'create' | 'edit'
+  characterId?: string
+  initialData?: CharacterWithDetail
+}
+
+export function CharacterCreateForm({
+  mode = 'create',
+  characterId,
+  initialData,
+}: CharacterCreateFormProps = {}) {
   const router = useRouter()
   const createCharacterMutation = useCreateCharacter()
+  const updateCharacterMutation = useUpdateCharacter(characterId ?? '')
   const [activeTab, setActiveTab] = useState<TabId>('settings')
-  const [form, setForm] = useState<FormState>(DEFAULT_FORM)
+  const [form, setForm] = useState<FormState>(() =>
+    initialData ? toFormState(initialData) : DEFAULT_FORM,
+  )
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -470,12 +512,15 @@ export function CharacterCreateForm() {
     setSubmitting(true)
     setError(null)
     try {
-      let profileImageUrl: string | null = null
+      // undefined = 이미지 변경 없음(기존 값 유지), null = 사용자가 이미지를 제거함
+      let profileImageUrl: string | null | undefined
       if (imageFile) {
         profileImageUrl = await uploadImage(imageFile)
+      } else if (mode === 'edit' && !form.imageUrl) {
+        profileImageUrl = null
       }
 
-      const data = await createCharacterMutation.mutateAsync({
+      const payload = {
         name: form.name,
         short_intro: form.tagline,
         system_prompt: form.system,
@@ -485,9 +530,20 @@ export function CharacterCreateForm() {
         description: form.desc,
         suggestions: form.suggestions.filter(Boolean),
         introTurns: form.introTurns,
-        profile_image_url: profileImageUrl,
-      })
-      router.push(`/characters/${data.id}`)
+        ...(profileImageUrl !== undefined
+          ? { profile_image_url: profileImageUrl }
+          : {}),
+      }
+
+      if (mode === 'edit' && characterId) {
+        const updated = await updateCharacterMutation.mutateAsync(payload)
+        setImageFile(null)
+        setForm((f) => ({ ...f, imageUrl: updated.profile_image_url ?? '' }))
+        toast.success('Saved')
+      } else {
+        const data = await createCharacterMutation.mutateAsync(payload)
+        router.push(`/characters/${data.id}`)
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to save')
     } finally {
@@ -503,12 +559,34 @@ export function CharacterCreateForm() {
     }
   }
 
+  // edit 모드에서는 특정 탭만 수정하고 바로 저장할 수 있어야 하므로
+  // 전체 폼 기준으로 필수값을 검증한다 (현재 탭 기준이 아님).
+  const isFormValid =
+    form.name.trim().length > 0 &&
+    form.system.trim().length > 0 &&
+    form.introTurns.every((t) => t.text.trim().length > 0)
+
   const canNext = (() => {
     if (activeTab === 'settings') return form.name.trim().length > 0
     if (activeTab === 'prompt')   return form.system.trim().length > 0
     if (activeTab === 'intro')    return form.introTurns.every((t) => t.text.trim().length > 0)
     return true
   })()
+
+  function handlePrimaryAction() {
+    if (mode === 'edit') {
+      handleSubmit()
+    } else {
+      goNext()
+    }
+  }
+
+  const primaryDisabled = mode === 'edit' ? !isFormValid || submitting : !canNext || submitting
+  const primaryLabel = submitting
+    ? 'Saving…'
+    : mode === 'edit'
+      ? 'Save'
+      : isLast ? 'Done' : 'Next'
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col">
@@ -524,7 +602,9 @@ export function CharacterCreateForm() {
         >
           <ChevronLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-base font-semibold text-foreground">Create character</h1>
+        <h1 className="text-base font-semibold text-foreground">
+          {mode === 'edit' ? 'Edit character' : 'Create character'}
+        </h1>
         <div className="h-10 w-10" />
       </header>
 
@@ -571,11 +651,11 @@ export function CharacterCreateForm() {
       <div className="shrink-0 border-t border-border bg-background px-4 py-4">
         <Button
           type="button"
-          onClick={goNext}
-          disabled={!canNext || submitting}
+          onClick={handlePrimaryAction}
+          disabled={primaryDisabled}
           className="w-full rounded-xl py-3 text-base font-semibold"
         >
-          {submitting ? 'Saving…' : isLast ? 'Done' : 'Next'}
+          {primaryLabel}
         </Button>
       </div>
     </div>

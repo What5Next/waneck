@@ -24,7 +24,7 @@ export async function requireAuthenticatedUser() {
 export async function getCharacterOr404(characterId: string) {
   const { data, error } = await supabaseAdmin
     .from('characters')
-    .select('id, created_by')
+    .select('id, created_by, profile_image_url')
     .eq('id', characterId)
     .maybeSingle()
 

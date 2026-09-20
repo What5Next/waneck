@@ -16,6 +16,8 @@ export const queryKeys = {
     comments: (id: string) =>
       [...queryKeys.characters.all, "comments", id] as const,
     liked: () => [...queryKeys.characters.all, "liked"] as const,
+    /** 내가 만든 캐릭터 목록 */
+    mine: () => [...queryKeys.characters.all, "mine"] as const,
     /** 유사 캐릭터 추천 */
     similar: (id: string, excludeKey = "") =>
       [...queryKeys.characters.all, "similar", id, excludeKey] as const,

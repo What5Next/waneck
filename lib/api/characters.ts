@@ -47,6 +47,19 @@ export type CreateCharacterBody = {
   profile_image_url?: string | null
 }
 
+export type UpdateCharacterBody = Partial<CreateCharacterBody>
+
+/** GET /api/characters/mine — 내가 만든 캐릭터 목록 */
+export async function getMyCharacters(): Promise<Character[]> {
+  const data = await apiFetch<Character[]>('/api/characters/mine')
+
+  if (!Array.isArray(data)) {
+    throw new Error('Invalid my characters response')
+  }
+
+  return data
+}
+
 type GetSimilarCharactersOptions = {
   limit?: number
   excludeIds?: string[]
@@ -87,6 +100,18 @@ export async function createCharacter(
 ): Promise<{ id: string }> {
   return apiFetch<{ id: string }>('/api/characters', {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+}
+
+/** PATCH /api/characters/[id] — 캐릭터 수정 */
+export async function updateCharacter(
+  characterId: string,
+  body: UpdateCharacterBody,
+): Promise<Character> {
+  return apiFetch<Character>(`/api/characters/${characterId}`, {
+    method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   })
