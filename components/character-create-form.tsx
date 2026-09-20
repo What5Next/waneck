@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useRef, useState } from 'react'
 import { ChevronLeft, Plus, Upload, User, X } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { cn } from '@/lib/utils'
 import { CHARACTER_GENRE_OPTIONS } from '@/lib/character-genres'
@@ -535,8 +536,10 @@ export function CharacterCreateForm({
       }
 
       if (mode === 'edit' && characterId) {
-        await updateCharacterMutation.mutateAsync(payload)
-        router.push(`/characters/${characterId}`)
+        const updated = await updateCharacterMutation.mutateAsync(payload)
+        setImageFile(null)
+        setForm((f) => ({ ...f, imageUrl: updated.profile_image_url ?? '' }))
+        toast.success('Saved')
       } else {
         const data = await createCharacterMutation.mutateAsync(payload)
         router.push(`/characters/${data.id}`)
@@ -556,12 +559,34 @@ export function CharacterCreateForm({
     }
   }
 
+  // edit 모드에서는 특정 탭만 수정하고 바로 저장할 수 있어야 하므로
+  // 전체 폼 기준으로 필수값을 검증한다 (현재 탭 기준이 아님).
+  const isFormValid =
+    form.name.trim().length > 0 &&
+    form.system.trim().length > 0 &&
+    form.introTurns.every((t) => t.text.trim().length > 0)
+
   const canNext = (() => {
     if (activeTab === 'settings') return form.name.trim().length > 0
     if (activeTab === 'prompt')   return form.system.trim().length > 0
     if (activeTab === 'intro')    return form.introTurns.every((t) => t.text.trim().length > 0)
     return true
   })()
+
+  function handlePrimaryAction() {
+    if (mode === 'edit') {
+      handleSubmit()
+    } else {
+      goNext()
+    }
+  }
+
+  const primaryDisabled = mode === 'edit' ? !isFormValid || submitting : !canNext || submitting
+  const primaryLabel = submitting
+    ? 'Saving…'
+    : mode === 'edit'
+      ? 'Save'
+      : isLast ? 'Done' : 'Next'
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col">
@@ -626,11 +651,11 @@ export function CharacterCreateForm({
       <div className="shrink-0 border-t border-border bg-background px-4 py-4">
         <Button
           type="button"
-          onClick={goNext}
-          disabled={!canNext || submitting}
+          onClick={handlePrimaryAction}
+          disabled={primaryDisabled}
           className="w-full rounded-xl py-3 text-base font-semibold"
         >
-          {submitting ? 'Saving…' : isLast ? (mode === 'edit' ? 'Save' : 'Done') : 'Next'}
+          {primaryLabel}
         </Button>
       </div>
     </div>
