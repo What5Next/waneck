@@ -513,6 +513,206 @@ export type Database = {
           },
         ]
       }
+      nex_packages: {
+        Row: {
+          bonus_nex: number
+          created_at: string
+          currency_code: string
+          id: string
+          is_active: boolean
+          nex_amount: number
+          price_amount: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          bonus_nex?: number
+          created_at?: string
+          currency_code?: string
+          id: string
+          is_active?: boolean
+          nex_amount: number
+          price_amount: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          bonus_nex?: number
+          created_at?: string
+          currency_code?: string
+          id?: string
+          is_active?: boolean
+          nex_amount?: number
+          price_amount?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      paypal_orders: {
+        Row: {
+          approved_at: string | null
+          bonus_nex: number
+          cancelled_at: string | null
+          capture_payload: Json | null
+          captured_at: string | null
+          created_at: string
+          credited_at: string | null
+          currency_code: string
+          failed_at: string | null
+          id: string
+          nex_amount: number
+          order_payload: Json | null
+          package_id: string
+          paypal_capture_id: string | null
+          paypal_order_id: string | null
+          paypal_payer_email: string | null
+          paypal_payer_id: string | null
+          price_amount: number
+          refunded_at: string | null
+          status: string
+          total_nex: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          bonus_nex?: number
+          cancelled_at?: string | null
+          capture_payload?: Json | null
+          captured_at?: string | null
+          created_at?: string
+          credited_at?: string | null
+          currency_code?: string
+          failed_at?: string | null
+          id?: string
+          nex_amount: number
+          order_payload?: Json | null
+          package_id: string
+          paypal_capture_id?: string | null
+          paypal_order_id?: string | null
+          paypal_payer_email?: string | null
+          paypal_payer_id?: string | null
+          price_amount: number
+          refunded_at?: string | null
+          status?: string
+          total_nex?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          bonus_nex?: number
+          cancelled_at?: string | null
+          capture_payload?: Json | null
+          captured_at?: string | null
+          created_at?: string
+          credited_at?: string | null
+          currency_code?: string
+          failed_at?: string | null
+          id?: string
+          nex_amount?: number
+          order_payload?: Json | null
+          package_id?: string
+          paypal_capture_id?: string | null
+          paypal_order_id?: string | null
+          paypal_payer_email?: string | null
+          paypal_payer_id?: string | null
+          price_amount?: number
+          refunded_at?: string | null
+          status?: string
+          total_nex?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "paypal_orders_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "nex_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "paypal_orders_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      paypal_webhook_events: {
+        Row: {
+          auth_algo: string | null
+          cert_url: string | null
+          error_message: string | null
+          event_type: string
+          id: string
+          payload: Json
+          payment_order_id: string | null
+          paypal_capture_id: string | null
+          paypal_event_id: string
+          paypal_order_id: string | null
+          processed_at: string | null
+          processing_status: string
+          received_at: string
+          transmission_id: string | null
+          transmission_sig: string | null
+          transmission_time: string | null
+          verification_status: string
+          webhook_id: string | null
+        }
+        Insert: {
+          auth_algo?: string | null
+          cert_url?: string | null
+          error_message?: string | null
+          event_type: string
+          id?: string
+          payload: Json
+          payment_order_id?: string | null
+          paypal_capture_id?: string | null
+          paypal_event_id: string
+          paypal_order_id?: string | null
+          processed_at?: string | null
+          processing_status?: string
+          received_at?: string
+          transmission_id?: string | null
+          transmission_sig?: string | null
+          transmission_time?: string | null
+          verification_status?: string
+          webhook_id?: string | null
+        }
+        Update: {
+          auth_algo?: string | null
+          cert_url?: string | null
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json
+          payment_order_id?: string | null
+          paypal_capture_id?: string | null
+          paypal_event_id?: string
+          paypal_order_id?: string | null
+          processed_at?: string | null
+          processing_status?: string
+          received_at?: string
+          transmission_id?: string | null
+          transmission_sig?: string | null
+          transmission_time?: string | null
+          verification_status?: string
+          webhook_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "paypal_webhook_events_payment_order_id_fkey"
+            columns: ["payment_order_id"]
+            isOneToOne: false
+            referencedRelation: "paypal_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       token_transactions: {
         Row: {
           amount: number
@@ -521,6 +721,7 @@ export type Database = {
           description: string | null
           external_ref: string | null
           id: string
+          payment_order_id: string | null
           type: string
           user_id: string | null
         }
@@ -531,6 +732,7 @@ export type Database = {
           description?: string | null
           external_ref?: string | null
           id?: string
+          payment_order_id?: string | null
           type: string
           user_id?: string | null
         }
@@ -541,10 +743,18 @@ export type Database = {
           description?: string | null
           external_ref?: string | null
           id?: string
+          payment_order_id?: string | null
           type?: string
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "token_transactions_payment_order_id_fkey"
+            columns: ["payment_order_id"]
+            isOneToOne: false
+            referencedRelation: "paypal_orders"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "token_transactions_user_id_fkey"
             columns: ["user_id"]
@@ -704,7 +914,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      credit_paypal_order: {
+        Args: { p_order_id: string }
+        Returns: {
+          amount: number
+          balance_after: number
+          created_at: string | null
+          description: string | null
+          external_ref: string | null
+          id: string
+          payment_order_id: string | null
+          type: string
+          user_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "token_transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       [_ in never]: never
@@ -723,12 +952,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -752,11 +981,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -777,11 +1006,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -802,11 +1031,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -819,11 +1048,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

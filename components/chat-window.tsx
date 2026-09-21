@@ -16,7 +16,9 @@ import { useResolvedConversationModel } from '@/hooks/use-user-settings'
 import { useAiModelsQuery } from '@/hooks/queries/use-ai-models-query'
 import { resolveModelName } from '@/lib/ai-models'
 import { bumpCharacterMessageCountInCache } from '@/lib/api/character-stats-cache'
+import { queryKeys } from '@/lib/api/query-keys'
 import { createClient } from '@/lib/supabase/browser'
+import type { ProfileSummary } from '@/lib/user-profile'
 
 const CHAT_API_URL =
   process.env.NEXT_PUBLIC_CHAT_API_URL?.replace(/\/$/, '') ??
@@ -27,6 +29,8 @@ type ChatAcceptedEvent = {
   clientMessageId?: string
   messageId: string
   jobId: string
+  tokenCost?: number
+  tokenBalance?: number
 }
 
 type ChatDeltaEvent = {
@@ -89,6 +93,21 @@ function isRollbackError(code: string) {
     'conversation_busy',
     'send_failed',
   ].includes(code)
+}
+
+function syncProfileTokenBalance(
+  queryClient: ReturnType<typeof useQueryClient>,
+  tokenBalance: unknown,
+) {
+  if (typeof tokenBalance !== 'number' || !Number.isFinite(tokenBalance)) {
+    return
+  }
+
+  queryClient.setQueryData<ProfileSummary>(
+    queryKeys.profile.me(),
+    (current) =>
+      current ? { ...current, token_balance: tokenBalance } : current,
+  )
 }
 
 /** TODO: 실제 AI 생성 API 연동 전까지 쓰는 목업 — 실제 대화 맥락과 무관 */
@@ -166,6 +185,8 @@ export default function ChatWindow({
 
       socket.on('chat:accepted', (event) => {
         if (event.conversationId !== conversationId) return
+
+        syncProfileTokenBalance(queryClient, event.tokenBalance)
       })
 
       socket.on('chat:delta', (event) => {

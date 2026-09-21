@@ -48,4 +48,8 @@ export const queryKeys = {
     defaultSettings: () =>
       [...queryKeys.userSettings.all, "default-settings"] as const,
   },
+  paypal: {
+    all: ["paypal"] as const,
+    config: () => [...queryKeys.paypal.all, "config"] as const,
+  },
 } as const;
