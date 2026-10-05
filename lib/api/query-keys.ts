@@ -52,4 +52,8 @@ export const queryKeys = {
     all: ["paypal"] as const,
     config: () => [...queryKeys.paypal.all, "config"] as const,
   },
+  nexPackages: {
+    all: ["nex-packages"] as const,
+    list: () => [...queryKeys.nexPackages.all, "list"] as const,
+  },
 } as const;
