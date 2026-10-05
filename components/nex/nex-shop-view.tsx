@@ -132,9 +132,12 @@ export function NexShopView() {
 
     const buttons = window.paypal.Buttons({
       style: {
+        color: "black",
+        height: 44,
         layout: "vertical",
         shape: "rect",
         label: "paypal",
+        tagline: false,
       },
       createOrder: createPayPalOrder,
       onApprove: async (data) => {
@@ -201,19 +204,22 @@ export function NexShopView() {
           </h2>
           <div className="min-h-[120px]">
             {isPayPalConfigLoading ? (
-              <div className="flex h-[52px] items-center justify-center rounded-lg bg-muted text-sm text-muted-foreground">
+              <div className="flex h-[52px] items-center justify-center rounded-lg border border-white/10 bg-card text-sm text-muted-foreground">
                 Loading PayPal...
               </div>
             ) : isPayPalUnavailable ? (
-              <div className="rounded-lg bg-muted px-4 py-3 text-sm text-muted-foreground">
+              <div className="rounded-lg border border-white/10 bg-card px-4 py-3 text-sm text-muted-foreground">
                 PayPal checkout is not configured.
               </div>
             ) : isCheckoutBusy ? (
-              <div className="flex h-[52px] items-center justify-center rounded-lg bg-muted text-sm font-medium text-foreground">
+              <div className="flex h-[52px] items-center justify-center rounded-lg border border-white/10 bg-card text-sm font-medium text-foreground">
                 Processing payment...
               </div>
             ) : (
-              <div ref={paypalButtonsRef} />
+              <div
+                ref={paypalButtonsRef}
+                className="overflow-hidden rounded-lg bg-card"
+              />
             )}
           </div>
         </section>
