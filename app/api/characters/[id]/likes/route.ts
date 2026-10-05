@@ -16,7 +16,9 @@ export async function POST(
     const auth = await requireAuthenticatedUser()
     if (auth.errorResponse) return auth.errorResponse
 
-    const { character, errorResponse } = await getCharacterOr404(characterId)
+    const { character, errorResponse } = await getCharacterOr404(characterId, {
+      requireActive: true,
+    })
     if (errorResponse) return errorResponse
 
     const forbidden = selfLikeForbiddenResponse(character.created_by, auth.user.id)

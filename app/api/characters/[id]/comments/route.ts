@@ -25,7 +25,9 @@ export async function GET(
 ) {
   try {
     const { id: characterId } = await params;
-    const { errorResponse } = await getCharacterOr404(characterId);
+    const { errorResponse } = await getCharacterOr404(characterId, {
+      requireActive: true,
+    });
     if (errorResponse) return errorResponse;
 
     const limitParam = Number(
@@ -111,7 +113,9 @@ export async function POST(
     const auth = await requireAuthenticatedUser();
     if (auth.errorResponse) return auth.errorResponse;
 
-    const { errorResponse } = await getCharacterOr404(characterId);
+    const { errorResponse } = await getCharacterOr404(characterId, {
+      requireActive: true,
+    });
     if (errorResponse) return errorResponse;
 
     const body = await req.json();

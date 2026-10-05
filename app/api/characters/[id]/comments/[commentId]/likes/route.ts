@@ -17,7 +17,9 @@ export async function POST(
     const auth = await requireAuthenticatedUser()
     if (auth.errorResponse) return auth.errorResponse
 
-    const { errorResponse } = await getCharacterOr404(characterId)
+    const { errorResponse } = await getCharacterOr404(characterId, {
+      requireActive: true,
+    })
     if (errorResponse) return errorResponse
 
     const { errorResponse: commentError } = await getCommentForCharacter(
