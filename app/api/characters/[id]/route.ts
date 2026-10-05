@@ -29,6 +29,7 @@ export async function GET(
     `,
     )
     .eq("id", id)
+    .eq("is_archived", false)
     .order("sort_order", {
       referencedTable: "character_intro_messages",
       ascending: true,

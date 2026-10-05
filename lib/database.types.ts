@@ -288,6 +288,7 @@ export type Database = {
           detail_description: string | null
           genres: string[]
           id: string
+          is_archived: boolean
           is_public: boolean
           like_count: number
           message_count: number
@@ -309,6 +310,7 @@ export type Database = {
           detail_description?: string | null
           genres?: string[]
           id?: string
+          is_archived?: boolean
           is_public?: boolean
           like_count?: number
           message_count?: number
@@ -330,6 +332,7 @@ export type Database = {
           detail_description?: string | null
           genres?: string[]
           id?: string
+          is_archived?: boolean
           is_public?: boolean
           like_count?: number
           message_count?: number

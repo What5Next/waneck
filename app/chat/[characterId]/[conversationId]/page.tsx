@@ -16,6 +16,7 @@ export default async function ChatPage({
     .from('characters')
     .select('*')
     .eq('id', characterId)
+    .eq('is_archived', false)
     .single()
 
   if (!character) notFound()

@@ -67,6 +67,7 @@ export async function GET(
       .from("characters")
       .select("id, genres, tag, mood, message_count")
       .eq("id", characterId)
+      .eq("is_archived", false)
       .maybeSingle();
 
     if (sourceError) {
@@ -92,6 +93,7 @@ export async function GET(
           .from("characters")
           .select("*")
           .eq("is_public", true)
+          .eq("is_archived", false)
           .eq("tag", sourceTag)
           .limit(POOL_FETCH_LIMIT),
         excludeIds,
@@ -115,6 +117,7 @@ export async function GET(
           .from("characters")
           .select("*")
           .eq("is_public", true)
+          .eq("is_archived", false)
           .overlaps("genres", sourceGenres)
           .limit(POOL_FETCH_LIMIT),
         excludeIds,
@@ -144,6 +147,7 @@ export async function GET(
           .from("characters")
           .select("*")
           .eq("is_public", true)
+          .eq("is_archived", false)
           .order("message_count", { ascending: false })
           .limit(POOL_FETCH_LIMIT),
         excludeIds,

@@ -13,6 +13,7 @@ export async function GET() {
       .from('characters')
       .select('*')
       .eq('created_by', auth.user.id)
+      .eq('is_archived', false)
       .order('created_at', { ascending: false })
 
     if (error) {
