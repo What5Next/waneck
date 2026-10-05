@@ -9,13 +9,11 @@ import {
   useCapturePayPalOrderMutation,
   useCreatePayPalOrderMutation,
 } from "@/hooks/mutations/use-paypal-checkout";
+import { useNexPackagesQuery } from "@/hooks/queries/use-nex-packages-query";
 import { usePayPalConfigQuery } from "@/hooks/queries/use-paypal-config-query";
 import { useProfileQuery } from "@/hooks/queries/use-profile-query";
-import {
-  NEX_PACKAGES,
-  NEX_REFUND_NOTICES,
-  type NexPackage,
-} from "@/lib/nex-shop";
+import type { NexPackageSummary } from "@/lib/api/nex-packages";
+import { NEX_REFUND_NOTICES } from "@/lib/nex-shop";
 import { cn } from "@/lib/utils";
 
 declare global {
@@ -35,12 +33,20 @@ declare global {
   }
 }
 
-function formatUsd(amount: number) {
-  return `$${amount.toLocaleString("en-US")}`;
+function formatPrice(amount: number, currencyCode: string) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: currencyCode,
+  }).format(amount);
 }
 
 export function NexShopView() {
   const { data: profile } = useProfileQuery()
+  const {
+    data: nexPackages = [],
+    isLoading: isPackagesLoading,
+    isError: isPackagesError,
+  } = useNexPackagesQuery();
   const { data: paypalConfig, isLoading: isPayPalConfigLoading } =
     usePayPalConfigQuery();
   const createOrderMutation = useCreatePayPalOrderMutation();
@@ -51,13 +57,12 @@ export function NexShopView() {
   const renderedButtonsRef = useRef<{ close?: () => void } | null>(null);
   const [sdkReady, setSdkReady] = useState(false);
   const [sdkError, setSdkError] = useState<string | null>(null);
-  const [selectedPackageId, setSelectedPackageId] = useState(
-    NEX_PACKAGES.find((item) => item.badge)?.id ?? NEX_PACKAGES[0]?.id ?? "",
-  );
+  const [selectedPackageId, setSelectedPackageId] = useState("");
 
   const selectedPackage =
-    NEX_PACKAGES.find((item) => item.id === selectedPackageId) ??
-    NEX_PACKAGES[0];
+    nexPackages.find((item) => item.id === selectedPackageId) ??
+    nexPackages.find((item) => item.id === "nex-popular") ??
+    nexPackages[0];
 
   const createPayPalOrder = useCallback(async () => {
     if (!selectedPackage) {
@@ -172,8 +177,10 @@ export function NexShopView() {
   ]);
 
   const isCheckoutBusy = captureOrderMutation.isPending;
+  const hasPackages = nexPackages.length > 0;
   const isPayPalUnavailable =
-    !isPayPalConfigLoading && (!paypalConfig?.enabled || Boolean(sdkError));
+    !isPayPalConfigLoading &&
+    (!paypalConfig?.enabled || Boolean(sdkError) || !hasPackages);
 
   return (
     <div className="scroll-hide flex h-full min-h-0 flex-col overflow-y-auto bg-background pb-8">
@@ -186,16 +193,35 @@ export function NexShopView() {
           <h2 className="mb-3 text-[19px] font-bold text-foreground">
             Packages
           </h2>
-          <div className="space-y-2.5">
-            {NEX_PACKAGES.map((item) => (
-              <PackageRow
-                key={item.id}
-                item={item}
-                selected={selectedPackageId === item.id}
-                onSelect={() => setSelectedPackageId(item.id)}
-              />
-            ))}
-          </div>
+          {isPackagesLoading ? (
+            <div className="space-y-2.5">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="h-[73px] rounded-lg border border-white/10 bg-muted/20"
+                />
+              ))}
+            </div>
+          ) : isPackagesError ? (
+            <div className="rounded-lg border border-white/10 bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
+              Failed to load packages.
+            </div>
+          ) : !hasPackages ? (
+            <div className="rounded-lg border border-white/10 bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
+              No packages are available.
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              {nexPackages.map((item) => (
+                <PackageRow
+                  key={item.id}
+                  item={item}
+                  selected={selectedPackage?.id === item.id}
+                  onSelect={() => setSelectedPackageId(item.id)}
+                />
+              ))}
+            </div>
+          )}
         </section>
 
         <section className="px-4 pt-6">
@@ -209,7 +235,9 @@ export function NexShopView() {
               </div>
             ) : isPayPalUnavailable ? (
               <div className="rounded-lg border border-white/10 bg-card px-4 py-3 text-sm text-muted-foreground">
-                PayPal checkout is not configured.
+                {hasPackages
+                  ? "PayPal checkout is not configured."
+                  : "Select an available package to continue."}
               </div>
             ) : isCheckoutBusy ? (
               <div className="flex h-[52px] items-center justify-center rounded-lg border border-white/10 bg-card text-sm font-medium text-foreground">
@@ -247,14 +275,15 @@ function PackageRow({
   selected,
   onSelect,
 }: {
-  item: NexPackage;
+  item: NexPackageSummary;
   selected: boolean;
   onSelect: () => void;
 }) {
-  const totalNex = item.nexAmount + (item.bonusNex ?? 0);
+  const totalNex = item.nexAmount + item.bonusNex;
   const bonusPercent = item.bonusNex
     ? Math.round((item.bonusNex / item.nexAmount) * 100)
     : null;
+  const badge = item.id === "nex-popular" ? "Popular" : null;
 
   return (
     <button
@@ -279,9 +308,9 @@ function PackageRow({
             <span className="text-sm font-medium text-muted-foreground">
               Nex
             </span>
-            {item.badge ? (
+            {badge ? (
               <span className="shrink-0 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground">
-                {item.badge}
+                {badge}
               </span>
             ) : null}
           </div>
@@ -306,7 +335,7 @@ function PackageRow({
             : "bg-muted text-foreground",
         )}
       >
-        {formatUsd(item.priceUsd)}
+        {formatPrice(item.priceAmount, item.currencyCode)}
       </span>
     </button>
   );
