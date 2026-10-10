@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { uploadCharacterProfileImage } from '@/lib/api/character-image-upload-server'
-import { createClient } from '@/lib/supabase/server'
 
+import { hasCharacterCreateApiKey } from '@/lib/api/character-create-access'
+import { uploadCharacterProfileImage } from '@/lib/api/character-image-upload-server'
+
+/**
+ * POST /api/admin/upload — 서버 간 캐릭터 프로필 이미지 업로드.
+ * `Authorization: Bearer <CHARACTER_CREATE_API_KEY>` 필요.
+ */
 export async function POST(req: NextRequest) {
-  const authClient = await createClient()
-  const {
-    data: { user },
-  } = await authClient.auth.getUser()
-  if (!user) {
+  if (!hasCharacterCreateApiKey(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
