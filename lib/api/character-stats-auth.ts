@@ -20,13 +20,28 @@ export async function requireAuthenticatedUser() {
   return { user, errorResponse: null as null }
 }
 
-/** 캐릭터 존재 여부 확인 — 없으면 404 */
-export async function getCharacterOr404(characterId: string) {
-  const { data, error } = await supabaseAdmin
+/**
+ * 캐릭터 존재 여부 확인 — 없으면 404
+ *
+ * `requireActive: true`면 아카이브된 캐릭터도 404로 취급한다.
+ * 좋아요/댓글 작성, 캐릭터 수정처럼 아카이브된 캐릭터와의 "새" 상호작용을 막을 때 쓰고,
+ * 이미 작성된 댓글/좋아요를 수정·삭제·취소하는 정리성 동작에는 쓰지 않는다
+ * (캐릭터가 아카이브됐다고 본인 댓글을 못 지우게 되는 건 의도가 아님).
+ */
+export async function getCharacterOr404(
+  characterId: string,
+  opts: { requireActive?: boolean } = {},
+) {
+  let query = supabaseAdmin
     .from('characters')
     .select('id, created_by, profile_image_url')
     .eq('id', characterId)
-    .maybeSingle()
+
+  if (opts.requireActive) {
+    query = query.eq('is_archived', false)
+  }
+
+  const { data, error } = await query.maybeSingle()
 
   if (error || !data) {
     return {

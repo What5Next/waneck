@@ -14,6 +14,7 @@ export async function GET() {
     .from('characters')
     .select('*')
     .eq('is_public', true)
+    .eq('is_archived', false)
     .order('created_at', { ascending: true })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

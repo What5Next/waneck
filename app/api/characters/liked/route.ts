@@ -14,10 +14,12 @@ export async function GET() {
       .select(
         `
         created_at,
-        character:characters(*)
+        character:characters!inner(*)
       `,
       )
       .eq('user_id', auth.user.id)
+      // !inner로 조인해야 embedded 필터가 실제로 행을 거름 (left join이면 무시됨)
+      .eq('character.is_archived', false)
       .order('created_at', { ascending: false })
 
     if (error) {

@@ -36,9 +36,11 @@ export async function GET(req: NextRequest) {
     const { data, error } = await supabaseAdmin
       .from('conversations')
       .select(
-        'id, character_id, last_message_at, characters(name, profile_image_url)',
+        'id, character_id, last_message_at, characters!inner(name, profile_image_url)',
       )
       .eq('user_id', user.id)
+      // !inner로 조인해야 embedded 필터가 실제로 행을 거름 (left join이면 무시됨)
+      .eq('characters.is_archived', false)
       .order('last_message_at', { ascending: false, nullsFirst: false })
       .limit(30)
 

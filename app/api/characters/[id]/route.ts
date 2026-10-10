@@ -29,6 +29,7 @@ export async function GET(
     `,
     )
     .eq("id", id)
+    .eq("is_archived", false)
     .order("sort_order", {
       referencedTable: "character_intro_messages",
       ascending: true,
@@ -101,7 +102,9 @@ export async function PATCH(
   const auth = await requireAuthenticatedUser();
   if (auth.errorResponse) return auth.errorResponse;
 
-  const { character, errorResponse } = await getCharacterOr404(id);
+  const { character, errorResponse } = await getCharacterOr404(id, {
+    requireActive: true,
+  });
   if (errorResponse) return errorResponse;
 
   if (character.created_by !== auth.user.id) {

@@ -102,6 +102,7 @@ export async function POST(req: NextRequest) {
       .from("characters")
       .select("system_prompt")
       .eq("id", characterId)
+      .eq("is_archived", false)
       .single();
 
     if (!character) {
