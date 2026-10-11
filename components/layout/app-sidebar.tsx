@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { Gem, Home, LayoutGrid, Plus } from "lucide-react";
+import { Gem, Home, LayoutGrid, Plus, UserPlus } from "lucide-react";
 
 import { useLoginPrompt } from "@/components/auth/login-prompt-provider";
 import { useSidebar } from "@/components/layout/sidebar-context";
@@ -111,18 +111,26 @@ function SidebarNav({
             </button>
           ) : (
             <div className="mx-3 mt-4 shrink-0">
-              {/* 가입 혜택 말풍선 — 누르면 로그인 창이 열린다 */}
+              {/* 메뉴 항목과 같은 틀의 가입 버튼 (왼쪽 정렬) */}
               <button
                 type="button"
                 onClick={() => requestLogin()}
-                className="relative mx-auto mt-1 block w-fit max-w-full rounded-xl bg-white px-3.5 py-2 text-center text-[13px] font-medium text-neutral-900 shadow-md transition-colors hover:bg-white/90"
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-base font-medium text-white/90 transition-colors hover:bg-muted/50 hover:text-white"
+              >
+                <UserPlus className="h-[18px] w-[18px] shrink-0" fill="currentColor" />
+                Sign up
+              </button>
+              {/* 가입 혜택 말풍선 — 화살표가 Sign up 버튼을 가리킨다 */}
+              <div
+                role="note"
+                className="relative ml-3 mt-2 w-fit max-w-full rounded-xl bg-white px-3.5 py-2 text-left text-[13px] font-medium text-neutral-900 shadow-md"
               >
                 <span
                   aria-hidden
-                  className="absolute -top-1 left-1/2 h-2.5 w-2.5 -translate-x-1/2 rotate-45 rounded-[2px] bg-white"
+                  className="absolute -top-1 left-4 h-2.5 w-2.5 rotate-45 rounded-[2px] bg-white"
                 />
                 Sign up and get {SIGNUP_BONUS_NEX} Nex!
-              </button>
+              </div>
             </div>
           )}
         </>
