@@ -11,6 +11,8 @@ import { ChatThread } from '@/components/chat/chat-thread'
 import { ChatComposer } from '@/components/chat/chat-composer'
 import type { SuggestedReply } from '@/components/chat/suggested-replies'
 import { LoginModal } from '@/components/auth/login-modal'
+import type { ChatSystemNotice } from '@/components/chat/chat-thread'
+import { SAFETY_NOTICES, checkMessageSafety } from '@/lib/chat-safety'
 import { useAuth } from '@/hooks/use-auth'
 import { useResolvedConversationModel } from '@/hooks/use-user-settings'
 import { useAiModelsQuery } from '@/hooks/queries/use-ai-models-query'
@@ -143,6 +145,8 @@ export default function ChatWindow({
   // P1: 채팅 전송 전 로그인 여부 확인용
   const { isAuthenticated } = useAuth()
   const [showLoginModal, setShowLoginModal] = useState(false)
+  // 위험한 입력(자해·19금)이 감지되면 전송을 막고 채팅 안에 시스템 메시지로 알린다
+  const [notices, setNotices] = useState<ChatSystemNotice[]>([])
   const queryClient = useQueryClient()
   const socketRef = useRef<ChatSocket | null>(null)
   const isStreamingRef = useRef(false)
@@ -277,6 +281,20 @@ export default function ChatWindow({
     const trimmed = (overrideText ?? draft).trim()
     if (!trimmed || isLoading) return
 
+    // 전송 전 안전 검사 — 막힌 글은 입력창에 그대로 남겨 고쳐 쓸 수 있게 한다
+    const safety = checkMessageSafety(trimmed)
+    if (!safety.ok) {
+      setNotices((prev) => [
+        ...prev,
+        {
+          id: createClientMessageId(),
+          afterIndex: messages.length - 1,
+          text: SAFETY_NOTICES[safety.category],
+        },
+      ])
+      return
+    }
+
     if (!isAuthenticated) {
       setShowLoginModal(true)
       return
@@ -367,6 +385,7 @@ export default function ChatWindow({
         <div className="flex min-h-0 flex-1 flex-col">
           <ChatThread
             messages={messages}
+            notices={notices}
             isLoading={isLoading}
             character={character}
             suggestedReplies={suggestedReplies}
