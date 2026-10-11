@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { Gem, Home, LayoutGrid, Plus, UserPlus } from "lucide-react";
+import { Gem, Home, LayoutGrid, LogIn, Plus } from "lucide-react";
 
 import { useLoginPrompt } from "@/components/auth/login-prompt-provider";
 import { useSidebar } from "@/components/layout/sidebar-context";
@@ -117,7 +117,7 @@ function SidebarNav({
                 onClick={() => requestLogin()}
                 className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-base font-medium text-white/90 transition-colors hover:bg-muted/50 hover:text-white"
               >
-                <UserPlus className="h-[18px] w-[18px] shrink-0" fill="currentColor" />
+                <LogIn className="h-[18px] w-[18px] shrink-0" aria-hidden />
                 Sign up
               </button>
               {/* 가입 혜택 말풍선 — 화살표가 Sign up 버튼을 가리킨다 */}
