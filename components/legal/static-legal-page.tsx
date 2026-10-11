@@ -7,7 +7,7 @@ import rehypeSanitize from 'rehype-sanitize'
 import { ExplorePageLayout } from '@/components/layout/explore-page-layout'
 
 /** content/legal 아래의 Markdown 파일 이름 */
-export type StaticLegalDocument = 'terms' | 'privacy' | 'refund'
+export type StaticLegalDocument = 'terms' | 'privacy' | 'refund' | 'account-deletion'
 
 async function readLegalMarkdown(name: StaticLegalDocument): Promise<string> {
   return readFile(path.join(process.cwd(), 'content', 'legal', `${name}.md`), 'utf8')
