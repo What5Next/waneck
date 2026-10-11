@@ -19,7 +19,7 @@ function FeaturedCharacterSlide({ character, className, pageLabel, isActive }: F
   return (
     <CharacterDetailLink
       characterId={character.id}
-      className={cn("block aspect-square w-full cursor-pointer overflow-hidden rounded-2xl", className)}
+      className={cn("block aspect-[4/5] w-full cursor-pointer overflow-hidden rounded-2xl md:aspect-[16/11]", className)}
     >
       <div
         className="relative h-full w-full bg-cover bg-[position:center_15%]"
@@ -160,13 +160,13 @@ export function FeaturedCharacterHero({ characters }: FeaturedCharacterHeroProps
       <div
         ref={scrollerRef}
         onScroll={handleScroll}
-        className="scroll-hide flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth px-[16%]"
+        className="scroll-hide flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-[8%]"
       >
         {loopedCharacters.map((character, index) => (
           <FeaturedCharacterSlide
             key={`${character.id}-${index}`}
             character={character}
-            className="w-[68%] shrink-0 snap-center"
+            className="w-[84%] shrink-0 snap-center"
             isActive={index - 1 === activeIndex}
             pageLabel={index - 1 === activeIndex ? `${activeIndex + 1}/${total}` : undefined}
           />
