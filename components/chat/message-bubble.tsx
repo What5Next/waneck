@@ -70,7 +70,7 @@ export function MessageBubble({
               <img
                 src={character.profile_image_url}
                 alt={character.name}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-cover object-[center_15%]"
               />
             ) : (
               character?.name[0] ?? 'AI'

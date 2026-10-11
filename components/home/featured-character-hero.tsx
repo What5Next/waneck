@@ -22,7 +22,7 @@ function FeaturedCharacterSlide({ character, className, pageLabel, isActive }: F
       className={cn("block aspect-square w-full cursor-pointer overflow-hidden rounded-2xl", className)}
     >
       <div
-        className="relative h-full w-full bg-cover bg-center"
+        className="relative h-full w-full bg-cover bg-[position:center_15%]"
         style={{
           backgroundImage: character.profile_image_url
             ? `url(${character.profile_image_url})`

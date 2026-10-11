@@ -81,7 +81,7 @@ export function CharacterThumbnailCard({
             src={imageUrl}
             alt={name}
             className={cn(
-              'h-full w-full object-cover',
+              'h-full w-full object-cover object-[center_15%]',
               interactive &&
                 'transition-transform duration-300 group-hover:scale-105',
             )}

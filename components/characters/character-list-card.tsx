@@ -60,7 +60,7 @@ export function CharacterListCard({ character, className, href }: CharacterListC
           <img
             src={character.profile_image_url}
             alt={character.name}
-            className="absolute inset-0 h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-cover object-[center_15%]"
             loading="lazy"
           />
         ) : (
