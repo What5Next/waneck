@@ -40,3 +40,6 @@ export const NEX_REFUND_NOTICES = [
   'Free Nex expiration varies by grant method.',
   'Nex with the nearest expiration date is used first automatically.',
 ] as const
+
+/** 신규 가입 보너스 Nex — DB의 scripts/sql/signup-bonus.sql 과 같은 값을 유지할 것 */
+export const SIGNUP_BONUS_NEX = 150
