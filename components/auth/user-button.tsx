@@ -8,7 +8,6 @@ import { UserMenu } from '@/components/auth/user-menu'
 import { EditProfileModal } from '@/components/profile/edit-profile-modal'
 import { headerIconClass } from '@/components/ui/icon-button'
 import { PopoverMenu, PopoverMenuTrigger } from '@/components/ui/popover-menu'
-import { SIGNUP_BONUS_NEX } from '@/lib/nex-shop'
 import { useAuth } from '@/hooks/use-auth'
 
 export function UserButton() {
@@ -28,7 +27,7 @@ export function UserButton() {
   if (!user) {
     return (
       <>
-        <div className="relative flex items-center gap-1">
+        <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={() => setLoginOpen(true)}
@@ -37,17 +36,6 @@ export function UserButton() {
             <LogIn className={headerIconClass} aria-hidden />
             Sign in
           </button>
-          {/* 가입 혜택 말풍선 — 화살표가 Sign in 버튼을 가리킨다 */}
-          <div
-            role="note"
-            className="pointer-events-none absolute right-2 top-full z-50 mt-2.5 whitespace-nowrap rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-neutral-900 shadow-lg"
-          >
-            <span
-              aria-hidden
-              className="absolute -top-1 right-8 h-3 w-3 rotate-45 rounded-[2px] bg-white"
-            />
-            Sign up and get {SIGNUP_BONUS_NEX} Nex!
-          </div>
         </div>
         <LoginModal open={loginOpen} onOpenChange={setLoginOpen} />
       </>

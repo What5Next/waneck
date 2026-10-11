@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { Home, LayoutGrid, Plus } from "lucide-react";
+import { Gem, Home, LayoutGrid, Plus } from "lucide-react";
 
+import { useLoginPrompt } from "@/components/auth/login-prompt-provider";
 import { useSidebar } from "@/components/layout/sidebar-context";
 import { useAuth } from "@/hooks/use-auth";
 import { useConversationsQuery } from "@/hooks/queries/use-conversations-query";
 import type { RecentConversation } from "@/lib/api/conversations";
+import { SIGNUP_BONUS_NEX } from "@/lib/nex-shop";
 import { CHARACTER_CREATION_ENABLED } from "@/lib/site-config";
 import { cn } from "@/lib/utils";
 
@@ -39,7 +41,8 @@ function SidebarNav({
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const { requestLogin } = useLoginPrompt();
   // P4: useEffect fetch 제거 — TanStack Query 캐시 사용
   const {
     data: recentChats = [],
@@ -86,6 +89,42 @@ function SidebarNav({
           );
         })}
       </nav>
+
+      {/* 로그아웃 상태: Explore 아래 구분선 + 가입 유도 카드 (최근 대화 영역 대신) */}
+      {!isAuthLoading && !isAuthenticated ? (
+        <>
+          <div
+            className={cn(
+              "mt-4 shrink-0 border-t border-border/40",
+              collapsed ? "mx-2" : "mx-3",
+            )}
+          />
+          {collapsed ? (
+            <button
+              type="button"
+              onClick={() => requestLogin()}
+              title={`Sign up and get ${SIGNUP_BONUS_NEX} Nex!`}
+              aria-label="Sign up"
+              className="mx-2 mt-4 flex shrink-0 items-center justify-center rounded-xl py-2.5 text-white/90 transition-colors hover:bg-muted/50 hover:text-white"
+            >
+              <Gem className="h-[18px] w-[18px]" aria-hidden />
+            </button>
+          ) : (
+            <div className="mx-3 mt-4 shrink-0 rounded-2xl bg-white/5 p-4">
+              <p className="text-sm font-semibold leading-snug text-white">
+                Sign up and get {SIGNUP_BONUS_NEX} Nex!
+              </p>
+              <button
+                type="button"
+                onClick={() => requestLogin()}
+                className="mt-3 w-full rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-neutral-900 transition-colors hover:bg-white/90"
+              >
+                Sign up
+              </button>
+            </div>
+          )}
+        </>
+      ) : null}
 
       {/* 로그아웃 상태에서는 최근 대화 영역 자체를 숨긴다 */}
       {isAuthenticated ? (
