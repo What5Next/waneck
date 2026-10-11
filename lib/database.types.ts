@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      legal_document_versions: {
+        Row: {
+          id: string
+          document_type: string
+          version: string
+          title: string
+          content: string
+          effective_at: string
+          published_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          document_type: string
+          version: string
+          title: string
+          content: string
+          effective_at: string
+          published_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          document_type?: string
+          version?: string
+          title?: string
+          content?: string
+          effective_at?: string
+          published_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ai_models: {
         Row: {
           created_at: string | null
