@@ -155,18 +155,21 @@ export function FeaturedCharacterHero({ characters }: FeaturedCharacterHeroProps
     );
   }
 
+  // 가운데 카드는 컨테이너 폭의 70%(최소 240px, 최대 480px) — 폭이 변해도 크기가 급변하지 않는다.
+  // 양옆 여백은 같은 값에서 계산해 가운데 카드가 항상 정중앙에 오고 이웃 카드는 살짝만 보인다.
   return (
-    <div className="relative px-4 sm:px-6 lg:px-8">
+    <div className="px-4 sm:px-6 lg:px-8">
+     <div className="@container relative">
       <div
         ref={scrollerRef}
         onScroll={handleScroll}
-        className="scroll-hide flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-[8%] min-[900px]:gap-3 min-[900px]:px-[16%]"
+        className="scroll-hide flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-[calc((100cqw-clamp(240px,70cqw,480px))/2)]"
       >
         {loopedCharacters.map((character, index) => (
           <FeaturedCharacterSlide
             key={`${character.id}-${index}`}
             character={character}
-            className="w-[84%] shrink-0 snap-center min-[900px]:w-[68%]"
+            className="w-[clamp(240px,70cqw,480px)] shrink-0 snap-center"
             isActive={index - 1 === activeIndex}
             pageLabel={index - 1 === activeIndex ? `${activeIndex + 1}/${total}` : undefined}
           />
@@ -177,7 +180,7 @@ export function FeaturedCharacterHero({ characters }: FeaturedCharacterHeroProps
         variant="floating"
         size="sm"
         onClick={() => goTo(-1)}
-        className="absolute left-6 top-1/2 z-10 -translate-y-1/2 sm:left-8 lg:left-10"
+        className="absolute left-3 top-1/2 z-10 -translate-y-1/2"
         aria-label="Previous"
       >
         <ChevronLeft />
@@ -186,11 +189,12 @@ export function FeaturedCharacterHero({ characters }: FeaturedCharacterHeroProps
         variant="floating"
         size="sm"
         onClick={() => goTo(1)}
-        className="absolute right-6 top-1/2 z-10 -translate-y-1/2 sm:right-8 lg:right-10"
+        className="absolute right-3 top-1/2 z-10 -translate-y-1/2"
         aria-label="Next"
       >
         <ChevronRight />
       </IconButton>
+     </div>
     </div>
   );
 }
