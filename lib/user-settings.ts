@@ -6,7 +6,7 @@ export const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed'
 
 export const DISCORD_URL = process.env.NEXT_PUBLIC_DISCORD_URL
 export const SUPPORT_EMAIL =
-  process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? 'support@waneck.app'
+  process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? 'whatsnext.public@gmail.com'
 
 /** localStorage에서 세이프티 필터 설정 읽기 (SSR 기본값: true) */
 export function readSafetyFilterFromStorage(): boolean {
