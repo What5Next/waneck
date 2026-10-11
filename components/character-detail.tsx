@@ -97,7 +97,7 @@ export function CharacterDetail({
               {hashtags.map((hashtag) => (
                 <span
                   key={hashtag}
-                  className="inline-flex items-center rounded-[4px] bg-white/5 px-2.5 py-1.5 text-sm font-medium text-primary"
+                  className="inline-flex items-center rounded-[4px] bg-white/5 px-2.5 py-1.5 text-sm font-medium text-muted-foreground"
                 >
                   #{hashtag}
                 </span>
