@@ -5,8 +5,9 @@ export const CHARACTER_CREATOR_LABEL = "whatsnext";
 
 /** 푸터 정책 링크 */
 export const SITE_FOOTER_LINKS = [
-  { href: "/policy", label: "Terms of Service" },
-  { href: "/privacy-policy", label: "Privacy Policy" },
+  { href: "/terms", label: "Terms of Service" },
+  { href: "/privacy", label: "Privacy Policy" },
+  { href: "/refund-policy", label: "Refund Policy" },
   { href: "/account-deletion", label: "Account & Data Deletion" },
 ] as const;
 
