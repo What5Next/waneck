@@ -1,17 +1,14 @@
 /**
- * 캐릭터 카테고리 — 직업이 아니라 분위기·관계 구도 기준이고, 한 캐릭터가 여러 개에 속할 수 있다.
+ * 캐릭터 장르 — 한 캐릭터가 여러 개에 속할 수 있다.
  * characters.genres 에 이 값 그대로(영문 라벨) 저장한다.
  */
 export const CHARACTER_GENRE_OPTIONS = [
+  'Romance',
   'Fantasy',
-  'Dangerous',
-  'Cold & Aloof',
-  'Gentle',
-  'Possessive',
-  'Playful',
-  'Forced Proximity',
-  'Slow Burn',
-  'Healing',
+  'Thriller',
+  'Rom-Com',
+  'Drama',
+  'Slice of Life',
 ] as const
 
 export type CharacterGenre = (typeof CHARACTER_GENRE_OPTIONS)[number]
@@ -20,7 +17,7 @@ const GENRE_BY_LOWER = new Map<string, CharacterGenre>(
   CHARACTER_GENRE_OPTIONS.map((genre) => [genre.toLowerCase(), genre]),
 )
 
-/** 허용 카테고리만 필터·중복 제거 (대소문자 무시, 표준 표기로 정규화) */
+/** 허용 장르만 필터·중복 제거 (대소문자 무시, 표준 표기로 정규화) */
 export function normalizeCharacterGenres(genres: unknown): string[] {
   if (!Array.isArray(genres)) return []
 
@@ -34,12 +31,12 @@ export function normalizeCharacterGenres(genres: unknown): string[] {
   return normalized
 }
 
-/** 홈 카테고리 표시 라벨 — 카테고리 값이 곧 라벨이다 */
+/** 홈 카테고리 표시 라벨 — 장르 값이 곧 라벨이다 */
 export const HOME_CATEGORY_LABELS = Object.fromEntries(
   CHARACTER_GENRE_OPTIONS.map((genre) => [genre, genre]),
 ) as Record<CharacterGenre, string>
 
-/** 카테고리 개편 전 값 → 새 라벨 (DB 가 아직 옛 값일 때를 위한 호환) */
+/** 장르 개편 전 값 → 새 라벨 (DB 가 아직 옛 값일 때를 위한 호환) */
 const LEGACY_LABELS: Record<string, string> = {
   로맨스: 'Romance',
   판타지: 'Fantasy',
