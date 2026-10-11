@@ -110,17 +110,25 @@ function SidebarNav({
               <Gem className="h-[18px] w-[18px]" aria-hidden />
             </button>
           ) : (
-            <div className="mx-3 mt-4 shrink-0 rounded-2xl bg-white/5 p-4">
-              <p className="text-sm font-semibold leading-snug text-white">
-                Sign up and get {SIGNUP_BONUS_NEX} Nex!
-              </p>
+            <div className="mx-3 mt-4 shrink-0">
               <button
                 type="button"
                 onClick={() => requestLogin()}
-                className="mt-3 w-full rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-neutral-900 transition-colors hover:bg-white/90"
+                className="flex w-full items-center justify-center rounded-lg bg-white/10 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/15"
               >
                 Sign up
               </button>
+              {/* 가입 혜택 말풍선 — 화살표가 Sign up 버튼을 가리킨다 */}
+              <div
+                role="note"
+                className="relative mx-auto mt-2.5 w-fit max-w-full rounded-lg bg-white px-3 py-1.5 text-center text-xs font-medium text-neutral-900 shadow-md"
+              >
+                <span
+                  aria-hidden
+                  className="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 rounded-[1px] bg-white"
+                />
+                Sign up and get {SIGNUP_BONUS_NEX} Nex!
+              </div>
             </div>
           )}
         </>
