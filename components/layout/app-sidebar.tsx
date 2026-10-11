@@ -105,30 +105,24 @@ function SidebarNav({
               onClick={() => requestLogin()}
               title={`Sign up and get ${SIGNUP_BONUS_NEX} Nex!`}
               aria-label="Sign up"
-              className="mx-2 mt-4 flex shrink-0 items-center justify-center rounded-xl bg-primary py-2.5 text-primary-foreground transition-colors hover:bg-primary/90"
+              className="mx-2 mt-4 flex shrink-0 items-center justify-center rounded-xl py-2.5 text-white/90 transition-colors hover:bg-muted/50 hover:text-white"
             >
               <Gem className="h-[18px] w-[18px]" aria-hidden />
             </button>
           ) : (
             <div className="mx-3 mt-4 shrink-0">
+              {/* 가입 혜택 말풍선 — 누르면 로그인 창이 열린다 */}
               <button
                 type="button"
                 onClick={() => requestLogin()}
-                className="flex w-full items-center justify-center rounded-xl bg-primary px-3 py-2.5 text-base font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-              >
-                Sign up
-              </button>
-              {/* 가입 혜택 말풍선 — 화살표가 Sign up 버튼을 가리킨다 */}
-              <div
-                role="note"
-                className="relative mx-auto mt-3 w-fit max-w-full rounded-xl bg-white px-3.5 py-2 text-center text-[13px] font-medium text-neutral-900 shadow-md"
+                className="relative mx-auto mt-1 block w-fit max-w-full rounded-xl bg-white px-3.5 py-2 text-center text-[13px] font-medium text-neutral-900 shadow-md transition-colors hover:bg-white/90"
               >
                 <span
                   aria-hidden
                   className="absolute -top-1 left-1/2 h-2.5 w-2.5 -translate-x-1/2 rotate-45 rounded-[2px] bg-white"
                 />
                 Sign up and get {SIGNUP_BONUS_NEX} Nex!
-              </div>
+              </button>
             </div>
           )}
         </>
