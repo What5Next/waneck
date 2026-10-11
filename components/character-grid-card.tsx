@@ -1,12 +1,9 @@
 import { CharacterDetailLink } from '@/components/characters/character-detail-link'
 import { CharacterThumbnailCard } from '@/components/characters/character-thumbnail-card'
 import { formatCompactCount } from '@/lib/character-display'
-import { toHomeCategoryLabel } from '@/lib/character-genres'
 import { CHARACTER_CREATOR_LABEL } from '@/lib/site-config'
 import type { Character } from '@/lib/types'
 import { cn } from '@/lib/utils'
-
-const MAX_VISIBLE_TAGS = 2
 
 /** 그리드 카드에 실제로 쓰이는 캐릭터 필드만 — genres는 프로필 등 일부 소스에 없을 수 있어 optional */
 export type CharacterGridCardData = Pick<
@@ -23,20 +20,6 @@ export type CharacterGridCardData = Pick<
   genres?: Character['genres']
 }
 
-function buildTagLabels(character: Pick<CharacterGridCardData, 'genres' | 'tag'>): string[] {
-  const labels = new Set<string>()
-
-  for (const genre of character.genres ?? []) {
-    const trimmed = genre.trim()
-    if (trimmed) labels.add(toHomeCategoryLabel(trimmed))
-  }
-
-  const tag = character.tag?.trim()
-  if (tag) labels.add(toHomeCategoryLabel(tag))
-
-  return Array.from(labels)
-}
-
 interface CharacterGridCardProps {
   character: CharacterGridCardData
   rank?: number
@@ -45,7 +28,6 @@ interface CharacterGridCardProps {
 
 export function CharacterGridCard({ character, rank, className }: CharacterGridCardProps) {
   const creatorHandle = CHARACTER_CREATOR_LABEL
-  const visibleTags = buildTagLabels(character).slice(0, MAX_VISIBLE_TAGS)
 
   return (
     <CharacterDetailLink
@@ -78,18 +60,6 @@ export function CharacterGridCard({ character, rank, className }: CharacterGridC
         <p className="mt-1.5 line-clamp-1 text-[14px] text-muted-foreground/70">
           {formatCompactCount(character.message_count ?? 0)} · {creatorHandle}
         </p>
-        {visibleTags.length > 0 ? (
-          <div className="mt-2 flex flex-nowrap items-center gap-1 overflow-hidden">
-            {visibleTags.map((label) => (
-              <span
-                key={label}
-                className="inline-flex h-5 shrink-0 items-center rounded-[4px] bg-muted px-2 text-[12px] font-medium text-muted-foreground"
-              >
-                {label}
-              </span>
-            ))}
-          </div>
-        ) : null}
       </div>
     </CharacterDetailLink>
   )
