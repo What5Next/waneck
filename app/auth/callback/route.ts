@@ -1,7 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse, type NextRequest } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase.server'
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
@@ -30,19 +29,7 @@ export async function GET(request: NextRequest) {
       console.error('[auth/callback] exchangeCodeForSession 실패:', error.message)
     }
     if (!error) {
-      // public.users에 유저 동기화
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        await supabaseAdmin.from('users').upsert(
-          {
-            id: user.id,
-            email: user.email!,
-            display_name: user.user_metadata?.full_name ?? null,
-          },
-          { onConflict: 'id', ignoreDuplicates: true },
-        )
-      }
-
+      // public.users 프로필과 가입 보너스는 auth.users 트리거가 원자적으로 처리한다.
       return NextResponse.redirect(`${origin}${next}`)
     }
   }
