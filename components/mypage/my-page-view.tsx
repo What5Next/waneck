@@ -19,7 +19,6 @@ import { PageLoading } from "@/components/ui/page-loading";
 import { PageNavBar } from "@/components/ui/page-nav-bar";
 import { List } from "@/components/ui/list";
 import { Row, RowLink } from "@/components/ui/row";
-import { NexBalanceBar } from "@/components/nex/nex-balance-bar";
 import { SettingsDialog } from "@/components/ui/settings-dialog";
 import { Switch } from "@/components/ui/switch";
 import { PersonaSettings } from "@/components/persona/persona-settings";
@@ -149,8 +148,6 @@ export function MyPageView() {
             </div>
             <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
           </button>
-
-          <NexBalanceBar href="/nex" balance={profile.token_balance ?? 0} />
 
           <List title="Default settings" className="mt-6">
             <Row

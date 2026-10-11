@@ -1,7 +1,6 @@
 'use client'
 
-import Link from 'next/link'
-import { Gem, LogOut, Shield, User } from 'lucide-react'
+import { LogOut, Shield, User } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -93,30 +92,6 @@ export function UserMenu({ user, onClose, onEditProfile }: UserMenuProps) {
           <p className="truncate text-xs text-muted-foreground">{profileHandle}</p>
         </div>
       </button>
-
-      <PopoverMenuSeparator />
-
-      {/* Nex 잔액 — 아이콘부터 Top up까지 행 전체가 충전 페이지로 이동 */}
-      <div className="px-1.5 py-1">
-        <Link
-          href="/nex"
-          onClick={onClose}
-          className="flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2.5 transition-colors hover:bg-muted/40"
-        >
-          <div className="flex min-w-0 items-center gap-2.5">
-            <Gem className="h-4 w-4 shrink-0 text-primary" aria-hidden />
-            <p className="truncate text-[13px] font-medium text-foreground/90">
-              Nex{" "}
-              <span className="text-muted-foreground">
-                {(profile?.token_balance ?? 0).toLocaleString("en-US")}
-              </span>
-            </p>
-          </div>
-          <span className="shrink-0 text-sm font-medium text-primary">
-            Top up
-          </span>
-        </Link>
-      </div>
 
       <PopoverMenuSeparator />
 

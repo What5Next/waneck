@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { FormEvent, useState } from 'react'
-import { Menu, Search, Gem } from 'lucide-react'
+import { Menu, Search } from 'lucide-react'
 
 import { MobileSearchDialog } from '@/components/layout/mobile-search-dialog'
 import { NotificationButton } from '@/components/layout/notification-button'
@@ -12,7 +12,6 @@ import { useSidebar } from '@/components/layout/sidebar-context'
 import { IconButton, headerIconClass } from '@/components/ui/icon-button'
 import { Logo } from '@/components/ui/logo'
 import { SearchInput } from '@/components/ui/search-input'
-import { useProfileQuery } from '@/hooks/queries/use-profile-query'
 import { useAuth } from '@/hooks/use-auth'
 import { cn } from '@/lib/utils'
 
@@ -46,7 +45,6 @@ export function Header({ className }: { className?: string }) {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const { collapsed, mobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar()
   const { isAuthenticated } = useAuth()
-  const { data: profile } = useProfileQuery({ enabled: isAuthenticated })
 
   // URL 검색어가 바뀌면 입력창 동기화 (React 권장 derived state 패턴)
   if (committedUrlQuery !== urlQuery) {
@@ -105,7 +103,7 @@ export function Header({ className }: { className?: string }) {
           <NotificationButton className="sm:hidden" />
         ) : null}
 
-        {/* 데스크톱: 검색창 + Nex + 알림 + 프로필 */}
+        {/* 데스크톱: 검색창 + 알림 + 프로필 */}
         <form onSubmit={handleSearch} className="mr-1 hidden min-w-0 sm:block">
           <SearchInput
             value={query}
@@ -114,19 +112,6 @@ export function Header({ className }: { className?: string }) {
             aria-label="Search characters"
           />
         </form>
-
-        {isAuthenticated ? (
-          <Link
-            href="/nex"
-            className="flex h-9 items-center gap-1.5 rounded-full px-2 text-foreground transition-colors hover:bg-muted"
-            aria-label="Top up Nex"
-          >
-            <Gem className="h-4 w-4 text-primary" aria-hidden />
-            <span className="text-sm font-medium tabular-nums">
-              {(profile?.token_balance ?? 0).toLocaleString('en-US')}
-            </span>
-          </Link>
-        ) : null}
 
         {isAuthenticated ? (
           <NotificationButton className="hidden sm:block" />
