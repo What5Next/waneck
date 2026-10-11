@@ -123,7 +123,7 @@ function SidebarNav({
               {/* 가입 혜택 말풍선 — 화살표가 Sign up 버튼을 가리킨다 */}
               <div
                 role="note"
-                className="relative ml-3 mt-1.5 w-fit max-w-full rounded-xl bg-white px-3.5 py-1 text-left text-[13px] font-medium leading-5 text-neutral-900 shadow-md"
+                className="relative ml-3 mt-1.5 w-fit max-w-full rounded-md bg-white px-3.5 py-1 text-left text-[13px] font-medium leading-5 text-neutral-900 shadow-md"
               >
                 <span
                   aria-hidden
