@@ -265,11 +265,11 @@ export function PopoverMenuItem({
           >
             {label}
           </span>
-          {description ? (
+          {/* {description ? (
             <span className="mt-0.5 block text-[11px] text-muted-foreground">
               {description}
             </span>
-          ) : null}
+          ) : null} */}
         </div>
       </div>
       {trailing ? (
