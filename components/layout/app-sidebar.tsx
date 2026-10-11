@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
 import { Home, LayoutGrid, Plus } from "lucide-react";
 
 import { useSidebar } from "@/components/layout/sidebar-context";
+import { useLoginPrompt } from "@/components/auth/login-prompt-provider";
 import { useAuth } from "@/hooks/use-auth";
 import { useConversationsQuery } from "@/hooks/queries/use-conversations-query";
 import type { RecentConversation } from "@/lib/api/conversations";
@@ -39,6 +40,7 @@ function SidebarNav({
 }) {
   const pathname = usePathname();
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const { requestLogin } = useLoginPrompt();
   // P4: useEffect fetch 제거 — TanStack Query 캐시 사용
   const {
     data: recentChats = [],
@@ -66,7 +68,15 @@ function SidebarNav({
             <Link
               key={item.href}
               href={item.href}
-              onClick={onNavigate}
+              onClick={(event) => {
+                // 로그인이 필요한 메뉴: 이동 대신 로그인 팝업
+                if (item.href === "/characters/create" && !isAuthenticated) {
+                  event.preventDefault();
+                  requestLogin({ redirectPath: item.href });
+                  return;
+                }
+                onNavigate?.();
+              }}
               title={collapsed ? item.label : undefined}
               className={cn(
                 "flex items-center rounded-xl py-2.5 text-base font-medium transition-colors",
@@ -106,9 +116,13 @@ function SidebarNav({
 
         <div className="scroll-hide min-h-0 flex-1 overflow-y-auto">
           {!collapsed && !isAuthLoading && !isAuthenticated ? (
-            <p className="px-3 py-2 text-xs leading-relaxed text-muted-foreground">
+            <button
+              type="button"
+              onClick={() => requestLogin()}
+              className="px-3 py-2 text-left text-xs leading-relaxed text-muted-foreground hover:text-foreground"
+            >
               Sign in to see your recent chats here.
-            </p>
+            </button>
           ) : !collapsed &&
             isAuthenticated &&
             !isConversationsLoading &&

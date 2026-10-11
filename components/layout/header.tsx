@@ -3,11 +3,12 @@
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { FormEvent, useState } from 'react'
-import { Menu, Search, Gem } from 'lucide-react'
+import { Bell, Menu, Search, Gem } from 'lucide-react'
 
 import { MobileSearchDialog } from '@/components/layout/mobile-search-dialog'
 import { NotificationButton } from '@/components/layout/notification-button'
 import { UserButton } from '@/components/auth/user-button'
+import { useLoginPrompt } from '@/components/auth/login-prompt-provider'
 import { useSidebar } from '@/components/layout/sidebar-context'
 import { IconButton, headerIconClass } from '@/components/ui/icon-button'
 import { Logo } from '@/components/ui/logo'
@@ -46,6 +47,7 @@ export function Header({ className }: { className?: string }) {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const { collapsed, mobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar()
   const { isAuthenticated } = useAuth()
+  const { requestLogin } = useLoginPrompt()
   const { data: profile } = useProfileQuery({ enabled: isAuthenticated })
 
   // URL 검색어가 바뀌면 입력창 동기화 (React 권장 derived state 패턴)
@@ -103,7 +105,15 @@ export function Header({ className }: { className?: string }) {
         />
         {isAuthenticated ? (
           <NotificationButton className="sm:hidden" />
-        ) : null}
+        ) : (
+          <IconButton
+            className="sm:hidden"
+            aria-label="Notifications"
+            onClick={() => requestLogin()}
+          >
+            <Bell className={headerIconClass} />
+          </IconButton>
+        )}
 
         {/* 데스크톱: 검색창 + Nex + 알림 + 프로필 */}
         <form onSubmit={handleSearch} className="mr-1 hidden min-w-0 sm:block">
@@ -126,11 +136,29 @@ export function Header({ className }: { className?: string }) {
               {(profile?.token_balance ?? 0).toLocaleString('en-US')}
             </span>
           </Link>
-        ) : null}
+        ) : (
+          <button
+            type="button"
+            onClick={() => requestLogin({ redirectPath: '/nex' })}
+            className="flex h-9 items-center gap-1.5 rounded-full px-2 text-foreground transition-colors hover:bg-muted"
+            aria-label="Top up Nex"
+          >
+            <Gem className="h-4 w-4 text-primary" aria-hidden />
+            <span className="text-sm font-medium tabular-nums">0</span>
+          </button>
+        )}
 
         {isAuthenticated ? (
           <NotificationButton className="hidden sm:block" />
-        ) : null}
+        ) : (
+          <IconButton
+            className="hidden sm:inline-flex"
+            aria-label="Notifications"
+            onClick={() => requestLogin()}
+          >
+            <Bell className={headerIconClass} />
+          </IconButton>
+        )}
 
         <div className="flex shrink-0">
           <UserButton />
