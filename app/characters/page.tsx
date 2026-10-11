@@ -52,7 +52,7 @@ export default function CharactersPage() {
         </nav>
 
         {loading ? (
-          <div className="grid grid-cols-2 gap-x-2 gap-y-10 xs:grid-cols-3 min-[900px]:grid-cols-4">
+          <div className="grid grid-cols-2 gap-x-2 gap-y-10 xs:grid-cols-3 min-[1200px]:grid-cols-4">
             {Array.from({ length: 10 }).map((_, index) => (
               <CharacterCardSkeleton key={index} />
             ))}
@@ -64,7 +64,7 @@ export default function CharactersPage() {
             messageClassName="text-sm"
           />
         ) : (
-          <div className="grid grid-cols-2 gap-x-2 gap-y-10 xs:grid-cols-3 min-[900px]:grid-cols-4">
+          <div className="grid grid-cols-2 gap-x-2 gap-y-10 xs:grid-cols-3 min-[1200px]:grid-cols-4">
             {filteredCharacters.map((character) => (
               <div key={character.id} className="min-w-0">
                 <CharacterGridCard character={character} />
