@@ -3,6 +3,9 @@ import { SUPPORT_EMAIL } from "@/lib/user-settings";
 /** 캐릭터 카드·상세페이지에 표시되는 크리에이터 이름 — 현재 모든 캐릭터가 자체 등록이라 브랜드명으로 고정 */
 export const CHARACTER_CREATOR_LABEL = "whatsnext";
 
+/** 유저 캐릭터 생성 기능 공개 여부 — 공개 준비가 끝나면 true 로 바꾼다 */
+export const CHARACTER_CREATION_ENABLED = false;
+
 /** 푸터 정책 링크 */
 export const SITE_FOOTER_LINKS = [
   { href: "/terms", label: "Terms of Service" },

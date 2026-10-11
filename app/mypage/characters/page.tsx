@@ -10,6 +10,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { PageLoading } from '@/components/ui/page-loading'
 import { PageNavBar } from '@/components/ui/page-nav-bar'
 import { useMyCharactersQuery } from '@/hooks/queries/use-my-characters-query'
+import { CHARACTER_CREATION_ENABLED } from '@/lib/site-config'
 
 export default function MyCharactersPage() {
   const router = useRouter()
@@ -58,7 +59,7 @@ export default function MyCharactersPage() {
               ))
             )}
 
-            {!isPending ? (
+            {!isPending && CHARACTER_CREATION_ENABLED ? (
               <p className="text-center text-xs text-muted-foreground">
                 <Link href="/characters/create" className="underline underline-offset-2">
                   Create a new character

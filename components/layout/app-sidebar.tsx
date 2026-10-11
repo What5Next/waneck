@@ -6,10 +6,10 @@ import { useEffect, useRef } from "react";
 import { Home, LayoutGrid, Plus } from "lucide-react";
 
 import { useSidebar } from "@/components/layout/sidebar-context";
-import { useLoginPrompt } from "@/components/auth/login-prompt-provider";
 import { useAuth } from "@/hooks/use-auth";
 import { useConversationsQuery } from "@/hooks/queries/use-conversations-query";
 import type { RecentConversation } from "@/lib/api/conversations";
+import { CHARACTER_CREATION_ENABLED } from "@/lib/site-config";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -40,7 +40,6 @@ function SidebarNav({
 }) {
   const pathname = usePathname();
   const { isAuthenticated } = useAuth();
-  const { requestLogin } = useLoginPrompt();
   // P4: useEffect fetch 제거 — TanStack Query 캐시 사용
   const {
     data: recentChats = [],
@@ -60,7 +59,10 @@ function SidebarNav({
           collapsed ? "px-2" : "px-3",
         )}
       >
-        {NAV_ITEMS.map((item) => {
+        {NAV_ITEMS.filter(
+          (item) =>
+            CHARACTER_CREATION_ENABLED || item.href !== "/characters/create",
+        ).map((item) => {
           const isActive = item.match(pathname);
           const Icon = item.icon;
 
@@ -68,15 +70,7 @@ function SidebarNav({
             <Link
               key={item.href}
               href={item.href}
-              onClick={(event) => {
-                // 로그인이 필요한 메뉴: 이동 대신 로그인 팝업
-                if (item.href === "/characters/create" && !isAuthenticated) {
-                  event.preventDefault();
-                  requestLogin({ redirectPath: item.href });
-                  return;
-                }
-                onNavigate?.();
-              }}
+              onClick={onNavigate}
               title={collapsed ? item.label : undefined}
               className={cn(
                 "flex items-center rounded-xl py-2.5 text-base font-medium transition-colors",
