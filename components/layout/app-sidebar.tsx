@@ -39,7 +39,7 @@ function SidebarNav({
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
-  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const { isAuthenticated } = useAuth();
   const { requestLogin } = useLoginPrompt();
   // P4: useEffect fetch 제거 — TanStack Query 캐시 사용
   const {
@@ -93,97 +93,93 @@ function SidebarNav({
         })}
       </nav>
 
-      <div className={cn("mt-4 shrink-0 border-t border-border/40", collapsed ? "mx-2" : "mx-3")} />
+      {/* 로그아웃 상태에서는 최근 대화 영역 자체를 숨긴다 */}
+      {isAuthenticated ? (
+        <>
+        <div className={cn("mt-4 shrink-0 border-t border-border/40", collapsed ? "mx-2" : "mx-3")} />
 
-      <div
-        className={cn(
-          "mt-4 flex min-h-0 flex-1 flex-col",
-          collapsed ? "px-2" : "px-3",
-        )}
-      >
         <div
           className={cn(
-            "mb-2 flex items-center",
-            collapsed ? "justify-center px-0" : "px-3",
+            "mt-4 flex min-h-0 flex-1 flex-col",
+            collapsed ? "px-2" : "px-3",
           )}
         >
-          {!collapsed ? (
-            <span className="text-sm font-semibold text-white">
-              Recent chats
-            </span>
-          ) : null}
-        </div>
+          <div
+            className={cn(
+              "mb-2 flex items-center",
+              collapsed ? "justify-center px-0" : "px-3",
+            )}
+          >
+            {!collapsed ? (
+              <span className="text-sm font-semibold text-white">
+                Recent chats
+              </span>
+            ) : null}
+          </div>
 
-        <div className="scroll-hide min-h-0 flex-1 overflow-y-auto">
-          {!collapsed && !isAuthLoading && !isAuthenticated ? (
-            <button
-              type="button"
-              onClick={() => requestLogin()}
-              className="px-3 py-2 text-left text-xs leading-relaxed text-muted-foreground hover:text-foreground"
-            >
-              Sign in to see your recent chats here.
-            </button>
-          ) : !collapsed &&
-            isAuthenticated &&
+          <div className="scroll-hide min-h-0 flex-1 overflow-y-auto">
+            {!collapsed &&
             !isConversationsLoading &&
             visibleRecentChats.length === 0 ? (
-            <p className="px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-              No chats yet.
-            </p>
-          ) : (
-            <ul className="flex flex-col gap-0.5">
-              {visibleRecentChats.map((chat) => {
-                const chatPath = `/chat/${chat.character_id}/${chat.id}`;
-                const isActive = pathname === chatPath;
+              <p className="px-3 py-2 text-xs leading-relaxed text-muted-foreground">
+                No chats yet.
+              </p>
+            ) : (
+              <ul className="flex flex-col gap-0.5">
+                {visibleRecentChats.map((chat) => {
+                  const chatPath = `/chat/${chat.character_id}/${chat.id}`;
+                  const isActive = pathname === chatPath;
 
-                return (
-                  <li key={chat.id}>
-                    <Link
-                      href={chatPath}
-                      onClick={onNavigate}
-                      title={collapsed ? chat.character_name : undefined}
-                      className={cn(
-                        "flex items-center rounded-xl transition-colors",
-                        collapsed
-                          ? "justify-center p-1.5"
-                          : "gap-2.5 px-3 py-2",
-                        isActive
-                          ? "bg-white/10 text-white"
-                          : "text-white/90 hover:bg-muted/50 hover:text-white",
-                      )}
-                    >
-                      {chat.character_image_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={chat.character_image_url}
-                          alt=""
-                          className="h-8 w-8 shrink-0 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold">
-                          {chat.character_name[0]}
-                        </div>
-                      )}
-                      {!collapsed ? (
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium">
-                            {chat.character_name}
-                          </p>
-                          {chat.last_message_preview ? (
-                            <p className="truncate text-xs text-muted-foreground">
-                              {chat.last_message_preview}
+                  return (
+                    <li key={chat.id}>
+                      <Link
+                        href={chatPath}
+                        onClick={onNavigate}
+                        title={collapsed ? chat.character_name : undefined}
+                        className={cn(
+                          "flex items-center rounded-xl transition-colors",
+                          collapsed
+                            ? "justify-center p-1.5"
+                            : "gap-2.5 px-3 py-2",
+                          isActive
+                            ? "bg-white/10 text-white"
+                            : "text-white/90 hover:bg-muted/50 hover:text-white",
+                        )}
+                      >
+                        {chat.character_image_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={chat.character_image_url}
+                            alt=""
+                            className="h-8 w-8 shrink-0 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold">
+                            {chat.character_name[0]}
+                          </div>
+                        )}
+                        {!collapsed ? (
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium">
+                              {chat.character_name}
                             </p>
-                          ) : null}
-                        </div>
-                      ) : null}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+                            {chat.last_message_preview ? (
+                              <p className="truncate text-xs text-muted-foreground">
+                                {chat.last_message_preview}
+                              </p>
+                            ) : null}
+                          </div>
+                        ) : null}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
         </div>
-      </div>
+        </>
+      ) : null}
     </>
   );
 }
