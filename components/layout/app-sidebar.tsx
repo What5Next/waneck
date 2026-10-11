@@ -82,7 +82,7 @@ function SidebarNav({
                 "flex items-center rounded-xl py-2.5 text-base font-medium transition-colors",
                 collapsed ? "justify-center px-0" : "gap-3 px-3",
                 isActive
-                  ? "bg-primary/10 text-primary"
+                  ? "bg-white/10 text-white"
                   : "text-white/90 hover:bg-muted/50 hover:text-white",
               )}
             >

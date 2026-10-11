@@ -72,7 +72,7 @@ export function CharacterGridCard({ character, rank, className }: CharacterGridC
         <p className="line-clamp-1 text-[16px] font-bold text-foreground">{character.name}</p>
         {character.short_intro ? (
           <p className="mt-1.5 line-clamp-2 text-[12px] leading-snug text-muted-foreground">
-            &ldquo;{character.short_intro}&rdquo;
+            {character.short_intro}
           </p>
         ) : null}
         <p className="mt-1.5 line-clamp-1 text-[14px] text-muted-foreground/70">

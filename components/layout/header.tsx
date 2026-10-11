@@ -131,7 +131,7 @@ export function Header({ className }: { className?: string }) {
             className="flex h-9 items-center gap-1.5 rounded-full px-2 text-foreground transition-colors hover:bg-muted"
             aria-label="Top up Nex"
           >
-            <Gem className="h-4 w-4 text-primary" aria-hidden />
+            <Gem className="h-4 w-4 text-muted-foreground" aria-hidden />
             <span className="text-sm font-medium tabular-nums">
               {(profile?.token_balance ?? 0).toLocaleString('en-US')}
             </span>
@@ -143,7 +143,7 @@ export function Header({ className }: { className?: string }) {
             className="flex h-9 items-center gap-1.5 rounded-full px-2 text-foreground transition-colors hover:bg-muted"
             aria-label="Top up Nex"
           >
-            <Gem className="h-4 w-4 text-primary" aria-hidden />
+            <Gem className="h-4 w-4 text-muted-foreground" aria-hidden />
             <span className="text-sm font-medium tabular-nums">0</span>
           </button>
         )}
