@@ -12,7 +12,9 @@ function splitBracketSegments(content: string): MessageSegment[] {
 
   for (const part of content.split(BRACKET_DIALOGUE_RE)) {
     if (/^「[^」]*」$/.test(part)) {
-      segments.push({ type: 'dialogue', text: part })
+      // 괄호는 표시하지 않고 안쪽 대사만 남긴다
+      const text = part.slice(1, -1).trim()
+      if (text) segments.push({ type: 'dialogue', text })
       continue
     }
 

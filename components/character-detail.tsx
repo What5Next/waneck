@@ -9,6 +9,8 @@ import { CharacterThumbnailCard } from "@/components/characters/character-thumbn
 import { CharacterIntroPreview } from "@/components/character-intro-preview";
 import { StartChatButton } from "@/components/start-chat-button";
 import { useCharacterQuery } from "@/hooks/queries/use-character-query";
+import { useUserLabel } from "@/hooks/use-user-label";
+import { fillTemplateVars } from "@/lib/template-vars";
 import { formatCompactCount } from "@/lib/character-display";
 import {
   getCharacterDetailedDescription,
@@ -30,6 +32,9 @@ export function CharacterDetail({
   const { data: liveCharacter } = useCharacterQuery(character.id);
 
   const characterData = liveCharacter ?? character;
+  const userLabel = useUserLabel();
+  const fill = (text: string) =>
+    fillTemplateVars(text, { user: userLabel, char: characterData.name });
 
   const hashtags = getCharacterHashtags(
     characterData.genres,
@@ -68,7 +73,7 @@ export function CharacterDetail({
           </span>
           {characterData.short_intro ? (
             <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-              {characterData.short_intro}
+              {fill(characterData.short_intro)}
             </p>
           ) : null}
           <span className="mt-1.5 inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground">
@@ -110,7 +115,7 @@ export function CharacterDetail({
                 About
               </h3>
               <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
-                {detailedDescription}
+                {fill(detailedDescription)}
               </p>
             </section>
           ) : null}
