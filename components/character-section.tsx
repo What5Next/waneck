@@ -26,7 +26,7 @@ interface CharacterSectionProps {
 }
 
 const CHARACTER_CARD_WIDTH_CLASS =
-  'w-[calc(50%-4px)] shrink-0 xs:w-[calc(33.333%-5.333px)] min-[1100px]:w-[calc(25%-6px)]'
+  'w-[calc(50%-4px)] shrink-0 xs:w-[calc(33.333%-5.333px)] min-[1000px]:w-[calc(25%-6px)]'
 
 function HorizontalSlider({
   characters,
@@ -172,7 +172,7 @@ export function CharacterSection({
           emptyMessage={emptyMessage}
         />
       ) : loading ? (
-        <div className="grid grid-cols-2 gap-x-2 gap-y-10 px-4 xs:grid-cols-3 sm:px-6 min-[1100px]:grid-cols-4 lg:px-8">
+        <div className="grid grid-cols-2 gap-x-2 gap-y-10 px-4 xs:grid-cols-3 sm:px-6 min-[1000px]:grid-cols-4 lg:px-8">
           {Array.from({ length: 6 }).map((_, index) => (
             <CharacterCardSkeleton key={index} />
           ))}
@@ -185,7 +185,7 @@ export function CharacterSection({
           />
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-x-2 gap-y-10 px-4 xs:grid-cols-3 sm:px-6 min-[1100px]:grid-cols-4 lg:px-8">
+        <div className="grid grid-cols-2 gap-x-2 gap-y-10 px-4 xs:grid-cols-3 sm:px-6 min-[1000px]:grid-cols-4 lg:px-8">
           {characters.map((character, index) => (
             <CharacterGridCard
               key={character.id}
