@@ -1,59 +1,51 @@
-/** 홈 카테고리·캐릭터 생성·유사도 추천 공용 genre 목록 */
+/**
+ * 캐릭터 장르 — 한 캐릭터가 여러 개에 속할 수 있다.
+ * characters.genres 에 이 값 그대로(영문 라벨) 저장한다.
+ */
 export const CHARACTER_GENRE_OPTIONS = [
-  '로맨스',
-  '판타지',
-  '시뮬레이션',
-  'GL',
-  'BL',
+  'Romance',
+  'Fantasy',
+  'Thriller',
+  'Rom-Com',
+  'Drama',
+  'Slice of Life',
 ] as const
 
 export type CharacterGenre = (typeof CHARACTER_GENRE_OPTIONS)[number]
 
-const GENRE_SET = new Set<string>(CHARACTER_GENRE_OPTIONS)
+const GENRE_BY_LOWER = new Map<string, CharacterGenre>(
+  CHARACTER_GENRE_OPTIONS.map((genre) => [genre.toLowerCase(), genre]),
+)
 
-/** 허용 genre만 필터·중복 제거 */
+/** 허용 장르만 필터·중복 제거 (대소문자 무시, 표준 표기로 정규화) */
 export function normalizeCharacterGenres(genres: unknown): string[] {
   if (!Array.isArray(genres)) return []
 
   const normalized: string[] = []
   for (const genre of genres) {
     if (typeof genre !== 'string') continue
-    const trimmed = genre.trim()
-    if (!trimmed || !GENRE_SET.has(trimmed)) continue
-    if (!normalized.includes(trimmed)) normalized.push(trimmed)
+    const canonical = GENRE_BY_LOWER.get(genre.trim().toLowerCase())
+    if (canonical && !normalized.includes(canonical)) normalized.push(canonical)
   }
 
   return normalized
 }
 
-/** 홈 카테고리 영어 라벨 (표시용) */
-export const HOME_CATEGORY_LABELS = {
+/** 홈 카테고리 표시 라벨 — 장르 값이 곧 라벨이다 */
+export const HOME_CATEGORY_LABELS = Object.fromEntries(
+  CHARACTER_GENRE_OPTIONS.map((genre) => [genre, genre]),
+) as Record<CharacterGenre, string>
+
+/** 장르 개편 전 값 → 새 라벨 (DB 가 아직 옛 값일 때를 위한 호환) */
+const LEGACY_LABELS: Record<string, string> = {
   로맨스: 'Romance',
   판타지: 'Fantasy',
-  시뮬레이션: 'Simulation',
-  GL: 'GL',
-  BL: 'BL',
-} as const satisfies Record<CharacterGenre, string>
-
-/** 홈 카테고리와 무관한 자유 태그(무드·말투 등)를 가장 가까운 카테고리로 매핑 */
-const FALLBACK_CATEGORY_MAP: Record<string, string> = {
-  romance: 'Romance',
-  emotional: 'Romance',
-  fantasy: 'Fantasy',
-  simulation: 'Simulation',
-  humor: 'Simulation',
-  유머: 'Simulation',
-  direct: 'Simulation',
-  gl: 'GL',
-  bl: 'BL',
 }
 
-/** 캐릭터의 genre/tag 원문(한글·영문 혼용)을 홈 카테고리 영어 라벨로 정규화 */
+/** 카테고리 원문을 표시 라벨로 정규화. 알 수 없는 값(옛 태그 등)은 그대로 돌려준다 */
 export function toHomeCategoryLabel(rawLabel: string): string {
   const trimmed = rawLabel.trim()
-  const key = trimmed as CharacterGenre
-  if (key in HOME_CATEGORY_LABELS) return HOME_CATEGORY_LABELS[key]
-
-  const lower = trimmed.toLowerCase()
-  return FALLBACK_CATEGORY_MAP[lower] ?? 'Simulation'
+  return (
+    GENRE_BY_LOWER.get(trimmed.toLowerCase()) ?? LEGACY_LABELS[trimmed] ?? trimmed
+  )
 }

@@ -3,12 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { Home, LayoutGrid, Plus } from "lucide-react";
+import { Gem, Home, LayoutGrid, LogIn, Plus } from "lucide-react";
 
+import { useLoginPrompt } from "@/components/auth/login-prompt-provider";
 import { useSidebar } from "@/components/layout/sidebar-context";
 import { useAuth } from "@/hooks/use-auth";
 import { useConversationsQuery } from "@/hooks/queries/use-conversations-query";
 import type { RecentConversation } from "@/lib/api/conversations";
+import { SIGNUP_BONUS_NEX } from "@/lib/nex-shop";
+import { CHARACTER_CREATION_ENABLED } from "@/lib/site-config";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -39,6 +42,7 @@ function SidebarNav({
 }) {
   const pathname = usePathname();
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const { requestLogin } = useLoginPrompt();
   // P4: useEffect fetch 제거 — TanStack Query 캐시 사용
   const {
     data: recentChats = [],
@@ -58,7 +62,10 @@ function SidebarNav({
           collapsed ? "px-2" : "px-3",
         )}
       >
-        {NAV_ITEMS.map((item) => {
+        {NAV_ITEMS.filter(
+          (item) =>
+            CHARACTER_CREATION_ENABLED || item.href !== "/characters/create",
+        ).map((item) => {
           const isActive = item.match(pathname);
           const Icon = item.icon;
 
@@ -72,7 +79,7 @@ function SidebarNav({
                 "flex items-center rounded-xl py-2.5 text-base font-medium transition-colors",
                 collapsed ? "justify-center px-0" : "gap-3 px-3",
                 isActive
-                  ? "bg-primary/10 text-primary"
+                  ? "bg-white/10 text-white"
                   : "text-white/90 hover:bg-muted/50 hover:text-white",
               )}
             >
@@ -83,93 +90,139 @@ function SidebarNav({
         })}
       </nav>
 
-      <div className={cn("mt-4 shrink-0 border-t border-border/40", collapsed ? "mx-2" : "mx-3")} />
+      {/* 로그아웃 상태: Explore 아래 구분선 + 가입 유도 카드 (최근 대화 영역 대신) */}
+      {!isAuthLoading && !isAuthenticated ? (
+        <>
+          <div
+            className={cn(
+              "mt-4 shrink-0 border-t border-border/40",
+              collapsed ? "mx-2" : "mx-3",
+            )}
+          />
+          {collapsed ? (
+            <button
+              type="button"
+              onClick={() => requestLogin()}
+              title={`Sign up and get ${SIGNUP_BONUS_NEX} Nex!`}
+              aria-label="Sign up"
+              className="mx-2 mt-4 flex shrink-0 items-center justify-center rounded-xl py-2.5 text-white/90 transition-colors hover:bg-muted/50 hover:text-white"
+            >
+              <Gem className="h-[18px] w-[18px]" aria-hidden />
+            </button>
+          ) : (
+            <div className="mx-3 mt-4 shrink-0">
+              {/* 메뉴 항목과 같은 틀의 가입 버튼 (왼쪽 정렬) */}
+              <button
+                type="button"
+                onClick={() => requestLogin()}
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-base font-medium text-white/90 transition-colors hover:bg-muted/50 hover:text-white"
+              >
+                <LogIn className="h-[18px] w-[18px] shrink-0" aria-hidden />
+                Sign up
+              </button>
+              {/* 가입 혜택 말풍선 — 화살표가 Sign up 버튼을 가리킨다 */}
+              <div
+                role="note"
+                className="relative ml-3 mt-1.5 w-fit max-w-full rounded-md bg-white px-3.5 py-1 text-left text-[13px] font-medium leading-5 text-neutral-900 shadow-md"
+              >
+                <span
+                  aria-hidden
+                  className="absolute -top-1 left-4 h-2.5 w-2.5 rotate-45 rounded-[2px] bg-white"
+                />
+                Sign up and get {SIGNUP_BONUS_NEX} Nex!
+              </div>
+            </div>
+          )}
+        </>
+      ) : null}
 
-      <div
-        className={cn(
-          "mt-4 flex min-h-0 flex-1 flex-col",
-          collapsed ? "px-2" : "px-3",
-        )}
-      >
+      {/* 로그아웃 상태에서는 최근 대화 영역 자체를 숨긴다 */}
+      {isAuthenticated ? (
+        <>
+        <div className={cn("mt-4 shrink-0 border-t border-border/40", collapsed ? "mx-2" : "mx-3")} />
+
         <div
           className={cn(
-            "mb-2 flex items-center",
-            collapsed ? "justify-center px-0" : "px-3",
+            "mt-4 flex min-h-0 flex-1 flex-col",
+            collapsed ? "px-2" : "px-3",
           )}
         >
-          {!collapsed ? (
-            <span className="text-sm font-semibold text-white">
-              Recent chats
-            </span>
-          ) : null}
-        </div>
+          <div
+            className={cn(
+              "mb-2 flex items-center",
+              collapsed ? "justify-center px-0" : "px-3",
+            )}
+          >
+            {!collapsed ? (
+              <span className="text-sm font-semibold text-white">
+                Recent chats
+              </span>
+            ) : null}
+          </div>
 
-        <div className="scroll-hide min-h-0 flex-1 overflow-y-auto">
-          {!collapsed && !isAuthLoading && !isAuthenticated ? (
-            <p className="px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-              Sign in to see your recent chats here.
-            </p>
-          ) : !collapsed &&
-            isAuthenticated &&
+          <div className="scroll-hide min-h-0 flex-1 overflow-y-auto">
+            {!collapsed &&
             !isConversationsLoading &&
             visibleRecentChats.length === 0 ? (
-            <p className="px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-              No chats yet.
-            </p>
-          ) : (
-            <ul className="flex flex-col gap-0.5">
-              {visibleRecentChats.map((chat) => {
-                const chatPath = `/chat/${chat.character_id}/${chat.id}`;
-                const isActive = pathname === chatPath;
+              <p className="px-3 py-2 text-xs leading-relaxed text-muted-foreground">
+                No chats yet.
+              </p>
+            ) : (
+              <ul className="flex flex-col gap-0.5">
+                {visibleRecentChats.map((chat) => {
+                  const chatPath = `/chat/${chat.character_id}/${chat.id}`;
+                  const isActive = pathname === chatPath;
 
-                return (
-                  <li key={chat.id}>
-                    <Link
-                      href={chatPath}
-                      onClick={onNavigate}
-                      title={collapsed ? chat.character_name : undefined}
-                      className={cn(
-                        "flex items-center rounded-xl transition-colors",
-                        collapsed
-                          ? "justify-center p-1.5"
-                          : "gap-2.5 px-3 py-2",
-                        isActive
-                          ? "bg-white/10 text-white"
-                          : "text-white/90 hover:bg-muted/50 hover:text-white",
-                      )}
-                    >
-                      {chat.character_image_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={chat.character_image_url}
-                          alt=""
-                          className="h-8 w-8 shrink-0 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold">
-                          {chat.character_name[0]}
-                        </div>
-                      )}
-                      {!collapsed ? (
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium">
-                            {chat.character_name}
-                          </p>
-                          {chat.last_message_preview ? (
-                            <p className="truncate text-xs text-muted-foreground">
-                              {chat.last_message_preview}
+                  return (
+                    <li key={chat.id}>
+                      <Link
+                        href={chatPath}
+                        onClick={onNavigate}
+                        title={collapsed ? chat.character_name : undefined}
+                        className={cn(
+                          "flex items-center rounded-xl transition-colors",
+                          collapsed
+                            ? "justify-center p-1.5"
+                            : "gap-2.5 px-3 py-2",
+                          isActive
+                            ? "bg-white/10 text-white"
+                            : "text-white/90 hover:bg-muted/50 hover:text-white",
+                        )}
+                      >
+                        {chat.character_image_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={chat.character_image_url}
+                            alt=""
+                            className="h-8 w-8 shrink-0 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold">
+                            {chat.character_name[0]}
+                          </div>
+                        )}
+                        {!collapsed ? (
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium">
+                              {chat.character_name}
                             </p>
-                          ) : null}
-                        </div>
-                      ) : null}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+                            {chat.last_message_preview ? (
+                              <p className="truncate text-xs text-muted-foreground">
+                                {chat.last_message_preview}
+                              </p>
+                            ) : null}
+                          </div>
+                        ) : null}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
         </div>
-      </div>
+        </>
+      ) : null}
     </>
   );
 }

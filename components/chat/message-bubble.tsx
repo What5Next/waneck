@@ -1,6 +1,10 @@
+'use client'
+
 import type { ReactNode } from 'react'
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { useUserLabel } from '@/hooks/use-user-label'
+import { fillTemplateVars } from '@/lib/template-vars'
 import { cn } from '@/lib/utils'
 import type { Character } from '@/lib/types'
 import { splitMessageSegments, type MessageSegment } from '@/lib/chat-message-segments'
@@ -39,6 +43,9 @@ export function MessageBubble({
   showAvatar = true,
   timestamp,
 }: MessageBubbleProps) {
+  const userLabel = useUserLabel()
+  content = fillTemplateVars(content, { user: userLabel, char: character?.name })
+
   if (role === 'user') {
     return (
       <div className="flex w-full flex-col items-end gap-1">
@@ -70,7 +77,7 @@ export function MessageBubble({
               <img
                 src={character.profile_image_url}
                 alt={character.name}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-cover object-[center_15%]"
               />
             ) : (
               character?.name[0] ?? 'AI'

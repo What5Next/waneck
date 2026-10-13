@@ -1,4 +1,4 @@
-import { toHomeCategoryLabel } from '@/lib/character-genres'
+import { CHARACTER_GENRE_OPTIONS, toHomeCategoryLabel } from '@/lib/character-genres'
 import type { Character } from '@/lib/types'
 
 export const SORT_OPTIONS = [
@@ -52,14 +52,6 @@ export function filterBySearch(characters: Character[], search: string): Charact
   )
 }
 
-const HOME_CATEGORY_GENRES = new Set([
-  '로맨스',
-  '판타지',
-  '시뮬레이션',
-  'GL',
-  'BL',
-])
-
 export type HomeCategory = {
   id: string
   label: string
@@ -67,29 +59,18 @@ export type HomeCategory = {
 
 export const HOME_CATEGORIES: HomeCategory[] = [
   { id: 'for-you', label: 'For You' },
-  { id: '로맨스', label: 'Romance' },
-  { id: '판타지', label: 'Fantasy' },
-  { id: '시뮬레이션', label: 'Simulation' },
-  { id: 'GL', label: 'GL' },
-  { id: 'BL', label: 'BL' },
+  ...CHARACTER_GENRE_OPTIONS.map((genre) => ({ id: genre, label: genre })),
 ]
 
 export function filterByHomeCategory(
   characters: Character[],
   category: string,
 ): Character[] {
-  if (!HOME_CATEGORY_GENRES.has(category)) return characters
+  if (category === 'for-you') return characters
 
-  const targetLabel = toHomeCategoryLabel(category)
+  const target = toHomeCategoryLabel(category)
 
-  return characters.filter((character) => {
-    const genreMatch = character.genres.some(
-      (item) => item.toLowerCase() === category.toLowerCase(),
-    )
-    if (genreMatch) return true
-
-    // genres가 비어 있는 캐릭터가 많아 tag(무드/장르 자유 태그)도 같은 카테고리로 정규화해 매칭
-    const tag = character.tag?.trim()
-    return !!tag && toHomeCategoryLabel(tag) === targetLabel
-  })
+  return characters.filter((character) =>
+    character.genres.some((item) => toHomeCategoryLabel(item) === target),
+  )
 }

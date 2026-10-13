@@ -13,10 +13,12 @@ export function LoginModal({
   open,
   onOpenChange,
   redirectPath,
+  description = 'A new way to stay immersed',
 }: {
   open: boolean
   onOpenChange: (v: boolean) => void
   redirectPath?: string
+  description?: string
 }) {
   function getCallbackUrl() {
     return redirectPath
@@ -46,7 +48,7 @@ export function LoginModal({
         <DialogHeader>
           <span className="text-4xl">💬</span>
           <DialogTitle className="sr-only">Sign in</DialogTitle>
-          <DialogDescription>A new way to stay immersed</DialogDescription>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 
         <button

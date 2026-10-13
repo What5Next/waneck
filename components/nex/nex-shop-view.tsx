@@ -246,7 +246,9 @@ export function NexShopView() {
             ) : (
               <div
                 ref={paypalButtonsRef}
-                className="overflow-hidden rounded-lg bg-card"
+                // 다크 테마 페이지 안의 PayPal iframe(라이트 문서)은 color-scheme 이 달라
+                // 브라우저가 불투명한 흰 배경을 깐다 → 컨테이너를 light 로 맞춰 투명하게 만든다
+                className="overflow-hidden rounded-lg bg-card [color-scheme:light]"
               />
             )}
           </div>

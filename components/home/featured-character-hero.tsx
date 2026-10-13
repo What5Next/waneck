@@ -22,7 +22,7 @@ function FeaturedCharacterSlide({ character, className, pageLabel, isActive }: F
       className={cn("block aspect-square w-full cursor-pointer overflow-hidden rounded-2xl", className)}
     >
       <div
-        className="relative h-full w-full bg-cover bg-center"
+        className="relative h-full w-full bg-cover bg-[position:center_15%]"
         style={{
           backgroundImage: character.profile_image_url
             ? `url(${character.profile_image_url})`
@@ -155,18 +155,22 @@ export function FeaturedCharacterHero({ characters }: FeaturedCharacterHeroProps
     );
   }
 
+  // 1200px 미만: 가운데 카드는 컨테이너 폭의 70%(최소 240px, 최대 410px)로 부드럽게 변하고,
+  //   양옆 여백은 같은 값에서 계산해 가운데 카드가 항상 정중앙에 온다.
+  // 1200px 이상: 원래 모양(가운데 카드 68%, 양옆 여백 16%, 카드 간격 12px) — 410px 안팎으로 위와 이어진다.
   return (
-    <div className="relative px-4 sm:px-6 lg:px-8">
+    <div className="px-4 sm:px-6 lg:px-8">
+     <div className="@container relative">
       <div
         ref={scrollerRef}
         onScroll={handleScroll}
-        className="scroll-hide flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth px-[16%]"
+        className="scroll-hide flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-[calc((100cqw-clamp(240px,70cqw,410px))/2)] min-[1200px]:gap-3 min-[1200px]:px-[16%]"
       >
         {loopedCharacters.map((character, index) => (
           <FeaturedCharacterSlide
             key={`${character.id}-${index}`}
             character={character}
-            className="w-[68%] shrink-0 snap-center"
+            className="w-[clamp(240px,70cqw,410px)] shrink-0 snap-center min-[1200px]:w-[68%]"
             isActive={index - 1 === activeIndex}
             pageLabel={index - 1 === activeIndex ? `${activeIndex + 1}/${total}` : undefined}
           />
@@ -177,7 +181,7 @@ export function FeaturedCharacterHero({ characters }: FeaturedCharacterHeroProps
         variant="floating"
         size="sm"
         onClick={() => goTo(-1)}
-        className="absolute left-6 top-1/2 z-10 -translate-y-1/2 sm:left-8 lg:left-10"
+        className="absolute left-3 top-1/2 z-10 -translate-y-1/2"
         aria-label="Previous"
       >
         <ChevronLeft />
@@ -186,11 +190,12 @@ export function FeaturedCharacterHero({ characters }: FeaturedCharacterHeroProps
         variant="floating"
         size="sm"
         onClick={() => goTo(1)}
-        className="absolute right-6 top-1/2 z-10 -translate-y-1/2 sm:right-8 lg:right-10"
+        className="absolute right-3 top-1/2 z-10 -translate-y-1/2"
         aria-label="Next"
       >
         <ChevronRight />
       </IconButton>
+     </div>
     </div>
   );
 }

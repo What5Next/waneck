@@ -76,20 +76,12 @@ export function CharacterThumbnailCard({
     >
       {imageUrl ? (
         <>
-          {/* object-contain 여백: 같은 이미지를 블러 처리해 채움 */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={imageUrl}
-            alt=""
-            aria-hidden
-            className="absolute inset-0 h-full w-full scale-110 object-cover blur-2xl brightness-[0.65] saturate-150"
-          />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageUrl}
             alt={name}
             className={cn(
-              'relative z-1 h-full w-full object-contain',
+              'h-full w-full object-cover object-[center_15%]',
               interactive &&
                 'transition-transform duration-300 group-hover:scale-105',
             )}
