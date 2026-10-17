@@ -97,10 +97,10 @@ export function CharacterCreatePreview({
                 <User className="h-12 w-12 text-muted-foreground/50" aria-hidden />
               )}
             </div>
-            <h3 className={cn('mt-5 text-lg font-semibold', name.trim() ? 'text-foreground' : 'text-muted-foreground')}>
+            <h3 className={cn('mt-5 text-sm font-semibold leading-snug', name.trim() ? 'text-foreground' : 'text-muted-foreground')}>
               {previewName}
             </h3>
-            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
               {tagline.trim() || t('Your one-line introduction appears here.')}
             </p>
             {mood.trim() ? <p className="mt-3 text-xs text-muted-foreground">{mood}</p> : null}
@@ -114,7 +114,7 @@ export function CharacterCreatePreview({
             {description.trim() ? (
               <div className="mt-5 border-t border-border pt-4">
                 <h4 className="text-sm font-semibold text-foreground">{t('About')}</h4>
-                <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">{description}</p>
+                <p className="mt-2 whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground">{description}</p>
               </div>
             ) : null}
           </div>
