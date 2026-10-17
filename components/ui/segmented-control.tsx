@@ -25,6 +25,7 @@ export interface SegmentedControlProps<T extends string> {
   columns?: number
   iconOnly?: boolean
   className?: string
+  itemClassName?: string
   'aria-label': string
 }
 
@@ -54,6 +55,7 @@ export function SegmentedControl<T extends string>({
   columns,
   iconOnly = false,
   className,
+  itemClassName,
   'aria-label': ariaLabel,
 }: SegmentedControlProps<T>) {
   const trackHeight = size === 'md' ? 'h-9' : 'h-8'
@@ -82,7 +84,6 @@ export function SegmentedControl<T extends string>({
             role="tab"
             aria-selected={isActive}
             aria-label={option['aria-label']}
-            aria-pressed={iconOnly ? isActive : undefined}
             onClick={() => onValueChange(option.value)}
             className={cn(
               'flex items-center justify-center font-medium whitespace-nowrap transition-all',
@@ -98,6 +99,7 @@ export function SegmentedControl<T extends string>({
               isActive
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground',
+              itemClassName,
             )}
           >
             {Icon ? (

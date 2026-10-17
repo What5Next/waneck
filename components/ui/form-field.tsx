@@ -2,10 +2,12 @@ import type { ReactNode } from 'react'
 
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { settingsFieldClassName, settingsTextareaClassName } from '@/components/default-settings/settings-field-classes'
+import { cn } from '@/lib/utils'
 
 export function Label({ children, required }: { children: string; required?: boolean }) {
   return (
-    <p className="mb-1.5 text-sm font-medium text-foreground">
+    <p className="mb-1.5 text-sm font-semibold text-foreground">
       {children}
       {required && <span className="ml-0.5 text-destructive">*</span>}
     </p>
@@ -24,7 +26,7 @@ export function Field({
   children: ReactNode
 }) {
   return (
-    <div className="flex flex-col gap-0">
+    <div className="flex min-w-0 flex-col">
       <Label required={required}>{label}</Label>
       {hint && <p className="mb-2 text-xs text-muted-foreground">{hint}</p>}
       {children}
@@ -50,9 +52,10 @@ export function TextInput({
         onChange={(event) => onChange(event.target.value)}
         maxLength={maxLength}
         placeholder={placeholder}
+        className={cn(settingsFieldClassName, maxLength !== undefined && 'pr-16')}
       />
       {maxLength !== undefined ? (
-        <span className="pointer-events-none absolute bottom-3 right-4 text-xs text-muted-foreground">
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
           {value.length}/{maxLength}
         </span>
       ) : null}
@@ -77,14 +80,19 @@ export function TextArea({
     <div className="relative">
       <Textarea
         value={value}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={(event) => onChange(event.target.value.slice(0, maxLength))}
         maxLength={maxLength}
         placeholder={placeholder}
         rows={rows}
+        className={cn(
+          settingsTextareaClassName,
+          'scroll-thumb-only max-h-52 overflow-y-auto',
+          maxLength !== undefined && 'pb-8',
+        )}
       />
       {maxLength !== undefined ? (
-        <span className="pointer-events-none absolute bottom-3 right-4 text-xs text-muted-foreground">
-          {value.length}/{maxLength}
+        <span className="pointer-events-none absolute bottom-3 right-3 text-[11px] tabular-nums text-muted-foreground/70">
+          {value.length.toLocaleString('en-US')}/{maxLength.toLocaleString('en-US')}
         </span>
       ) : null}
     </div>

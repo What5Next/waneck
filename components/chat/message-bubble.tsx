@@ -30,7 +30,7 @@ export type MessageBubbleProps = {
   role: 'user' | 'model'
   content: string
   isLoading?: boolean
-  character?: Character
+  character?: Pick<Character, 'name' | 'profile_image_url'>
   showAvatar?: boolean
   timestamp?: string
 }
@@ -48,7 +48,7 @@ export function MessageBubble({
 
   if (role === 'user') {
     return (
-      <div className="flex w-full flex-col items-end gap-1">
+      <div data-dev-language-ignore className="flex w-full flex-col items-end gap-1">
         <div className="max-w-[80%] rounded-2xl rounded-br-sm bg-primary px-4 py-2.5 text-[16px] leading-relaxed text-primary-foreground shadow-sm">
           {renderActions(content, 'italic text-primary-foreground/60')}
         </div>
@@ -68,7 +68,7 @@ export function MessageBubble({
         : []
 
   return (
-    <div className="flex w-full items-start gap-2">
+    <div data-dev-language-ignore className="flex w-full items-start gap-2">
       {showAvatar ? (
         <Avatar className="h-8 w-8 shrink-0 border border-border shadow-sm">
           <AvatarFallback className="bg-muted text-base">

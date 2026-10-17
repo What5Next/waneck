@@ -12,15 +12,20 @@ import { AuthProvider } from '@/app/providers/auth-provider'
 import { LoginPromptProvider } from '@/components/auth/login-prompt-provider'
 import { QueryProvider } from '@/app/providers/query-provider'
 import { ThemeProvider } from '@/app/providers/theme-provider'
+import { DevLanguageProvider } from '@/components/dev-language-provider'
+import { DevUiTranslator } from '@/components/dev-ui-translator'
 
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider>
-      <QueryProvider>
-        <AuthProvider>
-          <LoginPromptProvider>{children}</LoginPromptProvider>
-        </AuthProvider>
-      </QueryProvider>
+      <DevLanguageProvider>
+        <DevUiTranslator />
+        <QueryProvider>
+          <AuthProvider>
+            <LoginPromptProvider>{children}</LoginPromptProvider>
+          </AuthProvider>
+        </QueryProvider>
+      </DevLanguageProvider>
     </ThemeProvider>
   )
 }

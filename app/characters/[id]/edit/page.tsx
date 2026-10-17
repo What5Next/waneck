@@ -34,14 +34,14 @@ export default function EditCharacterPage({
 
   if (isPending || profilePending || !character || !profile || !isOwner) {
     return (
-      <MobileShell>
+      <MobileShell className="max-w-[1440px]">
         <PageLoading />
       </MobileShell>
     )
   }
 
   return (
-    <MobileShell>
+    <MobileShell className="max-w-[1440px]">
       <CharacterCreateForm mode="edit" characterId={id} initialData={character} />
     </MobileShell>
   )

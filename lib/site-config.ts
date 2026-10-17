@@ -4,7 +4,7 @@ import { SUPPORT_EMAIL } from "@/lib/user-settings";
 export const CHARACTER_CREATOR_LABEL = "whatsnext";
 
 /** 유저 캐릭터 생성 기능 공개 여부 — 공개 준비가 끝나면 true 로 바꾼다 */
-export const CHARACTER_CREATION_ENABLED = false;
+export const CHARACTER_CREATION_ENABLED = process.env.NODE_ENV === "development";
 
 /** 푸터 정책 링크 */
 export const SITE_FOOTER_LINKS = [

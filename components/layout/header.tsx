@@ -13,6 +13,8 @@ import { useSidebar } from '@/components/layout/sidebar-context'
 import { IconButton, headerIconClass } from '@/components/ui/icon-button'
 import { Logo } from '@/components/ui/logo'
 import { SearchInput } from '@/components/ui/search-input'
+import { InputDropdown } from '@/components/ui/input-dropdown'
+import { DEV_LANGUAGE_SELECTOR_ENABLED, useDevLanguage } from '@/components/dev-language-provider'
 import { useProfileQuery } from '@/hooks/queries/use-profile-query'
 import { useAuth } from '@/hooks/use-auth'
 import { cn } from '@/lib/utils'
@@ -49,6 +51,7 @@ export function Header({ className }: { className?: string }) {
   const { isAuthenticated } = useAuth()
   const { requestLogin } = useLoginPrompt()
   const { data: profile } = useProfileQuery({ enabled: isAuthenticated })
+  const { language, setLanguage } = useDevLanguage()
 
   // URL 검색어가 바뀌면 입력창 동기화 (React 권장 derived state 패턴)
   if (committedUrlQuery !== urlQuery) {
@@ -92,6 +95,12 @@ export function Header({ className }: { className?: string }) {
 
       <div className="ml-auto flex min-w-0 items-center gap-1">
         {/* 모바일: 검색 + 알림 */}
+        {DEV_LANGUAGE_SELECTOR_ENABLED ? (
+          <InputDropdown value={language} onValueChange={setLanguage} variant="pill"
+            options={[{ value: 'ko', label: '한국어' }, { value: 'en', label: 'English' }]}
+            aria-label="Development language" className="mr-1 sm:hidden"
+            triggerClassName="border-0 bg-transparent px-1.5 text-foreground hover:bg-transparent" />
+        ) : null}
         <IconButton
           onClick={() => setMobileSearchOpen(true)}
           className="sm:hidden"
@@ -116,6 +125,12 @@ export function Header({ className }: { className?: string }) {
         )}
 
         {/* 데스크톱: 검색창 + Nex + 알림 + 프로필 */}
+        {DEV_LANGUAGE_SELECTOR_ENABLED ? (
+          <InputDropdown value={language} onValueChange={setLanguage} variant="pill"
+            options={[{ value: 'ko', label: '한국어' }, { value: 'en', label: 'English' }]}
+            aria-label="Development language" className="mr-1 hidden sm:inline-flex"
+            triggerClassName="border-0 bg-transparent px-1.5 text-foreground hover:bg-transparent" />
+        ) : null}
         <form onSubmit={handleSearch} className="mr-1 hidden min-w-0 sm:block">
           <SearchInput
             value={query}

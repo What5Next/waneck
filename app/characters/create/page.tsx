@@ -15,7 +15,7 @@ export default async function CreateCharacterPage() {
   if (!user) redirect("/");
 
   return (
-    <MobileShell>
+    <MobileShell className="max-w-[1440px]">
       <CharacterCreateForm />
     </MobileShell>
   );
