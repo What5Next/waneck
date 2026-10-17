@@ -81,7 +81,6 @@ export function CharacterCreatePreview({
           layout="equal"
           columns={3}
           className="w-full"
-          itemClassName="min-w-0 w-full text-center [&>span]:w-full"
           aria-label={t('Preview sections')}
         />
       </div>

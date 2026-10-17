@@ -25,7 +25,6 @@ export interface SegmentedControlProps<T extends string> {
   columns?: number
   iconOnly?: boolean
   className?: string
-  itemClassName?: string
   'aria-label': string
 }
 
@@ -55,7 +54,6 @@ export function SegmentedControl<T extends string>({
   columns,
   iconOnly = false,
   className,
-  itemClassName,
   'aria-label': ariaLabel,
 }: SegmentedControlProps<T>) {
   const trackHeight = size === 'md' ? 'h-9' : 'h-8'
@@ -67,7 +65,7 @@ export function SegmentedControl<T extends string>({
       className={cn(
         'shrink-0 gap-1 bg-muted/30 p-1',
         columns !== undefined ? columnClass[columns] : 'flex w-fit',
-        trackHeight,
+        columns !== undefined ? 'h-auto min-h-9 min-w-0' : trackHeight,
         trackShapeClass[shape],
         layout === 'equal' && 'w-full',
         className,
@@ -86,21 +84,25 @@ export function SegmentedControl<T extends string>({
             aria-label={option['aria-label']}
             onClick={() => onValueChange(option.value)}
             className={cn(
-              'flex items-center justify-center font-medium whitespace-nowrap transition-all',
+              'flex items-center justify-center font-medium transition-all',
+              columns !== undefined
+                ? 'min-h-9 min-w-0 w-full whitespace-normal text-center'
+                : 'whitespace-nowrap',
               segmentShapeClass[shape],
-              layout === 'equal' && 'flex-1',
+              layout === 'equal' && columns === undefined && 'flex-1',
               iconOnly
                 ? cn('size-6', size === 'md' && 'size-7')
                 : cn(
                     shape === 'pill'
                       ? 'gap-1.5 px-2 py-1.5 text-[12px]'
-                      : 'px-2 py-2 text-sm',
+                      : columns !== undefined
+                        ? 'px-1 py-2 text-xs'
+                        : 'px-2 py-2 text-sm',
                   ),
               isActive
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground',
-              itemClassName,
-            )}
+                        )}
           >
             {Icon ? (
               <Icon
@@ -109,7 +111,7 @@ export function SegmentedControl<T extends string>({
               />
             ) : null}
             {!iconOnly ? (
-              <span className={Icon ? 'leading-none' : undefined}>{option.label}</span>
+              <span className={cn(columns !== undefined && 'min-w-0 w-full text-center leading-tight', Icon && 'leading-none')}>{option.label}</span>
             ) : null}
           </button>
         )
