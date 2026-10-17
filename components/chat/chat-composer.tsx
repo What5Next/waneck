@@ -21,8 +21,6 @@ export type ChatComposerProps = {
   model: ModelId;
   onModelChange: (model: ModelId) => void;
   showModelSelector?: boolean;
-  /** 캐릭터 추천 대화 — 채팅창 안에 칩으로 표시 */
-  suggestions?: string[];
   /** Suggested Response 버튼 — 클릭 시 채팅 하단에 추천 답변 3개 요청 */
   onRequestSuggestions?: () => void;
   isFetchingSuggestions?: boolean;
@@ -39,17 +37,12 @@ export function ChatComposer({
   model,
   onModelChange,
   showModelSelector = true,
-  suggestions = [],
   onRequestSuggestions,
   isFetchingSuggestions = false,
   onAutoPlay,
   isAutoPlaying = false,
 }: ChatComposerProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  const recommendedReplies = suggestions.filter(
-    (text) => text.trim().length > 0,
-  );
 
   useEffect(() => {
     const el = textareaRef.current;
@@ -93,11 +86,6 @@ export function ChatComposer({
     });
   }
 
-  function applyRecommendedReply(text: string) {
-    onChange(text);
-    requestAnimationFrame(() => textareaRef.current?.focus());
-  }
-
   const hasText = value.trim().length > 0;
   const canSend = !disabled && hasText;
   const canAutoPlay = !disabled && !isAutoPlaying;
@@ -110,22 +98,6 @@ export function ChatComposer({
       className="relative z-10 shrink-0 bg-background"
     >
       <div className="px-3 pb-4 pt-3">
-        {recommendedReplies.length > 0 ? (
-          <div className="mx-auto mb-2 flex w-full max-w-[46rem] gap-1.5 overflow-x-auto scroll-hide">
-            {recommendedReplies.map((reply, index) => (
-              <button
-                key={`${reply}-${index}`}
-                type="button"
-                disabled={disabled}
-                onClick={() => applyRecommendedReply(reply)}
-                className="shrink-0 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {reply}
-              </button>
-            ))}
-          </div>
-        ) : null}
-
         <div className="mx-auto w-full max-w-[46rem] rounded-2xl bg-card">
           <textarea
             ref={textareaRef}

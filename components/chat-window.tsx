@@ -70,11 +70,6 @@ type ChatClientEvents = {
 
 type ChatSocket = Socket<ChatServerEvents, ChatClientEvents>
 
-function parseCharacterSuggestions(raw: Character['suggestions']): string[] {
-  if (!Array.isArray(raw)) return []
-  return raw.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
-}
-
 function getTime() {
   return new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
 }
@@ -398,7 +393,6 @@ export default function ChatWindow({
             disabled={isLoading}
             model={modelId}
             onModelChange={setModel}
-            suggestions={parseCharacterSuggestions(character.suggestions)}
             onRequestSuggestions={requestSuggestions}
             isFetchingSuggestions={isFetchingSuggestions}
             onAutoPlay={autoPlay}
