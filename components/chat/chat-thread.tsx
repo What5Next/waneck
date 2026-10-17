@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react'
 
 import type { Message } from '@/lib/types'
-import type { Character } from '@/lib/types'
+import type { Character, CharacterSituationImage } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { MessageBubble } from './message-bubble'
 import { SuggestedReplies, type SuggestedReply } from './suggested-replies'
@@ -21,6 +21,7 @@ export type ChatThreadProps = {
   notices?: ChatSystemNotice[]
   isLoading?: boolean
   character: Character
+  situationImages?: CharacterSituationImage[]
   suggestedReplies?: SuggestedReply[]
   onSelectSuggestedReply?: (item: SuggestedReply) => void
 }
@@ -30,6 +31,7 @@ export function ChatThread({
   notices = [],
   isLoading = false,
   character,
+  situationImages = [],
   suggestedReplies = [],
   onSelectSuggestedReply,
 }: ChatThreadProps) {
@@ -61,6 +63,9 @@ export function ChatThread({
           const prevMsg = idx > 0 ? messages[idx - 1] : undefined
           const isConsecutiveSameRole = prevMsg?.role === m.role
           const showAvatar = m.role === 'model' && !isConsecutiveSameRole
+          const situationImage = !(isLoading && idx === messages.length - 1)
+            ? situationImages.find((image) => image.label?.trim() && m.content.toLocaleLowerCase().includes(image.label.trim().toLocaleLowerCase()))
+            : undefined
           return (
             <div
               key={m.role + m.time + idx}
@@ -72,6 +77,11 @@ export function ChatThread({
                 character={character}
                 showAvatar={showAvatar}
               />
+              {situationImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={situationImage.image_url} alt={situationImage.label ?? ''}
+                  className="mt-2 ml-10 max-h-80 max-w-[min(80%,20rem)] rounded-xl object-contain" />
+              ) : null}
               {noticesAfter(idx)}
             </div>
           )

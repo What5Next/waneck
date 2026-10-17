@@ -4,10 +4,9 @@ import { MessageSquare, User, X } from 'lucide-react'
 
 import { MessageBubble } from '@/components/chat/message-bubble'
 import { useDevLanguage } from '@/components/dev-language-provider'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { EmptyState } from '@/components/ui/empty-state'
 import { IconButton } from '@/components/ui/icon-button'
-import { SegmentedControl } from '@/components/ui/segmented-control'
+import { InputDropdown } from '@/components/ui/input-dropdown'
 import { characterCreateText } from '@/lib/character-create-copy'
 import type { CharacterPromptFields } from '@/lib/character-prompt'
 import { cn } from '@/lib/utils'
@@ -21,12 +20,11 @@ type PreviewProps = {
   name: string
   tagline: string
   imageUrl: string
-  emoji: string
   description: string
-  mood: string
   genres: string[]
   introTurns: { role: 'user' | 'model'; text: string }[]
   examples: CharacterPromptFields['examples']
+  situationImages: { imageUrl: string; label: string }[]
   suggestions: string[]
   className?: string
 }
@@ -38,12 +36,11 @@ export function CharacterCreatePreview({
   name,
   tagline,
   imageUrl,
-  emoji,
   description,
-  mood,
   genres,
   introTurns,
   examples,
+  situationImages,
   suggestions,
   className,
 }: PreviewProps) {
@@ -51,10 +48,8 @@ export function CharacterCreatePreview({
   const t = (english: string) => characterCreateText(language, english)
   const previewName = name.trim() || t('Character name')
   const previewCharacter = { name: previewName, profile_image_url: imageUrl || null }
-  const visibleIntro = introTurns.filter((turn) => turn.text.trim())
   const visibleExamples = examples.filter((example) => example.user.trim() || example.character.trim())
   const visibleSuggestions = suggestions.filter((suggestion) => suggestion.trim())
-
   return (
     <section className={cn('flex h-full min-h-0 w-full flex-col bg-background', className)} aria-label={t('Preview')}>
       <div className="relative flex shrink-0 items-start px-5 pb-3 pt-5 text-left">
@@ -69,20 +64,16 @@ export function CharacterCreatePreview({
         ) : null}
       </div>
       <div className="shrink-0 px-5 pb-4">
-        <SegmentedControl
+        <InputDropdown
           value={view}
           onValueChange={onViewChange}
           options={[
             { value: 'profile', label: t('Profile') },
             { value: 'chat', label: t('Opening chat') },
-            { value: 'examples', label: t('Examples') },
+            { value: 'examples', label: t('Advanced') },
           ]}
-          shape="rounded"
-          size="md"
-          layout="equal"
-          columns={3}
-          className="w-full [&_button]:text-sm"
           aria-label={t('Preview sections')}
+          triggerClassName="border-0 bg-muted/35 px-3 py-2.5 text-foreground shadow-none dark:bg-muted/25 [&>span]:text-sm"
         />
       </div>
       <div className="scroll-hide min-h-0 flex-1 overflow-y-auto border-t border-border px-5 py-5">
@@ -92,8 +83,6 @@ export function CharacterCreatePreview({
               {imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={imageUrl} alt="" className="h-full w-full object-cover" />
-              ) : emoji ? (
-                <span className="text-5xl">{emoji}</span>
               ) : (
                 <User className="h-12 w-12 text-muted-foreground/50" aria-hidden />
               )}
@@ -104,7 +93,6 @@ export function CharacterCreatePreview({
             <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
               {tagline.trim() || t('Your one-line introduction appears here.')}
             </p>
-            {mood.trim() ? <p className="mt-3 text-sm text-muted-foreground">{mood}</p> : null}
             {genres.length > 0 ? (
               <div className="mt-4 flex flex-wrap gap-1.5">
                 {genres.map((genre) => (
@@ -121,24 +109,22 @@ export function CharacterCreatePreview({
           </div>
         ) : view === 'chat' ? (
           <div className="flex flex-col gap-4" data-dev-language-ignore>
-            <div className="flex items-center gap-2 border-b border-border pb-4">
-              <Avatar className="h-9 w-9">
-                {imageUrl ? <AvatarImage src={imageUrl} alt="" /> : null}
-                <AvatarFallback className="bg-muted text-sm">{emoji || previewName.charAt(0)}</AvatarFallback>
-              </Avatar>
-              <span className="truncate text-base font-semibold text-foreground">{previewName}</span>
-            </div>
-            {visibleIntro.length > 0 ? visibleIntro.map((turn, index) => (
+            {introTurns.map((turn, index) => (
               <MessageBubble
                 key={index}
                 role={turn.role}
-                content={turn.text}
+                content={turn.text.trim() || t(turn.role === 'user' ? 'Please enter a user message.' : 'Please enter an intro.')}
                 character={previewCharacter}
-                showAvatar={turn.role === 'model' && (index === 0 || visibleIntro[index - 1].role !== 'model')}
+                showAvatar={turn.role === 'model' && (index === 0 || introTurns[index - 1].role !== 'model')}
               />
-            )) : (
-              <EmptyState icon={MessageSquare} message={t('Write an opening message to see the chat preview.')} className="min-h-44" />
-            )}
+            ))}
+            {!introTurns.some((turn) => turn.role === 'user') ? (
+              <MessageBubble
+                role="user"
+                content={t('Please enter a user message.')}
+                character={previewCharacter}
+              />
+            ) : null}
             {visibleSuggestions.length > 0 ? (
               <div className="flex flex-col items-end gap-2 pt-3">
                 <span className="text-xs font-medium text-muted-foreground">{t('Suggested replies')}</span>
@@ -158,9 +144,23 @@ export function CharacterCreatePreview({
                 {example.user.trim() ? <MessageBubble role="user" content={example.user} character={previewCharacter} /> : null}
                 {example.character.trim() ? <MessageBubble role="model" content={example.character} character={previewCharacter} /> : null}
               </div>
-            )) : (
-              <EmptyState icon={MessageSquare} message={t('Add an example dialogue to see it here.')} className="min-h-44" />
-            )}
+            )) : situationImages.length === 0 ? (
+              <EmptyState icon={MessageSquare} message={t('Add an example dialogue or situation image to see it here.')} className="min-h-44" />
+            ) : null}
+            {situationImages.length > 0 ? (
+              <div className="border-t border-border pt-4">
+                <h3 className="mb-3 text-sm font-semibold text-foreground">{t('Situation images')}</h3>
+                <div className="flex flex-col gap-3">
+                  {situationImages.map((image, index) => image.imageUrl ? (
+                    <div key={index} className="flex items-center gap-3">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={image.imageUrl} alt="" className="h-20 w-16 rounded-lg object-cover" />
+                      <span className="text-sm text-muted-foreground">{image.label || t('Trigger phrase')}</span>
+                    </div>
+                  ) : null)}
+                </div>
+              </div>
+            ) : null}
           </div>
         )}
       </div>

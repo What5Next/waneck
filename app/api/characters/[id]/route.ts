@@ -61,6 +61,15 @@ export async function GET(
     isLiked = !!likeRow;
   }
 
+  const { data: situationImages, error: imageFetchError } = await supabaseAdmin
+    .from("character_situation_images")
+    .select("*")
+    .eq("character_id", id)
+    .order("sort_order", { ascending: true });
+  if (imageFetchError) {
+    return NextResponse.json({ error: imageFetchError.message }, { status: 500 });
+  }
+
   const actualCommentCount = await getCommentCountForCharacter(id);
   const commentCount =
     actualCommentCount === null
@@ -74,6 +83,7 @@ export async function GET(
     message_count: data.message_count ?? 0,
     creator: data.creator,
     intro_messages: (data.intro_messages ?? []) as CharacterIntroMessage[],
+    situation_images: situationImages ?? [],
     is_liked: isLiked,
   });
 }
@@ -90,6 +100,7 @@ type UpdateCharacterBody = {
   description?: string;
   suggestions?: string[];
   introTurns?: IntroTurn[];
+  situationImages?: { image_url: string; label: string }[];
   profile_image_url?: string | null;
 };
 
@@ -124,6 +135,10 @@ export async function PATCH(
       { error: "시스템 프롬프트는 필수입니다" },
       { status: 400 },
     );
+  }
+
+  if (body.situationImages && (body.situationImages.length > 5 || body.situationImages.some((image) => !image.image_url?.trim() || !image.label?.trim()))) {
+    return NextResponse.json({ error: "상황 이미지마다 사진과 표시 조건 문구가 필요합니다" }, { status: 400 });
   }
 
   const update: TablesUpdate<"characters"> = {};
@@ -186,6 +201,26 @@ export async function PATCH(
           { status: 500 },
         );
       }
+    }
+  }
+
+  if (body.situationImages !== undefined) {
+    const { error: deleteError } = await supabaseAdmin
+      .from('character_situation_images')
+      .delete()
+      .eq('character_id', id);
+    if (deleteError) return NextResponse.json({ error: '상황 이미지 갱신 실패: ' + deleteError.message }, { status: 500 });
+
+    if (body.situationImages.length > 0) {
+      const { error: imageError } = await supabaseAdmin
+        .from('character_situation_images')
+        .insert(body.situationImages.map((image, index) => ({
+          character_id: id,
+          image_url: image.image_url,
+          label: image.label.trim(),
+          sort_order: index,
+        })));
+      if (imageError) return NextResponse.json({ error: '상황 이미지 저장 실패: ' + imageError.message }, { status: 500 });
     }
   }
 

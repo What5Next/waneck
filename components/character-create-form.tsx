@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useRef, useState } from 'react'
-import { Eye, Plus, Upload, User, X } from 'lucide-react'
+import { ChevronDown, Eye, Plus, Upload, User, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { CHARACTER_GENRE_OPTIONS } from '@/lib/character-genres'
@@ -29,58 +29,53 @@ function useFormText() {
 
 // ─── 탭 정의 ───────────────────────────────────────────────────────────────
 
-type TabId = 'settings' | 'intro' | 'prompt' | 'examples' | 'detail'
+type TabId = 'settings' | 'intro' | 'prompt' | 'examples'
 
 const TABS: { id: TabId; label: string; required?: boolean }[] = [
   { id: 'settings', label: 'Character', required: true },
   { id: 'prompt', label: 'Persona', required: true },
   { id: 'intro', label: 'Opening', required: true },
-  { id: 'examples', label: 'Examples' },
-  { id: 'detail', label: 'Details' },
+  { id: 'examples', label: 'Advanced' },
 ]
 
 const TAB_ORDER: TabId[] = TABS.map((t) => t.id)
 
 const TAB_INTROS: Record<TabId, { title: string; description: string }> = {
-  settings: { title: 'Character', description: 'Set the name and image people will see.' },
+  settings: { title: 'Character', description: 'Set the profile people will see.' },
   prompt: { title: 'Persona', description: 'Define how this character thinks, speaks, and reacts in every chat.' },
   intro: { title: 'Opening', description: 'Write the scene shown when a new chat begins.' },
-  examples: { title: 'Examples', description: 'Show the model how this character replies in different situations.' },
-  detail: { title: 'Details', description: 'Choose discovery details and suggested replies.' },
+  examples: { title: 'Advanced', description: 'Add example dialogues and images for specific moments.' },
 }
 
 // ─── 폼 상태 ───────────────────────────────────────────────────────────────
 
 type IntroTurn = { role: 'user' | 'model'; text: string }
+type SituationImageDraft = { imageUrl: string; label: string; file?: File }
 
 type FormState = {
   imageUrl: string
-  emoji: string
   name: string
   tagline: string
   introTurns: IntroTurn[]
   prompt: CharacterPromptFields
-  tag: string
   genres: string[]
-  mood: string
   desc: string
   suggestions: string[]
+  situationImages: SituationImageDraft[]
 }
 
 const DEFAULT_FORM: FormState = {
   imageUrl: '',
-  emoji: '',
   name: '',
   tagline: '',
   introTurns: [
     { role: 'model', text: '' },
   ],
   prompt: EMPTY_CHARACTER_PROMPT,
-  tag: '',
   genres: [],
-  mood: '',
   desc: '',
   suggestions: ['', '', ''],
+  situationImages: [],
 }
 
 function toFormState(character: CharacterWithDetail): FormState {
@@ -90,7 +85,6 @@ function toFormState(character: CharacterWithDetail): FormState {
 
   return {
     imageUrl: character.profile_image_url ?? '',
-    emoji: '',
     name: character.name,
     tagline: character.short_intro ?? '',
     introTurns:
@@ -101,11 +95,10 @@ function toFormState(character: CharacterWithDetail): FormState {
           }))
         : [{ role: 'model', text: '' }],
     prompt: parseCharacterPrompt(character.system_prompt),
-    tag: character.tag ?? '',
     genres: character.genres ?? [],
-    mood: character.mood ?? '',
     desc: character.description ?? '',
     suggestions: [suggestions[0] ?? '', suggestions[1] ?? '', suggestions[2] ?? ''],
+    situationImages: (character.situation_images ?? []).map((image) => ({ imageUrl: image.image_url, label: image.label ?? '' })),
   }
 }
 
@@ -131,10 +124,19 @@ function SettingsTab({
     setForm((f) => ({ ...f, imageUrl: url }))
   }
 
+  function toggleGenre(genre: string) {
+    setForm((current) => ({
+      ...current,
+      genres: current.genres.includes(genre)
+        ? current.genres.filter((item) => item !== genre)
+        : [...current.genres, genre],
+    }))
+  }
+
   return (
     <div className="flex flex-col gap-5">
       {/* 캐릭터 이미지 */}
-      <Field label={t('Character image')}>
+      <Field label={t('Character image')} required>
         <div className="flex items-center gap-4">
           {/* 이미지 프리뷰 */}
           <div className="relative h-28 w-[84px] shrink-0 overflow-hidden rounded-xl bg-muted/40">
@@ -148,17 +150,13 @@ function SettingsTab({
                 />
                 <button
                   type="button"
-                  onClick={() => { onFileChange(null); setForm((f) => ({ ...f, imageUrl: '' })) }}
+                  onClick={() => { onFileChange(null); setForm((f) => ({ ...f, imageUrl: '' })); if (fileRef.current) fileRef.current.value = '' }}
                   className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white"
                   aria-label={t('Remove image')}
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
               </>
-            ) : form.emoji ? (
-              <div className="flex h-full w-full items-center justify-center text-4xl">
-                {form.emoji}
-              </div>
             ) : (
               <div className="flex h-full w-full items-center justify-center">
                 <User className="h-9 w-9 text-muted-foreground/50" />
@@ -167,20 +165,6 @@ function SettingsTab({
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              variant="pill"
-              size="sm"
-              className="gap-1.5 text-sm"
-              onClick={() => {
-                const emojis = ['🌸', '⚔️', '🧪', '🦊', '🐉', '🌙', '🔮', '🎭', '🦋', '🌊']
-                const emoji = emojis[Math.floor(Math.random() * emojis.length)]
-                setForm((f) => ({ ...f, emoji, imageUrl: '' }))
-              }}
-            >
-              <Plus className="h-3.5 w-3.5" />
-              {t('Random emoji')}
-            </Button>
             <Button
               type="button"
               variant="pill"
@@ -208,7 +192,7 @@ function SettingsTab({
         <TextInput
           value={form.name}
           onChange={(v) => setForm((f) => ({ ...f, name: v }))}
-          placeholder={t('Enter a name')}
+          placeholder={t('e.g. Mara Voss')}
           maxLength={30}
         />
       </Field>
@@ -216,13 +200,44 @@ function SettingsTab({
       {/* 한 줄 소개 */}
       <Field
         label={t('Tagline')}
+        required
         hint={t('Introduce your character in one sentence')}
       >
         <TextInput
           value={form.tagline}
           onChange={(v) => setForm((f) => ({ ...f, tagline: v }))}
-          placeholder={t("e.g. I'm here to hear your story")}
+          placeholder={t("e.g. An archivist who hears the truth in erased voices.")}
           maxLength={50}
+        />
+      </Field>
+
+      {/* 장르 (복수 선택) */}
+      <Field label={t('Genres')} required hint={t('Pick categories that fit your character')}>
+        <div className="flex flex-wrap gap-2">
+          {CHARACTER_GENRE_OPTIONS.map((genre) => (
+            <Chip
+              key={genre}
+              selected={form.genres.includes(genre)}
+              onClick={() => toggleGenre(genre)}
+            >
+              {t(genre)}
+            </Chip>
+          ))}
+        </div>
+      </Field>
+
+      {/* 상세 소개 */}
+      <Field
+        label={t('Full description')}
+        required
+        hint={t('Shown on the character detail page')}
+      >
+        <TextArea
+          value={form.desc}
+          onChange={(v) => setForm((f) => ({ ...f, desc: v }))}
+          placeholder={t('e.g. Mara Voss, 29, restores damaged recordings. After a studio fire took her colleague, she began keeping copies of files someone wanted erased.')}
+          rows={5}
+          maxLength={300}
         />
       </Field>
     </div>
@@ -239,6 +254,14 @@ function IntroTab({
   setForm: React.Dispatch<React.SetStateAction<FormState>>
 }) {
   const t = useFormText()
+  function updateSuggestion(idx: number, value: string) {
+    setForm((f) => {
+      const suggestions = [...f.suggestions]
+      suggestions[idx] = value
+      return { ...f, suggestions }
+    })
+  }
+
   function updateTurn(idx: number, key: keyof IntroTurn, value: string) {
     setForm((f) => {
       const turns = [...f.introTurns]
@@ -266,6 +289,15 @@ function IntroTab({
 
   return (
     <div className="flex flex-col gap-5">
+      <Field label={t('Current situation')} hint={t('Where does the conversation begin? What is happening right now?')}>
+        <TextArea
+          value={form.prompt.scenario}
+          onChange={(value) => setForm((current) => ({ ...current, prompt: { ...current.prompt, scenario: value } }))}
+          placeholder={t('e.g. The archive closes in ten minutes. A recording has vanished, and the user is the last person who checked it out.')}
+          rows={4}
+          maxLength={1400}
+        />
+      </Field>
       <Field
         label={t('Starting messages')}
         required
@@ -315,6 +347,23 @@ function IntroTab({
           </Button>
         </div>
       </Field>
+      {/* 추천 대화 */}
+      <Field
+        label={t('Suggested replies')}
+        hint={t('Up to 3 conversation starters shown in chat')}
+      >
+        <div className="flex flex-col gap-2">
+          {form.suggestions.map((s, idx) => (
+            <TextInput
+              key={idx}
+              value={s}
+              onChange={(v) => updateSuggestion(idx, v)}
+              placeholder={`${t('Suggested reply')} ${idx + 1}`}
+              maxLength={40}
+            />
+          ))}
+        </div>
+      </Field>
     </div>
   )
 }
@@ -329,6 +378,12 @@ function PromptTab({
   setForm: React.Dispatch<React.SetStateAction<FormState>>
 }) {
   const t = useFormText()
+  const [detailsOpen, setDetailsOpen] = useState(() => Boolean(
+    form.prompt.backstory.trim() || form.prompt.relationship.trim() ||
+    form.prompt.voice.trim() || form.prompt.reactions.trim() || form.prompt.additional.trim() ||
+    form.prompt.viewpoint !== 'automatic' || form.prompt.pacing !== 'natural' ||
+    form.prompt.replyLength !== 'adaptive',
+  ))
   function update(key: keyof CharacterPromptFields, value: string) {
     setForm((current) => ({ ...current, prompt: { ...current.prompt, [key]: value } }))
   }
@@ -338,39 +393,47 @@ function PromptTab({
       <Field
         label={t('Who are they?')}
         required
-        hint={t('Role, age or life stage, goal, and what makes them different from other characters.')}
+        hint={t('Briefly describe their role and what they want right now.')}
       >
         <TextArea
           value={form.prompt.identity}
           onChange={(v) => update('identity', v)}
-          placeholder={t('e.g. A forensic archivist who cares more about the truth than being liked. Collects discarded voice recordings.')}
+          placeholder={t('e.g. Mara is a 29-year-old audio archivist investigating a missing recording. She catches lies by listening for tiny changes in a voice.')}
           rows={4}
           maxLength={1200}
         />
       </Field>
-      <Field label={t('Personality and inner conflict')} required hint={t('Show traits through choices. Include a flaw, desire, fear, and a contradiction.')}>
+      <Field label={t('Personality and inner conflict')} required hint={t('Describe their usual personality and how it shows in their actions.')}>
         <TextArea value={form.prompt.personality} onChange={(v) => update('personality', v)}
-          placeholder={t('e.g. Precise and guarded with strangers; quietly generous with people who notice details. Wants trust but tests it by withholding facts. Admits mistakes only after trying to fix them.')}
+          placeholder={t('e.g. Mara checks every detail but hides her own mistakes. She wants a partner she can trust, yet tests people by sharing only half of what she knows.')}
           rows={5} maxLength={1800} />
       </Field>
+      <button
+        type="button"
+        aria-expanded={detailsOpen}
+        onClick={() => setDetailsOpen((open) => !open)}
+        className="flex w-full items-center justify-between rounded-xl border border-border bg-card/40 px-4 py-4 text-left hover:bg-muted/40"
+      >
+        <span>
+          <span className="block text-base font-semibold text-foreground">{t('Detailed settings')}</span>
+          <span className="mt-1 block text-sm text-muted-foreground">{t('Optional: add history, relationships, voice, and story direction.')}</span>
+        </span>
+        <ChevronDown className={`ml-3 h-5 w-5 shrink-0 text-muted-foreground transition-transform ${detailsOpen ? 'rotate-180' : ''}`} aria-hidden />
+      </button>
+      {detailsOpen && <div className="flex flex-col gap-5">
       <Field label={t('Backstory and world')} hint={t('Only include history or setting details that should shape replies.')}>
         <TextArea value={form.prompt.backstory} onChange={(v) => update('backstory', v)}
-          placeholder={t('What happened before this chat? Which people, places, or rules matter now?')}
+          placeholder={t('e.g. Three years ago, Mara lost a colleague in a studio fire. Since then, she has secretly kept copies of recordings the company ordered destroyed.')}
           rows={4} maxLength={1600} />
       </Field>
       <Field label={t('Relationship with the user')} hint={t('Define what they know about the user, what they want from them, and how trust changes.')}>
         <TextArea value={form.prompt.relationship} onChange={(v) => update('relationship', v)}
-          placeholder={t('e.g. The user is a new colleague, not an old friend. At first they share practical facts only; trust grows when the user keeps a confidence.')}
+          placeholder={t('e.g. The user is Mara’s new partner on the case. She shares evidence but avoids personal questions; she opens up if the user protects a secret.')}
           rows={4} maxLength={1400} />
       </Field>
-      <Field label={t('Current situation')} hint={t('Where does the conversation begin? What is happening right now?')}>
-        <TextArea value={form.prompt.scenario} onChange={(v) => update('scenario', v)}
-          placeholder={t('e.g. The archive closes in ten minutes. A recording has vanished, and the user is the last person who checked it out.')}
-          rows={4} maxLength={1400} />
-      </Field>
-      <Field label={t('Voice and dialogue style')} required hint={t('Specify rhythm, vocabulary, humor, formality, and how emotion changes their speech.')}>
+      <Field label={t('Voice and dialogue style')} hint={t('Specify rhythm, vocabulary, humor, formality, and how emotion changes their speech.')}>
         <TextArea value={form.prompt.voice} onChange={(v) => update('voice', v)}
-          placeholder={t('e.g. Short, exact sentences; no pet names or emojis. Deflects concern with dry observations. When afraid, asks one unusually direct question.')}
+          placeholder={t('e.g. Mara speaks in short, precise sentences and never uses emojis. When worried, she says “Check the timestamp” instead of “Be careful.”')}
           rows={4} maxLength={1400} />
       </Field>
       <div className="space-y-4 border-t border-border/60 pt-5">
@@ -401,14 +464,15 @@ function PromptTab({
       </div>
       <Field label={t('Reactions and boundaries')} hint={t("Describe how this person responds to disagreement, affection, danger, or secrets. Avoid generic 'always kind' rules.")}>
         <TextArea value={form.prompt.reactions} onChange={(v) => update('reactions', v)}
-          placeholder={t("e.g. If challenged, asks for evidence instead of apologizing at once. If the user withdraws, gives them space. Never decides the user's feelings or actions for them.")}
+          placeholder={t("e.g. If accused, Mara asks to see the evidence before defending herself. If the user pulls away, she waits instead of following; she never decides their actions.")}
           rows={4} maxLength={1400} />
       </Field>
       <Field label={t('Extra instructions')} hint={t("Optional advanced rules. Existing characters' old prompts appear here and remain intact.")}>
         <TextArea value={form.prompt.additional} onChange={(v) => update('additional', v)}
-          placeholder={t('Other details that must stay true across conversations')}
+          placeholder={t('e.g. Do not reveal who erased the recording before the user finds a clue. Keep Mara’s knowledge limited to what she has seen or heard.')}
           rows={4} maxLength={2500} />
       </Field>
+      </div>}
     </div>
   )
 }
@@ -425,8 +489,16 @@ function ExamplesTab({ form, setForm }: {
     } }))
   }
 
+  function updateSituationImage(index: number, patch: Partial<SituationImageDraft>) {
+    setForm((current) => ({
+      ...current,
+      situationImages: current.situationImages.map((image, i) => i === index ? { ...image, ...patch } : image),
+    }))
+  }
+
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col">
       {form.prompt.examples.map((example, index) => (
         <div key={index} className="flex flex-col gap-3 border-t border-border/60 py-5 first:border-t-0 first:pt-0">
           <div className="flex items-center justify-between">
@@ -446,130 +518,49 @@ function ExamplesTab({ form, setForm }: {
         onClick={() => setForm((current) => ({ ...current, prompt: { ...current.prompt,
           examples: [...current.prompt.examples, { user: '', character: '' }],
         } }))}><Plus className="h-4 w-4" /> {t('Add example')}</Button>}
-    </div>
-  )
-}
+      </div>
 
-// ─── 탭 4: 고급 기능 ──────────────────────────────────────────────────────
-
-function AdvancedTab({
-  form,
-  setForm,
-}: {
-  form: FormState
-  setForm: React.Dispatch<React.SetStateAction<FormState>>
-}) {
-  const t = useFormText()
-  function updateSuggestion(idx: number, value: string) {
-    setForm((f) => {
-      const suggestions = [...f.suggestions]
-      suggestions[idx] = value
-      return { ...f, suggestions }
-    })
-  }
-
-  return (
-    <div className="flex flex-col gap-6">
-      {/* 추천 대화 */}
-      <Field
-        label={t('Suggested replies')}
-        hint={t('Up to 3 conversation starters shown in chat')}
-      >
-        <div className="flex flex-col gap-2">
-          {form.suggestions.map((s, idx) => (
-            <TextInput
-              key={idx}
-              value={s}
-              onChange={(v) => updateSuggestion(idx, v)}
-              placeholder={`${t('Suggested reply')} ${idx + 1}`}
-              maxLength={40}
-            />
+      <section className="border-t border-border pt-6">
+        <h3 className="text-base font-semibold text-foreground">{t('Situation images')}</h3>
+        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{t('Show an uploaded image when a chat message contains the trigger phrase.')}</p>
+        <div className="mt-4 flex flex-col gap-4">
+          {form.situationImages.map((image, index) => (
+            <div key={index} className="rounded-xl border border-border bg-card/40 p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <h4 className="text-sm font-semibold text-foreground">{t('Situation image')} {index + 1}</h4>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setForm((current) => ({
+                  ...current,
+                  situationImages: current.situationImages.filter((_, i) => i !== index),
+                }))}>{t('Remove image')}</Button>
+              </div>
+              <div className="flex flex-col gap-4 sm:flex-row">
+                <label className="flex h-32 w-24 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-muted/40 text-sm text-muted-foreground">
+                  {image.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={image.imageUrl} alt={t('Situation image')} className="h-full w-full object-cover" />
+                  ) : <><Upload className="mr-1 size-4" />{t('Upload')}</>}
+                  <input type="file" accept="image/*" className="sr-only" onChange={(event) => {
+                    const file = event.target.files?.[0]
+                    if (file) updateSituationImage(index, { imageUrl: URL.createObjectURL(file), file })
+                  }} />
+                </label>
+                <div className="min-w-0 flex-1">
+                  <Field label={t('Trigger phrase')} hint={t('Use a short, specific phrase from a user or character message.')}>
+                    <TextInput value={image.label} onChange={(value) => updateSituationImage(index, { label: value })}
+                      placeholder={t('e.g. The recording has vanished')} maxLength={120} />
+                  </Field>
+                </div>
+              </div>
+            </div>
           ))}
         </div>
-      </Field>
-
-      {/* 현재 상태 */}
-      <Field
-        label={t('Status')}
-        hint={t('Short status shown on character lists')}
-      >
-        <TextInput
-          value={form.mood}
-          onChange={(v) => setForm((f) => ({ ...f, mood: v }))}
-          placeholder={t('e.g. Waiting warmly')}
-          maxLength={20}
-        />
-      </Field>
-    </div>
-  )
-}
-
-// ─── 탭 5: 캐릭터 상세 ────────────────────────────────────────────────────
-
-function DetailTab({
-  form,
-  setForm,
-}: {
-  form: FormState
-  setForm: React.Dispatch<React.SetStateAction<FormState>>
-}) {
-  const t = useFormText()
-  const TAGS = ['Emotional', 'Direct', 'Knowledge', 'Humor', 'Fantasy', 'Romance', 'Thriller', 'Slice of life']
-
-  function toggleGenre(genre: string) {
-    setForm((current) => ({
-      ...current,
-      genres: current.genres.includes(genre)
-        ? current.genres.filter((item) => item !== genre)
-        : [...current.genres, genre],
-    }))
-  }
-
-  return (
-    <div className="flex flex-col gap-6">
-      {/* 장르 (복수 선택) */}
-      <Field label={t('Genres')} hint={t('Pick categories that fit your character')}>
-        <div className="flex flex-wrap gap-2">
-          {CHARACTER_GENRE_OPTIONS.map((genre) => (
-            <Chip
-              key={genre}
-              selected={form.genres.includes(genre)}
-              onClick={() => toggleGenre(genre)}
-            >
-              {t(genre)}
-            </Chip>
-          ))}
-        </div>
-      </Field>
-
-      {/* 태그 */}
-      <Field label={t('Tag')} hint={t('Pick the tag that best fits your character')}>
-        <div className="flex flex-wrap gap-2">
-          {TAGS.map((tag) => (
-            <Chip
-              key={tag}
-              selected={form.tag === tag}
-              onClick={() => setForm((f) => ({ ...f, tag: f.tag === tag ? '' : tag }))}
-            >
-              {t(tag)}
-            </Chip>
-          ))}
-        </div>
-      </Field>
-
-      {/* 상세 소개 */}
-      <Field
-        label={t('Full description')}
-        hint={t('Shown on the character detail page')}
-      >
-        <TextArea
-          value={form.desc}
-          onChange={(v) => setForm((f) => ({ ...f, desc: v }))}
-          placeholder={t('Describe your character in detail')}
-          rows={5}
-          maxLength={300}
-        />
-      </Field>
+        {form.situationImages.length < 5 ? (
+          <Button type="button" variant="ghost" size="sm" className="mt-3 gap-1.5 px-2 text-sm text-foreground"
+            onClick={() => setForm((current) => ({ ...current, situationImages: [...current.situationImages, { imageUrl: '', label: '' }] }))}>
+            <Plus className="size-4" />{t('Add situation image')}
+          </Button>
+        ) : null}
+      </section>
     </div>
   )
 }
@@ -632,16 +623,20 @@ export function CharacterCreateForm({
         profileImageUrl = null
       }
 
+      const situationImages = await Promise.all(form.situationImages.map(async (image) => ({
+        image_url: image.file ? await uploadImage(image.file) : image.imageUrl,
+        label: image.label.trim(),
+      })))
+
       const payload = {
         name: form.name,
         short_intro: form.tagline,
         system_prompt: buildCharacterPrompt(form.name, form.prompt),
-        tag: form.tag,
         genres: form.genres,
-        mood: form.mood,
         description: form.desc,
         suggestions: form.suggestions.filter(Boolean),
         introTurns: form.introTurns,
+        situationImages,
         ...(profileImageUrl !== undefined
           ? { profile_image_url: profileImageUrl }
           : {}),
@@ -650,7 +645,7 @@ export function CharacterCreateForm({
       if (mode === 'edit' && characterId) {
         const updated = await updateCharacterMutation.mutateAsync(payload)
         setImageFile(null)
-        setForm((f) => ({ ...f, imageUrl: updated.profile_image_url ?? '' }))
+        setForm((f) => ({ ...f, imageUrl: updated.profile_image_url ?? '', situationImages: situationImages.map((image) => ({ imageUrl: image.image_url, label: image.label })) }))
         toast.success(t('Saved'))
       } else {
         const data = await createCharacterMutation.mutateAsync(payload)
@@ -665,7 +660,7 @@ export function CharacterCreateForm({
 
   function selectTab(tab: TabId) {
     setActiveTab(tab)
-    setPreviewView(tab === 'intro' || tab === 'prompt' ? 'chat' : tab === 'examples' ? 'examples' : 'profile')
+    setPreviewView(tab === 'intro' ? 'chat' : tab === 'examples' ? 'examples' : 'profile')
   }
 
   function goNext() {
@@ -676,27 +671,30 @@ export function CharacterCreateForm({
     }
   }
 
+  function goPrevious() {
+    if (currentIdx > 0) selectTab(TAB_ORDER[currentIdx - 1])
+  }
+
   // edit 모드에서는 특정 탭만 수정하고 바로 저장할 수 있어야 하므로
   // 전체 폼 기준으로 필수값을 검증한다 (현재 탭 기준이 아님).
   const personaComplete =
     form.prompt.identity.trim().length > 0 &&
-    form.prompt.personality.trim().length > 0 &&
-    form.prompt.voice.trim().length > 0
+    form.prompt.personality.trim().length > 0
   const examplesComplete = form.prompt.examples.every((example) =>
     Boolean(example.user.trim()) === Boolean(example.character.trim()),
   )
-  const isFormValid =
+  const settingsComplete =
+    form.imageUrl.trim().length > 0 &&
     form.name.trim().length > 0 &&
+    form.tagline.trim().length > 0 &&
+    form.genres.length > 0 &&
+    form.desc.trim().length > 0
+  const isFormValid =
+    settingsComplete &&
     (personaComplete || (mode === 'edit' && form.prompt.additional.trim().length > 0)) &&
     form.introTurns.every((t) => t.text.trim().length > 0) &&
-    examplesComplete
-
-  // 탭을 직접 눌러 앞 단계를 건너뛰어도, 현재 단계까지의 필수 항목은 모두 확인한다.
-  const canNext =
-    form.name.trim().length > 0 &&
-    (currentIdx < TAB_ORDER.indexOf('prompt') || personaComplete) &&
-    (currentIdx < TAB_ORDER.indexOf('intro') || form.introTurns.every((turn) => turn.text.trim().length > 0)) &&
-    (currentIdx < TAB_ORDER.indexOf('examples') || examplesComplete)
+    examplesComplete &&
+    form.situationImages.every((image) => image.imageUrl.trim() && image.label.trim())
 
   function handlePrimaryAction() {
     if (mode === 'edit') {
@@ -706,12 +704,12 @@ export function CharacterCreateForm({
     }
   }
 
-  const primaryDisabled = (mode === 'edit' || isLast ? !isFormValid : !canNext) || submitting
+  const primaryDisabled = ((mode === 'edit' || isLast) && !isFormValid) || submitting
   const primaryLabel = t(submitting
     ? 'Saving…'
     : mode === 'edit'
       ? 'Save'
-      : isLast ? 'Done' : 'Next')
+      : isLast ? 'Create' : 'Next')
 
   const previewProps = {
     view: previewView,
@@ -719,12 +717,11 @@ export function CharacterCreateForm({
     name: form.name,
     tagline: form.tagline,
     imageUrl: form.imageUrl,
-    emoji: form.emoji,
     description: form.desc,
-    mood: form.mood,
     genres: form.genres,
     introTurns: form.introTurns,
     examples: form.prompt.examples,
+    situationImages: form.situationImages,
     suggestions: form.suggestions,
   }
 
@@ -764,7 +761,6 @@ export function CharacterCreateForm({
           {activeTab === 'intro'    && <IntroTab    form={form} setForm={setForm} />}
           {activeTab === 'prompt'   && <PromptTab   form={form} setForm={setForm} />}
           {activeTab === 'examples' && <ExamplesTab form={form} setForm={setForm} />}
-          {activeTab === 'detail'   && <div className="flex flex-col gap-6"><DetailTab form={form} setForm={setForm} /><AdvancedTab form={form} setForm={setForm} /></div>}
         </div>
       </div>
 
@@ -775,13 +771,27 @@ export function CharacterCreateForm({
 
       {/* 하단 버튼 */}
       <div className="shrink-0 border-t border-border bg-background px-4 py-3">
-        <div className="mx-auto flex w-full max-w-[648px]">
+        <div className="mx-auto grid w-full max-w-[648px] grid-cols-2 gap-3">
+          {currentIdx > 0 ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              disabled={submitting}
+              onClick={goPrevious}
+              className="w-full min-w-0 rounded-xl text-base font-semibold"
+            >
+              {t('Previous')}
+            </Button>
+          ) : (
+            <div aria-hidden="true" />
+          )}
           <Button
             type="button"
             size="lg"
             disabled={primaryDisabled}
             onClick={handlePrimaryAction}
-            className="w-full rounded-xl text-base font-semibold"
+            className="w-full min-w-0 rounded-xl text-base font-semibold"
           >
             {primaryLabel}
           </Button>

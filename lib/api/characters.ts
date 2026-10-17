@@ -28,6 +28,7 @@ export async function getCharacterDetail(
     ...data,
     creator: data.creator ?? null,
     intro_messages: data.intro_messages ?? [],
+    situation_images: data.situation_images ?? [],
     is_liked: data.is_liked ?? false,
   }
 }
@@ -44,6 +45,7 @@ export type CreateCharacterBody = {
   description?: string
   suggestions?: string[]
   introTurns?: IntroTurn[]
+  situationImages?: { image_url: string; label: string }[]
   profile_image_url?: string | null
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import type { Character } from "@/lib/types";
+import type { Character, CharacterSituationImage } from "@/lib/types";
 import type { Message } from "@/lib/types";
 import { ChatHeader } from "@/components/chat/chat-header";
 import { MobileShell } from "@/components/mobile-shell";
@@ -10,10 +10,14 @@ export function ChatPageClient({
   character,
   conversationId,
   initialMessages,
+  showOpeningSuggestions,
+  situationImages,
 }: {
   character: Character;
   conversationId: string;
   initialMessages: Message[];
+  showOpeningSuggestions: boolean;
+  situationImages: CharacterSituationImage[];
 }) {
   return (
     <div className="flex h-full w-full flex-col">
@@ -29,6 +33,8 @@ export function ChatPageClient({
             character={character}
             conversationId={conversationId}
             initialMessages={initialMessages}
+            showOpeningSuggestions={showOpeningSuggestions}
+            situationImages={situationImages}
           />
         </MobileShell>
       </div>

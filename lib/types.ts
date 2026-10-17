@@ -42,6 +42,7 @@ export type CharacterComment = {
 export type CharacterWithDetail = Character & {
   creator: { display_name: string | null } | null;
   intro_messages: CharacterIntroMessage[];
+  situation_images?: CharacterSituationImage[];
   /** 로그인 시에만 포함 */
   is_liked?: boolean;
 };

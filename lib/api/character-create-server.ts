@@ -14,6 +14,7 @@ export type CreateCharacterBody = {
   description?: string
   suggestions?: string[]
   introTurns?: IntroTurn[]
+  situationImages?: { image_url: string; label: string }[]
   profile_image_url?: string | null
 }
 
@@ -42,6 +43,9 @@ export async function createCharacter(
   }
   if (!body.system_prompt?.trim()) {
     return { ok: false, status: 400, error: '시스템 프롬프트는 필수입니다' }
+  }
+  if (body.situationImages && (body.situationImages.length > 5 || body.situationImages.some((image) => !image.image_url?.trim() || !image.label?.trim()))) {
+    return { ok: false, status: 400, error: '상황 이미지마다 사진과 표시 조건 문구가 필요합니다' }
   }
 
   const { data: character, error } = await supabaseAdmin
@@ -82,6 +86,19 @@ export async function createCharacter(
       console.error('[createCharacter] intro_messages insert error:', introError)
       return { ok: false, status: 500, error: '인트로 메시지 저장 실패: ' + introError.message }
     }
+  }
+
+  const situationImages = body.situationImages ?? []
+  if (situationImages.length > 0) {
+    const { error: imageError } = await supabaseAdmin
+      .from('character_situation_images')
+      .insert(situationImages.map((image, index) => ({
+        character_id: character.id,
+        image_url: image.image_url,
+        label: image.label.trim(),
+        sort_order: index,
+      })))
+    if (imageError) return { ok: false, status: 500, error: '상황 이미지 저장 실패: ' + imageError.message }
   }
 
   return { ok: true, character }

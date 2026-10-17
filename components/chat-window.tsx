@@ -5,7 +5,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { io, type Socket } from "socket.io-client";
 import { toast } from 'sonner'
 
-import type { Character } from '@/lib/types'
+import type { Character, CharacterSituationImage } from '@/lib/types'
 import type { Message } from '@/lib/types'
 import { ChatThread } from '@/components/chat/chat-thread'
 import { ChatComposer } from '@/components/chat/chat-composer'
@@ -122,15 +122,24 @@ export default function ChatWindow({
   character,
   conversationId: initialConversationId = null,
   initialMessages = [],
+  showOpeningSuggestions = false,
+  situationImages = [],
 }: {
   character: Character
   conversationId?: string | null
   initialMessages?: Message[]
+  showOpeningSuggestions?: boolean
+  situationImages?: CharacterSituationImage[]
 }) {
   const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [isLoading, setIsLoading] = useState(false)
   const [draft, setDraft] = useState('')
-  const [suggestedReplies, setSuggestedReplies] = useState<SuggestedReply[]>([])
+  const [suggestedReplies, setSuggestedReplies] = useState<SuggestedReply[]>(() =>
+    showOpeningSuggestions && Array.isArray(character.suggestions)
+      ? character.suggestions.filter((reply): reply is string => typeof reply === 'string' && reply.trim().length > 0)
+          .map((reply) => ({ dialogue: reply.trim() }))
+      : [],
+  )
   const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false)
   const [isAutoPlaying, setIsAutoPlaying] = useState(false)
   const [conversationId] = useState<string | null>(initialConversationId)
@@ -340,7 +349,6 @@ export default function ChatWindow({
   }
 
   function selectSuggestedReply(item: SuggestedReply) {
-    setSuggestedReplies([])
     void sendMessage(suggestedReplyToText(item))
   }
 
@@ -384,6 +392,7 @@ export default function ChatWindow({
             notices={notices}
             isLoading={isLoading}
             character={character}
+            situationImages={situationImages}
             suggestedReplies={suggestedReplies}
             onSelectSuggestedReply={selectSuggestedReply}
           />
