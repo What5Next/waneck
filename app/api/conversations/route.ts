@@ -29,27 +29,45 @@ export async function GET(req: NextRequest) {
 
       if (error) throw new Error(error.message)
 
-      return NextResponse.json(data ?? [])
+      return NextResponse.json(
+        (data ?? []).sort((a, b) =>
+          Date.parse(b.last_message_at ?? b.created_at) -
+          Date.parse(a.last_message_at ?? a.created_at),
+        ),
+      )
     }
 
-    // 전체 최근 대화 목록 (사이드바용)
-    const { data, error } = await supabaseAdmin
+    // 마지막 메시지가 없는 새 대화도 후보에 포함한다. 각 기준에서 30개씩 가져온 뒤
+    // 실제 최근 활동 시각으로 정렬해 최종 30개만 노출한다.
+    const recentConversations = () => supabaseAdmin
       .from('conversations')
       .select(
-        'id, character_id, last_message_at, characters!inner(name, profile_image_url)',
+        'id, character_id, created_at, last_message_at, characters!inner(name, profile_image_url)',
       )
       .eq('user_id', user.id)
-      // !inner로 조인해야 embedded 필터가 실제로 행을 거름 (left join이면 무시됨)
       .eq('characters.is_archived', false)
-      .order('last_message_at', { ascending: false, nullsFirst: false })
-      .limit(30)
 
-    if (error) throw new Error(error.message)
+    const [lastMessageResult, createdResult] = await Promise.all([
+      recentConversations()
+        .order('last_message_at', { ascending: false, nullsFirst: false })
+        .limit(30),
+      recentConversations()
+        .order('created_at', { ascending: false })
+        .limit(30),
+    ])
+
+    if (lastMessageResult.error) throw new Error(lastMessageResult.error.message)
+    if (createdResult.error) throw new Error(createdResult.error.message)
+
+    const conversationRows = Array.from(new Map(
+      [...(lastMessageResult.data ?? []), ...(createdResult.data ?? [])]
+        .map((row) => [row.id, row] as const),
+    ).values())
 
     // 각 대화방의 마지막 메시지 미리보기 — created_at 내림차순으로 가져와
     // conversation_id별 첫 등장(=최신) 메시지만 사용한다
-    const conversationIds = (data ?? []).map((row) => row.id)
-    const lastMessageByConversationId = new Map<string, string>()
+    const conversationIds = conversationRows.map((row) => row.id)
+    const lastMessageByConversationId = new Map<string, { content: string; created_at: string }>()
 
     if (conversationIds.length > 0) {
       const { data: messageRows, error: messagesError } = await supabaseAdmin
@@ -62,28 +80,35 @@ export async function GET(req: NextRequest) {
 
       for (const row of messageRows ?? []) {
         if (!lastMessageByConversationId.has(row.conversation_id)) {
-          lastMessageByConversationId.set(row.conversation_id, row.content)
+          lastMessageByConversationId.set(row.conversation_id, { content: row.content, created_at: row.created_at })
         }
       }
     }
 
-    const recentChats = (data ?? []).map((row) => {
+    const recentChats = conversationRows.map((row) => {
       const character = row.characters as {
         name: string
         profile_image_url: string | null
       } | null
+
+      const lastMessage = lastMessageByConversationId.get(row.id)
+      const lastActivityAt = [row.created_at, row.last_message_at, lastMessage?.created_at]
+        .filter((date): date is string => Boolean(date))
+        .sort((a, b) => Date.parse(b) - Date.parse(a))[0]
 
       return {
         id: row.id,
         character_id: row.character_id,
         character_name: character?.name ?? 'Unknown',
         character_image_url: character?.profile_image_url ?? null,
-        last_message_at: row.last_message_at,
-        last_message_preview: lastMessageByConversationId.get(row.id) ?? null,
+        last_message_at: lastActivityAt,
+        last_message_preview: lastMessage?.content ?? null,
       }
     })
 
-    return NextResponse.json(recentChats)
+    return NextResponse.json(
+      recentChats.sort((a, b) => Date.parse(b.last_message_at) - Date.parse(a.last_message_at)).slice(0, 30),
+    )
   } catch (err) {
     console.error('[/api/conversations GET]', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

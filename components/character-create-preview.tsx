@@ -59,8 +59,8 @@ export function CharacterCreatePreview({
     <section className={cn('flex h-full min-h-0 w-full flex-col bg-background', className)} aria-label={t('Preview')}>
       <div className="relative flex shrink-0 items-start px-5 pb-3 pt-5 text-left">
         <div className="min-w-0 pr-7">
-          <h2 className="text-sm font-semibold text-foreground">{t('Preview')}</h2>
-          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{t('See how your draft will look in the app.')}</p>
+          <h2 className="text-[19px] font-bold text-foreground">{t('Preview')}</h2>
+          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{t('See how your draft will look in the app.')}</p>
         </div>
         {onClose ? (
           <IconButton onClick={onClose} aria-label={t('Close preview')} className="absolute right-4 top-4">
@@ -78,9 +78,10 @@ export function CharacterCreatePreview({
             { value: 'examples', label: t('Examples') },
           ]}
           shape="rounded"
+          size="md"
           layout="equal"
           columns={3}
-          className="w-full"
+          className="w-full [&_button]:text-sm"
           aria-label={t('Preview sections')}
         />
       </div>
@@ -97,13 +98,13 @@ export function CharacterCreatePreview({
                 <User className="h-12 w-12 text-muted-foreground/50" aria-hidden />
               )}
             </div>
-            <h3 className={cn('mt-5 text-sm font-semibold leading-snug', name.trim() ? 'text-foreground' : 'text-muted-foreground')}>
+            <h3 className={cn('mt-5 text-base font-semibold leading-snug', name.trim() ? 'text-foreground' : 'text-muted-foreground')}>
               {previewName}
             </h3>
-            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
               {tagline.trim() || t('Your one-line introduction appears here.')}
             </p>
-            {mood.trim() ? <p className="mt-3 text-xs text-muted-foreground">{mood}</p> : null}
+            {mood.trim() ? <p className="mt-3 text-sm text-muted-foreground">{mood}</p> : null}
             {genres.length > 0 ? (
               <div className="mt-4 flex flex-wrap gap-1.5">
                 {genres.map((genre) => (
@@ -113,8 +114,8 @@ export function CharacterCreatePreview({
             ) : null}
             {description.trim() ? (
               <div className="mt-5 border-t border-border pt-4">
-                <h4 className="text-sm font-semibold text-foreground">{t('About')}</h4>
-                <p className="mt-2 whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground">{description}</p>
+                <h4 className="text-base font-semibold text-foreground">{t('About')}</h4>
+                <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">{description}</p>
               </div>
             ) : null}
           </div>
@@ -125,7 +126,7 @@ export function CharacterCreatePreview({
                 {imageUrl ? <AvatarImage src={imageUrl} alt="" /> : null}
                 <AvatarFallback className="bg-muted text-sm">{emoji || previewName.charAt(0)}</AvatarFallback>
               </Avatar>
-              <span className="truncate text-sm font-semibold text-foreground">{previewName}</span>
+              <span className="truncate text-base font-semibold text-foreground">{previewName}</span>
             </div>
             {visibleIntro.length > 0 ? visibleIntro.map((turn, index) => (
               <MessageBubble

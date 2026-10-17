@@ -232,6 +232,7 @@ export default function ChatWindow({
           ]
         })
         bumpCharacterMessageCountInCache(queryClient, character.id, 2)
+        void queryClient.invalidateQueries({ queryKey: queryKeys.conversations.list() })
       })
 
       socket.on('chat:error', (event) => {

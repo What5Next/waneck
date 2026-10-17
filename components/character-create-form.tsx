@@ -8,7 +8,7 @@ import { toast } from 'sonner'
 import { CHARACTER_GENRE_OPTIONS } from '@/lib/character-genres'
 import type { CharacterWithDetail } from '@/lib/types'
 import { Button } from '@/components/ui/button'
-import { Field, TextInput, TextArea } from '@/components/ui/form-field'
+import { Field, TextInput, TextArea, characterFormInputClassName, characterFormDescriptionClassName } from '@/components/ui/form-field'
 import { PageNavBar } from '@/components/ui/page-nav-bar'
 import { CharacterCreatePreview, type CharacterPreviewView } from '@/components/character-create-preview'
 import { BottomSheetContent } from '@/components/ui/bottom-sheet'
@@ -16,8 +16,6 @@ import { Dialog, DialogTitle } from '@/components/ui/dialog'
 import { InputDropdown } from '@/components/ui/input-dropdown'
 import { UnderlineTabs } from '@/components/ui/underline-tabs'
 import { Chip } from '@/components/ui/chip'
-import { SettingsSaveButton } from '@/components/default-settings/settings-save-button'
-import { settingsFieldClassName, settingsIntroDescriptionClassName } from '@/components/default-settings/settings-field-classes'
 import { useCreateCharacter } from '@/hooks/mutations/use-create-character'
 import { useUpdateCharacter } from '@/hooks/mutations/use-update-character'
 import { buildCharacterPrompt, EMPTY_CHARACTER_PROMPT, parseCharacterPrompt, type CharacterPromptFields } from '@/lib/character-prompt'
@@ -173,7 +171,7 @@ function SettingsTab({
               type="button"
               variant="pill"
               size="sm"
-              className="gap-1.5 text-xs"
+              className="gap-1.5 text-sm"
               onClick={() => {
                 const emojis = ['🌸', '⚔️', '🧪', '🦊', '🐉', '🌙', '🔮', '🎭', '🦋', '🌊']
                 const emoji = emojis[Math.floor(Math.random() * emojis.length)]
@@ -187,7 +185,7 @@ function SettingsTab({
               type="button"
               variant="pill"
               size="sm"
-              className="gap-1.5 text-xs"
+              className="gap-1.5 text-sm"
               onClick={() => fileRef.current?.click()}
             >
               <Upload className="h-3.5 w-3.5" />
@@ -277,7 +275,7 @@ function IntroTab({
           {form.introTurns.map((turn, idx) => (
             <div key={idx} className="flex flex-col gap-2 border-t border-border/60 py-3 first:border-t-0 first:pt-0">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-muted-foreground">{t('Message')} {idx + 1}</span>
+                <span className="text-sm font-medium text-muted-foreground">{t('Message')} {idx + 1}</span>
                 <InputDropdown
                   value={turn.role}
                   onValueChange={(value) => updateTurn(idx, 'role', value)}
@@ -309,7 +307,7 @@ function IntroTab({
             type="button"
             variant="ghost"
             size="sm"
-            className="mt-1 gap-1.5 self-start px-2 text-xs text-foreground hover:bg-muted/40"
+            className="mt-1 gap-1.5 self-start px-2 text-sm text-foreground hover:bg-muted/40"
             onClick={addTurn}
           >
             <Plus className="h-3.5 w-3.5" />
@@ -377,27 +375,27 @@ function PromptTab({
       </Field>
       <div className="space-y-4 border-t border-border/60 pt-5">
         <div>
-          <h3 className="text-sm font-semibold text-foreground">{t('Story direction')}</h3>
-          <p className={settingsIntroDescriptionClassName}>{t('Set the viewpoint, pace, and usual reply length. The model can still adapt to the scene.')}</p>
+          <h3 className="text-base font-semibold text-foreground">{t('Story direction')}</h3>
+          <p className={characterFormDescriptionClassName}>{t('Set the viewpoint, pace, and usual reply length. The model can still adapt to the scene.')}</p>
         </div>
         <div className="grid gap-3 sm:grid-cols-3">
           <Field label={t('Viewpoint')}>
             <InputDropdown value={form.prompt.viewpoint}
               onValueChange={(value) => setForm((current) => ({ ...current, prompt: { ...current.prompt, viewpoint: value } }))}
               options={[{ value: 'automatic', label: t('Automatic') }, { value: 'first', label: t('First person') }, { value: 'second', label: t('Second person') }, { value: 'third', label: t('Third person') }]}
-              triggerClassName={settingsFieldClassName} aria-label={t('Viewpoint')} />
+              triggerClassName={`${characterFormInputClassName} [&>span]:text-base`} aria-label={t('Viewpoint')} />
           </Field>
           <Field label={t('Pace')}>
             <InputDropdown value={form.prompt.pacing}
               onValueChange={(value) => setForm((current) => ({ ...current, prompt: { ...current.prompt, pacing: value } }))}
               options={[{ value: 'natural', label: t('Natural') }, { value: 'slow', label: t('Slow') }, { value: 'fast', label: t('Fast') }]}
-              triggerClassName={settingsFieldClassName} aria-label={t('Pace')} />
+              triggerClassName={`${characterFormInputClassName} [&>span]:text-base`} aria-label={t('Pace')} />
           </Field>
           <Field label={t('Reply length')}>
             <InputDropdown value={form.prompt.replyLength}
               onValueChange={(value) => setForm((current) => ({ ...current, prompt: { ...current.prompt, replyLength: value } }))}
               options={[{ value: 'adaptive', label: t('Adaptive') }, { value: 'short', label: t('Short') }, { value: 'medium', label: t('Medium') }, { value: 'long', label: t('Long') }]}
-              triggerClassName={settingsFieldClassName} aria-label={t('Reply length')} />
+              triggerClassName={`${characterFormInputClassName} [&>span]:text-base`} aria-label={t('Reply length')} />
           </Field>
         </div>
       </div>
@@ -432,7 +430,7 @@ function ExamplesTab({ form, setForm }: {
       {form.prompt.examples.map((example, index) => (
         <div key={index} className="flex flex-col gap-3 border-t border-border/60 py-5 first:border-t-0 first:pt-0">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-foreground">{t('Example')} {index + 1}</h2>
+            <h2 className="text-base font-semibold text-foreground">{t('Example')} {index + 1}</h2>
             {form.prompt.examples.length > 1 && <button type="button" aria-label={`${t('Remove example')} ${index + 1}`}
               onClick={() => setForm((current) => ({ ...current, prompt: { ...current.prompt,
                 examples: current.prompt.examples.filter((_, i) => i !== index),
@@ -444,7 +442,7 @@ function ExamplesTab({ form, setForm }: {
             placeholder={t('Write the exact kind of reply you want: words, pacing, and actions.')} rows={3} maxLength={1000} /></Field>
         </div>
       ))}
-      {form.prompt.examples.length < 3 && <Button type="button" variant="ghost" size="sm" className="self-start gap-1.5 px-2 text-xs text-foreground hover:bg-muted/40"
+      {form.prompt.examples.length < 3 && <Button type="button" variant="ghost" size="sm" className="self-start gap-1.5 px-2 text-sm text-foreground hover:bg-muted/40"
         onClick={() => setForm((current) => ({ ...current, prompt: { ...current.prompt,
           examples: [...current.prompt.examples, { user: '', character: '' }],
         } }))}><Plus className="h-4 w-4" /> {t('Add example')}</Button>}
@@ -693,13 +691,12 @@ export function CharacterCreateForm({
     form.introTurns.every((t) => t.text.trim().length > 0) &&
     examplesComplete
 
-  const canNext = (() => {
-    if (activeTab === 'settings') return form.name.trim().length > 0
-    if (activeTab === 'prompt')   return personaComplete
-    if (activeTab === 'intro')    return form.introTurns.every((t) => t.text.trim().length > 0)
-    if (activeTab === 'examples') return examplesComplete
-    return true
-  })()
+  // 탭을 직접 눌러 앞 단계를 건너뛰어도, 현재 단계까지의 필수 항목은 모두 확인한다.
+  const canNext =
+    form.name.trim().length > 0 &&
+    (currentIdx < TAB_ORDER.indexOf('prompt') || personaComplete) &&
+    (currentIdx < TAB_ORDER.indexOf('intro') || form.introTurns.every((turn) => turn.text.trim().length > 0)) &&
+    (currentIdx < TAB_ORDER.indexOf('examples') || examplesComplete)
 
   function handlePrimaryAction() {
     if (mode === 'edit') {
@@ -736,10 +733,10 @@ export function CharacterCreateForm({
 
       <PageNavBar
         title={t(mode === 'edit' ? 'Edit character' : 'Create character')}
-        titleClassName="text-sm font-semibold text-foreground"
+        titleClassName="text-base font-semibold text-foreground"
         onBack={() => router.back()}
         trailing={
-          <button type="button" onClick={() => setMobilePreviewOpen(true)} className="inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium text-foreground hover:bg-muted lg:hidden">
+          <button type="button" onClick={() => setMobilePreviewOpen(true)} className="inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium text-foreground hover:bg-muted lg:hidden">
             <Eye className="h-4 w-4" aria-hidden />{t('Preview')}
           </button>
         }
@@ -752,16 +749,16 @@ export function CharacterCreateForm({
           value={activeTab}
           onValueChange={selectTab}
           options={TABS.map((tab) => ({ value: tab.id, label: `${t(tab.label)}${tab.required ? ' *' : ''}` }))}
-          listClassName="min-w-max justify-start gap-6 sm:justify-center"
+          listClassName="min-w-max justify-start gap-6 sm:justify-center [&>button]:text-[15px]"
         />
       </div>
 
       {/* 탭 콘텐츠 */}
       <div className="scroll-hide min-h-0 flex-1 overflow-y-auto px-4 py-5">
         <div className="mx-auto w-full max-w-[648px]">
-          <div className="mb-5 space-y-0.5">
-            <h2 className="text-sm font-semibold text-foreground">{t(TAB_INTROS[activeTab].title)}</h2>
-            <p className={settingsIntroDescriptionClassName}>{t(TAB_INTROS[activeTab].description)}</p>
+          <div className="mb-6 space-y-1 border-b border-border pb-5">
+            <h2 className="text-[19px] font-bold text-foreground">{t(TAB_INTROS[activeTab].title)}</h2>
+            <p className={characterFormDescriptionClassName}>{t(TAB_INTROS[activeTab].description)}</p>
           </div>
           {activeTab === 'settings' && <SettingsTab form={form} setForm={setForm} onFileChange={setImageFile} />}
           {activeTab === 'intro'    && <IntroTab    form={form} setForm={setForm} />}
@@ -779,11 +776,15 @@ export function CharacterCreateForm({
       {/* 하단 버튼 */}
       <div className="shrink-0 border-t border-border bg-background px-4 py-3">
         <div className="mx-auto flex w-full max-w-[648px]">
-          <SettingsSaveButton
-            label={primaryLabel}
-            enabled={!primaryDisabled}
+          <Button
+            type="button"
+            size="lg"
+            disabled={primaryDisabled}
             onClick={handlePrimaryAction}
-          />
+            className="w-full rounded-xl text-base font-semibold"
+          >
+            {primaryLabel}
+          </Button>
         </div>
       </div>
         </div>

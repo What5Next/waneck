@@ -2,12 +2,16 @@ import type { ReactNode } from 'react'
 
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { settingsFieldClassName, settingsTextareaClassName } from '@/components/default-settings/settings-field-classes'
 import { cn } from '@/lib/utils'
+
+export const characterFormInputClassName =
+  'border-0 bg-muted/45 px-3 py-2.5 text-base shadow-none focus:ring-0 dark:bg-muted/25'
+
+export const characterFormDescriptionClassName = 'text-sm leading-relaxed text-muted-foreground'
 
 export function Label({ children, required }: { children: string; required?: boolean }) {
   return (
-    <p className="mb-1.5 text-sm font-semibold text-foreground">
+    <p className="mb-1.5 text-base font-semibold text-foreground">
       {children}
       {required && <span className="ml-0.5 text-destructive">*</span>}
     </p>
@@ -28,7 +32,7 @@ export function Field({
   return (
     <div className="flex min-w-0 flex-col">
       <Label required={required}>{label}</Label>
-      {hint && <p className="mb-2 text-xs text-muted-foreground">{hint}</p>}
+      {hint && <p className="mb-2 text-[13px] leading-relaxed text-muted-foreground">{hint}</p>}
       {children}
     </div>
   )
@@ -52,7 +56,7 @@ export function TextInput({
         onChange={(event) => onChange(event.target.value)}
         maxLength={maxLength}
         placeholder={placeholder}
-        className={cn(settingsFieldClassName, maxLength !== undefined && 'pr-16')}
+        className={cn(characterFormInputClassName, maxLength !== undefined && 'pr-16')}
       />
       {maxLength !== undefined ? (
         <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
@@ -85,7 +89,7 @@ export function TextArea({
         placeholder={placeholder}
         rows={rows}
         className={cn(
-          settingsTextareaClassName,
+          characterFormInputClassName,
           'scroll-thumb-only max-h-52 overflow-y-auto',
           maxLength !== undefined && 'pb-8',
         )}
