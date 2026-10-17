@@ -36,6 +36,21 @@ const KOREAN_SELF_HARM = [
   '살고싶지않',
   '사라지고싶',
   '번개탄',
+  '뒤지고싶',
+  '디지고싶',
+  '죽었으면',
+  '죽구싶',
+  '죽꼬싶',
+  '극단선택',
+  '유서쓰',
+  '유서썼',
+  '유서남',
+  '없어지고싶',
+  '사는게싫',
+  '사는의미없',
+  '사는의미가없',
+  '투신할',
+  '리스트컷',
 ]
 
 const KOREAN_SEXUAL = [
@@ -62,6 +77,64 @@ const KOREAN_SEXUAL = [
   '만져줘',
   '가슴을만',
   '하룻밤을보내',
+  '야스',
+  '섹트',
+  '섹파',
+  '원나잇',
+  '야설',
+  '딸딸이',
+  '딸감',
+  '자지',
+  '보지',
+  '좆',
+  '유두',
+  '젖꼭지',
+  '애널',
+  '후장',
+  '박아줘',
+  '질싸',
+  '질내사정',
+  '중출',
+  '발정',
+  '꼴려',
+  '꼴린',
+  '꼴리',
+  '강간',
+  '성폭행',
+  '능욕',
+  '준강간',
+  '야해줘',
+  '야하게',
+  '팬티벗어',
+  '헨타이',
+  '근친',
+  '네토라레',
+  '조건만남',
+  '성매매',
+  '원조교제',
+  '로리',
+  '로리타',
+  '로리콘',
+  '롤리콘',
+  '롤리타',
+  '쇼타',
+  '쇼타콘',
+]
+
+/**
+ * 짧은 토큰이 정상 단어 안에 들어가는 경우.
+ * 검사 전에 지운다. ("칼로리" 안의 "로리", "섹터" 안의 "섹트")
+ */
+const KOREAN_SEXUAL_ALLOW = [
+  '칼로리',
+  '글로리',
+  '로리팝',
+  '플로리다',
+  '쇼타임',
+  '보자기',
+  '섹터',
+  '인섹트',
+  '못박아',
 ]
 
 /** 영어는 단어 경계를 지켜서 찾는다 ("assess" 안의 "sex" 같은 오탐 방지) */
@@ -78,6 +151,12 @@ const ENGLISH_SELF_HARM = [
   /\bbetter\s+off\s+dead\b/i,
   /\b(do\s+not|don't|dont)\s+want\s+to\s+(live|be\s+alive)\b/i,
   /\boverdose\s+on\s+purpose\b/i,
+  /\bkms\b/i,
+  /\bun[\s-]?alive\b/i,
+  /\boff\s+my\s*self\b/i,
+  /\bend\s+it\s+all\b/i,
+  /\bslit(?:ting)?\s+my\s+wrists?\b/i,
+  /\bwish\s+i\s+(?:was|were)\s+dead\b/i,
 ]
 
 const ENGLISH_SEXUAL = [
@@ -95,15 +174,45 @@ const ENGLISH_SEXUAL = [
   /\bintercourse\b/i,
   /\bhorny\b/i,
   /\bmake\s+love\b/i,
+  /\b(?:mother|cluster)?fuck(?:ing|ed|ers?|s)?\b/i,
+  /\bdicks?\b/i,
+  /\bcocks?\b/i,
+  /\bpuss(?:y|ies)\b/i,
+  /\bcunts?\b/i,
+  /\bboobs?\b/i,
+  /\btits\b/i,
+  /\bnipples?\b/i,
+  /\bcum(?:ming|med|s)?\b/i,
+  /\bcreampies?\b/i,
+  /\bejaculat\w*/i,
+  /\banal\b/i,
+  /\bdildos?\b/i,
+  /\brap(?:e|es|ed|ing|ist)s?\b/i,
+  /\bnon[\s-]?con(?:sent(?:ual)?)?\b/i,
+  /\bhentai\b/i,
+  /\bonly[\s-]?fans\b/i,
+  /\brule[\s-]?34\b/i,
+  /\bincest(?:uous)?\b/i,
+  /\bloli(?:[\s-]?con|ta)?s?\b/i,
+  /\bshota(?:[\s-]?con)?s?\b/i,
+  /\bunder[\s-]?age\b/i,
+  /\bjail[\s-]?bait\b/i,
+  /\bcsam\b/i,
+  /\bchild\s+porn(?:ography)?\b/i,
 ]
 
 function compactKorean(text: string): string {
   return text.toLowerCase().replace(/[\s.,!?~*"'`\-_·…「」『』()[\]{}]+/g, '')
 }
 
+function withoutAllowlist(compact: string, allow: string[]): string {
+  return allow.reduce((text, phrase) => text.replaceAll(phrase, ''), compact)
+}
+
 /** 메시지가 전송 가능한지 검사한다. 자해 표현이 성적 표현보다 우선한다. */
 export function checkMessageSafety(text: string): SafetyResult {
   const compact = compactKorean(text)
+  const sexualText = withoutAllowlist(compact, KOREAN_SEXUAL_ALLOW)
 
   if (
     KOREAN_SELF_HARM.some((term) => compact.includes(term)) ||
@@ -113,7 +222,7 @@ export function checkMessageSafety(text: string): SafetyResult {
   }
 
   if (
-    KOREAN_SEXUAL.some((term) => compact.includes(term)) ||
+    KOREAN_SEXUAL.some((term) => sexualText.includes(term)) ||
     ENGLISH_SEXUAL.some((pattern) => pattern.test(text))
   ) {
     return { ok: false, category: 'sexual' }
