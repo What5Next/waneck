@@ -2,11 +2,12 @@
  * 채팅 입력 안전 검사 — 전송 직전에 사용자가 쓴 글을 검사한다.
  * - self_harm: 자살·자해 관련 표현 → 전송하지 않고 위기 지원 정보를 안내한다.
  * - sexual: 성적·19금 표현 → 전송하지 않고 지원하지 않는다고 안내한다.
+ * - violence: 잔혹한 폭력 또는 직접적인 위해 요청 → 전송하지 않는다.
  *
  * 키워드 기반의 1차 방어선이다. 우회될 수 있으므로 모델/서버 쪽 검사를 대신하지 않는다.
  */
 
-export type SafetyCategory = 'self_harm' | 'sexual'
+export type SafetyCategory = 'self_harm' | 'sexual' | 'violence'
 
 export type SafetyResult = { ok: true } | { ok: false; category: SafetyCategory }
 
@@ -201,6 +202,21 @@ const ENGLISH_SEXUAL = [
   /\bchild\s+porn(?:ography)?\b/i,
 ]
 
+const KOREAN_VIOLENCE = [
+  '살해해', '살해하', '살인해', '살인하', '죽여버', '죽여줘', '죽여야',
+  '때려죽', '칼로찌', '칼로찔', '목을베', '목을잘라', '목을졸라',
+  '총으로쏴', '총으로쏘', '고문해', '고문하', '폭행해', '폭행하',
+  '구타해', '구타하', '학살해', '학살하', '살육', '참수', '토막살인',
+  '시체훼손', '사지절단', '피투성이로만',
+]
+
+const ENGLISH_VIOLENCE = [
+  /\b(?:kill|murder|slaughter)\s+(?:him|her|them|someone|you)\b/i,
+  /\b(?:stab|shoot|strangle|torture|beat)\s+(?:him|her|them|someone|you)\b/i,
+  /\b(?:behead|dismember|mutilate)\b/i,
+  /\bgraphic\s+(?:violence|gore|murder)\b/i,
+]
+
 function compactKorean(text: string): string {
   return text.toLowerCase().replace(/[\s.,!?~*"'`\-_·…「」『』()[\]{}]+/g, '')
 }
@@ -228,6 +244,13 @@ export function checkMessageSafety(text: string): SafetyResult {
     return { ok: false, category: 'sexual' }
   }
 
+  if (
+    KOREAN_VIOLENCE.some((term) => compact.includes(term)) ||
+    ENGLISH_VIOLENCE.some((pattern) => pattern.test(text))
+  ) {
+    return { ok: false, category: 'violence' }
+  }
+
   return { ok: true }
 }
 
@@ -241,4 +264,13 @@ export const SAFETY_NOTICES: Record<SafetyCategory, string> = {
   sexual:
     "This message wasn't sent. whatsnext doesn't support sexually explicit (19+) content. " +
     'Please rephrase it.',
+  violence:
+    "This message wasn't sent. whatsnext doesn't support graphic violence or threats of harm. " +
+    'Please rephrase it.',
+}
+
+export const SAFETY_OUTPUT_NOTICES: Record<SafetyCategory, string> = {
+  self_harm: 'This reply was hidden because it may contain unsafe self-harm content.',
+  sexual: 'This reply was hidden because sexually explicit (19+) content is unavailable in safety mode.',
+  violence: 'This reply was hidden because graphic violence is unavailable in safety mode.',
 }

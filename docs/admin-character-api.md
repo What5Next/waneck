@@ -37,6 +37,9 @@
 - `introTurns[].role`: `model`(캐릭터) 또는 `user`.
 - `created_by`: 작성자 유저 id(uuid). 생략하면 작성자 없이 생성된다.
 - 생성 즉시 공개된다.
+- `system_prompt`는 캐릭터의 이름만 바꾼 범용 문장이 아니라 [AI 캐릭터 시트 생성 기준](./character-sheet-generation.md)에 따른 장문 시트로 작성한다. 성격의 원인, 상황별 행동, 말투, `{{user}}`와의 관계 변화 조건, 세계의 제약, 대화 예시를 포함한다.
+- `short_intro`, `description`, `suggestions`, `introTurns`는 같은 시작 상황과 캐릭터 설정을 가리키게 한다. `introTurns`는 첫 장면이며, 시트의 예시 대화를 이미 일어난 사건으로 간주하지 않는다.
+- 이 API는 받은 `system_prompt`를 저장한다. Drive나 저장소의 MD 파일을 수정해도 기존 DB 캐릭터의 프롬프트가 자동 갱신되지는 않는다.
 
 응답: `201` + 생성된 캐릭터 객체(`id` 포함)
 

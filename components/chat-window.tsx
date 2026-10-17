@@ -12,7 +12,7 @@ import { ChatComposer } from '@/components/chat/chat-composer'
 import type { SuggestedReply } from '@/components/chat/suggested-replies'
 import { LoginModal } from '@/components/auth/login-modal'
 import type { ChatSystemNotice } from '@/components/chat/chat-thread'
-import { SAFETY_NOTICES, checkMessageSafety } from '@/lib/chat-safety'
+import { SAFETY_NOTICES, SAFETY_OUTPUT_NOTICES, checkMessageSafety } from '@/lib/chat-safety'
 import { useAuth } from '@/hooks/use-auth'
 import { useResolvedConversationModel } from '@/hooks/use-user-settings'
 import { useAiModelsQuery } from '@/hooks/queries/use-ai-models-query'
@@ -131,7 +131,11 @@ export default function ChatWindow({
   showOpeningSuggestions?: boolean
   situationImages?: CharacterSituationImage[]
 }) {
-  const [messages, setMessages] = useState<Message[]>(initialMessages)
+  const [messages, setMessages] = useState<Message[]>(() => initialMessages.map((message) => {
+    if (message.role !== 'model') return message
+    const safety = checkMessageSafety(message.content)
+    return safety.ok ? message : { ...message, content: SAFETY_OUTPUT_NOTICES[safety.category] }
+  }))
   const [isLoading, setIsLoading] = useState(false)
   const [draft, setDraft] = useState('')
   const [suggestedReplies, setSuggestedReplies] = useState<SuggestedReply[]>(() =>
@@ -154,6 +158,7 @@ export default function ChatWindow({
   const queryClient = useQueryClient()
   const socketRef = useRef<ChatSocket | null>(null)
   const isStreamingRef = useRef(false)
+  const responseBufferRef = useRef('')
   const pendingSendRef = useRef<{
     content: string
     previousMessages: Message[]
@@ -202,42 +207,43 @@ export default function ChatWindow({
         if (!event.delta) return
 
         isStreamingRef.current = true
-        setMessages((prev) => {
-          const last = prev[prev.length - 1]
-
-          if (last?.role === 'model') {
-            return [
-              ...prev.slice(0, -1),
-              { ...last, content: last.content + event.delta },
-            ]
-          }
-
-          return [
-            ...prev,
-            { role: 'model', content: event.delta, time: getTime() },
-          ]
-        })
+        // 완성 전에는 표시하지 않는다. 단어가 여러 delta로 나뉘어도 안전 검사 후 노출한다.
+        responseBufferRef.current += event.delta
       })
 
       socket.on('chat:complete', (event) => {
         if (event.conversationId !== conversationId) return
 
+        const completedSend = pendingSendRef.current
         isStreamingRef.current = false
         pendingSendRef.current = null
         setIsLoading(false)
+        const reply = event.content || responseBufferRef.current
+        responseBufferRef.current = ''
+        const safety = checkMessageSafety(reply)
+        if (!safety.ok) {
+          const notice = SAFETY_OUTPUT_NOTICES[safety.category]
+          setNotices((prev) => [...prev, {
+            id: createClientMessageId(),
+            afterIndex: completedSend?.previousMessages.length ?? -1,
+            text: notice,
+          }])
+          toast.warning(notice)
+          return
+        }
         setMessages((prev) => {
           const last = prev[prev.length - 1]
 
           if (last?.role === 'model') {
             return [
               ...prev.slice(0, -1),
-              { ...last, content: event.content, time: getTime() },
+              { ...last, content: reply, time: getTime() },
             ]
           }
 
           return [
             ...prev,
-            { role: 'model', content: event.content, time: getTime() },
+            { role: 'model', content: reply, time: getTime() },
           ]
         })
         bumpCharacterMessageCountInCache(queryClient, character.id, 2)
@@ -251,6 +257,7 @@ export default function ChatWindow({
 
         const pendingSend = pendingSendRef.current
         isStreamingRef.current = false
+        responseBufferRef.current = ''
         pendingSendRef.current = null
         setIsLoading(false)
 
@@ -279,6 +286,7 @@ export default function ChatWindow({
       socketRef.current?.disconnect()
       socketRef.current = null
       isStreamingRef.current = false
+      responseBufferRef.current = ''
     }
   }, [character.id, conversationId, isAuthenticated, queryClient])
 
@@ -297,6 +305,7 @@ export default function ChatWindow({
           text: SAFETY_NOTICES[safety.category],
         },
       ])
+      toast.warning(SAFETY_NOTICES[safety.category])
       return
     }
 
@@ -322,6 +331,7 @@ export default function ChatWindow({
     setSuggestedReplies([])
     if (overrideText === undefined) setDraft('')
     setIsLoading(true)
+    responseBufferRef.current = ''
     pendingSendRef.current = {
       content: trimmed,
       previousMessages: messages,
