@@ -18,7 +18,8 @@ import { UnderlineTabs } from '@/components/ui/underline-tabs'
 import { Chip } from '@/components/ui/chip'
 import { useCreateCharacter } from '@/hooks/mutations/use-create-character'
 import { useUpdateCharacter } from '@/hooks/mutations/use-update-character'
-import { buildCharacterPrompt, EMPTY_CHARACTER_PROMPT, parseCharacterPrompt, type CharacterPromptFields } from '@/lib/character-prompt'
+import { buildCharacterPrompt, CHARACTER_TEMPLATE_SECTIONS, EMPTY_CHARACTER_PROMPT, parseCharacterPrompt, type CharacterPromptFields } from '@/lib/character-prompt'
+import { organizeCharacterPrompt } from '@/lib/character-prompt-organizer'
 import { useDevLanguage } from '@/components/dev-language-provider'
 import { characterCreateText } from '@/lib/character-create-copy'
 
@@ -42,7 +43,7 @@ const TAB_ORDER: TabId[] = TABS.map((t) => t.id)
 
 const TAB_INTROS: Record<TabId, { title: string; description: string }> = {
   settings: { title: 'Character', description: 'Set the profile people will see.' },
-  prompt: { title: 'Persona', description: 'Define how this character thinks, speaks, and reacts in every chat.' },
+  prompt: { title: 'Persona', description: 'Define one character and the story they share with the user.' },
   intro: { title: 'Opening', description: 'Write the scene shown when a new chat begins.' },
   examples: { title: 'Advanced', description: 'Add example dialogues and images for specific moments.' },
 }
@@ -379,99 +380,130 @@ function PromptTab({
 }) {
   const t = useFormText()
   const [detailsOpen, setDetailsOpen] = useState(() => Boolean(
-    form.prompt.backstory.trim() || form.prompt.relationship.trim() ||
-    form.prompt.voice.trim() || form.prompt.reactions.trim() || form.prompt.additional.trim() ||
-    form.prompt.viewpoint !== 'automatic' || form.prompt.pacing !== 'natural' ||
-    form.prompt.replyLength !== 'adaptive',
+    Object.values(form.prompt.template).some((value) => value.trim()) ||
+    ['personality', 'backstory', 'relationship', 'session', 'voice', 'reactions', 'dialogueRules', 'progressionRules', 'eventRules', 'additional'].some((key) => form.prompt[key as keyof CharacterPromptFields]?.toString().trim()),
   ))
+  const [openGroups, setOpenGroups] = useState<string[]>(['character'])
   function update(key: keyof CharacterPromptFields, value: string) {
     setForm((current) => ({ ...current, prompt: { ...current.prompt, [key]: value } }))
   }
+  function updateTemplate(key: keyof CharacterPromptFields['template'], value: string) {
+    setForm((current) => ({ ...current, prompt: { ...current.prompt, template: { ...current.prompt.template, [key]: value } } }))
+  }
+  function organizePrompt() {
+    const organized = organizeCharacterPrompt(form.prompt.identity)
+    const keys = ['personality', 'backstory', 'relationship', 'session', 'voice', 'reactions', 'dialogueRules', 'progressionRules', 'eventRules', 'additional'] as const
+    const filled = keys.filter((key) => !form.prompt[key].trim() && organized[key].trim()).length +
+      (Object.keys(form.prompt.template) as Array<keyof CharacterPromptFields['template']>)
+        .filter((key) => !form.prompt.template[key].trim() && organized.template[key].trim()).length
+    setForm((current) => {
+      const prompt = { ...current.prompt, template: { ...current.prompt.template } }
+      for (const key of keys) {
+        const value = organized[key]
+        if (!prompt[key].trim() && value.trim()) {
+          prompt[key] = value.trim()
+        }
+      }
+      for (const key of Object.keys(prompt.template) as Array<keyof CharacterPromptFields['template']>) {
+        const value = organized.template[key]
+        if (!prompt.template[key].trim() && value.trim()) {
+          prompt.template[key] = value.trim()
+        }
+      }
+      return { ...current, prompt }
+    })
+    setDetailsOpen(true)
+    setOpenGroups(['character', 'relationship', 'world', 'rules'])
+    if (filled) toast.success(t('Character concept organized into detailed settings.'))
+    else toast.info(t('No matching empty fields were found. The original text is unchanged.'))
+  }
+  const templateField = (section: typeof CHARACTER_TEMPLATE_SECTIONS[number]) => (
+    <Field key={section.key} label={t(section.title)} hint={t(section.guide)}>
+      <TextArea value={form.prompt.template[section.key]} onChange={(value) => updateTemplate(section.key, value)}
+        placeholder={`${t('e.g. ')}${t(section.example)}`} rows={4} maxLength={4000} />
+    </Field>
+  )
+  const group = (id: string, title: string, description: string, content: React.ReactNode) => (
+    <div key={id} className="rounded-xl border border-border bg-card/30">
+      <button type="button" aria-expanded={openGroups.includes(id)} onClick={() => setOpenGroups((groups) => groups.includes(id) ? groups.filter((groupId) => groupId !== id) : [...groups, id])}
+        className="flex w-full items-center justify-between gap-3 px-4 py-4 text-left">
+        <span><span className="block text-base font-semibold text-foreground">{t(title)}</span>
+          <span className="mt-1 block text-sm text-muted-foreground">{t(description)}</span></span>
+        <ChevronDown className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform ${openGroups.includes(id) ? 'rotate-180' : ''}`} aria-hidden />
+      </button>
+      {openGroups.includes(id) && <div className="flex flex-col gap-5 border-t border-border/60 px-4 py-5">{content}</div>}
+    </div>
+  )
 
   return (
     <div className="flex flex-col gap-5">
-      <Field
-        label={t('Who are they?')}
-        required
-        hint={t('Briefly describe their role and what they want right now.')}
-      >
-        <TextArea
-          value={form.prompt.identity}
-          onChange={(v) => update('identity', v)}
-          placeholder={t('e.g. Mara is a 29-year-old audio archivist investigating a missing recording. She catches lies by listening for tiny changes in a voice.')}
-          rows={4}
-          maxLength={1200}
-        />
+      <Field label={t('Character concept')}
+        hint={t('Write or paste one character’s personality, voice, appearance, relationship with the user, and story rules.')}>
+        <TextArea value={form.prompt.identity} onChange={(v) => update('identity', v)}
+          placeholder={t('e.g. Mara Voss is a guarded audio archivist looking for a missing recording. She speaks briefly, notices lies in voices, and slowly learns to trust the user.')}
+          rows={8} className="min-h-[420px] max-h-none resize-y font-mono text-sm leading-relaxed" maxLength={20000} />
       </Field>
-      <Field label={t('Personality and inner conflict')} required hint={t('Describe their usual personality and how it shows in their actions.')}>
-        <TextArea value={form.prompt.personality} onChange={(v) => update('personality', v)}
-          placeholder={t('e.g. Mara checks every detail but hides her own mistakes. She wants a partner she can trust, yet tests people by sharing only half of what she knows.')}
-          rows={5} maxLength={1800} />
-      </Field>
-      <button
-        type="button"
-        aria-expanded={detailsOpen}
-        onClick={() => setDetailsOpen((open) => !open)}
-        className="flex w-full items-center justify-between rounded-xl border border-border bg-card/40 px-4 py-4 text-left hover:bg-muted/40"
-      >
-        <span>
-          <span className="block text-base font-semibold text-foreground">{t('Detailed settings')}</span>
-          <span className="mt-1 block text-sm text-muted-foreground">{t('Optional: add history, relationships, voice, and story direction.')}</span>
-        </span>
+      <button type="button" aria-expanded={detailsOpen} onClick={() => setDetailsOpen((open) => !open)}
+        className="flex w-full items-center justify-between rounded-xl border border-border bg-card/40 px-4 py-4 text-left hover:bg-muted/40">
+        <span><span className="block text-base font-semibold text-foreground">{t('Detailed settings')}</span>
+          <span className="mt-1 block text-sm text-muted-foreground">{t('Fill only the sections you need. Freeform text stays separate.')}</span></span>
         <ChevronDown className={`ml-3 h-5 w-5 shrink-0 text-muted-foreground transition-transform ${detailsOpen ? 'rotate-180' : ''}`} aria-hidden />
       </button>
-      {detailsOpen && <div className="flex flex-col gap-5">
-      <Field label={t('Backstory and world')} hint={t('Only include history or setting details that should shape replies.')}>
-        <TextArea value={form.prompt.backstory} onChange={(v) => update('backstory', v)}
-          placeholder={t('e.g. Three years ago, Mara lost a colleague in a studio fire. Since then, she has secretly kept copies of recordings the company ordered destroyed.')}
-          rows={4} maxLength={1600} />
-      </Field>
-      <Field label={t('Relationship with the user')} hint={t('Define what they know about the user, what they want from them, and how trust changes.')}>
-        <TextArea value={form.prompt.relationship} onChange={(v) => update('relationship', v)}
-          placeholder={t('e.g. The user is Mara’s new partner on the case. She shares evidence but avoids personal questions; she opens up if the user protects a secret.')}
-          rows={4} maxLength={1400} />
-      </Field>
-      <Field label={t('Voice and dialogue style')} hint={t('Specify rhythm, vocabulary, humor, formality, and how emotion changes their speech.')}>
-        <TextArea value={form.prompt.voice} onChange={(v) => update('voice', v)}
-          placeholder={t('e.g. Mara speaks in short, precise sentences and never uses emojis. When worried, she says “Check the timestamp” instead of “Be careful.”')}
-          rows={4} maxLength={1400} />
-      </Field>
-      <div className="space-y-4 border-t border-border/60 pt-5">
-        <div>
-          <h3 className="text-base font-semibold text-foreground">{t('Story direction')}</h3>
-          <p className={characterFormDescriptionClassName}>{t('Set the viewpoint, pace, and usual reply length. The model can still adapt to the scene.')}</p>
+      {detailsOpen && <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-1">
+          <p className="text-sm text-muted-foreground">{t('Bring sections from the Character concept above into empty detailed fields.')}</p>
+          <Button type="button" variant="outline" size="sm" onClick={organizePrompt} disabled={!form.prompt.identity.trim()}>
+            {t('Fill from Character concept')}
+          </Button>
         </div>
-        <div className="grid gap-3 sm:grid-cols-3">
-          <Field label={t('Viewpoint')}>
-            <InputDropdown value={form.prompt.viewpoint}
-              onValueChange={(value) => setForm((current) => ({ ...current, prompt: { ...current.prompt, viewpoint: value } }))}
-              options={[{ value: 'automatic', label: t('Automatic') }, { value: 'first', label: t('First person') }, { value: 'second', label: t('Second person') }, { value: 'third', label: t('Third person') }]}
-              triggerClassName={`${characterFormInputClassName} [&>span]:text-base`} aria-label={t('Viewpoint')} />
+        {group('character', 'Character details', 'Personality, voice, appearance, history, and habits.', <>
+          {templateField(CHARACTER_TEMPLATE_SECTIONS[0])}
+          <Field label={t('Personality and inner conflict')} hint={t('Describe their usual traits, reactions in special situations, and core disposition.')}>
+            <TextArea value={form.prompt.personality} onChange={(v) => update('personality', v)} placeholder={t('e.g. Mara checks every detail but hides her own mistakes. She wants a partner she can trust, yet tests people by sharing only half of what she knows.')} rows={5} maxLength={1800} />
           </Field>
-          <Field label={t('Pace')}>
-            <InputDropdown value={form.prompt.pacing}
-              onValueChange={(value) => setForm((current) => ({ ...current, prompt: { ...current.prompt, pacing: value } }))}
-              options={[{ value: 'natural', label: t('Natural') }, { value: 'slow', label: t('Slow') }, { value: 'fast', label: t('Fast') }]}
-              triggerClassName={`${characterFormInputClassName} [&>span]:text-base`} aria-label={t('Pace')} />
+          <Field label={t('Voice and dialogue style')} hint={t('Describe everyday, emotional, and special-situation speech, plus recurring words.')}>
+            <TextArea value={form.prompt.voice} onChange={(v) => update('voice', v)} placeholder={t('e.g. Mara speaks in short, precise sentences and never uses emojis. When worried, she says “Check the timestamp” instead of “Be careful.”')} rows={4} maxLength={1400} />
           </Field>
-          <Field label={t('Reply length')}>
-            <InputDropdown value={form.prompt.replyLength}
-              onValueChange={(value) => setForm((current) => ({ ...current, prompt: { ...current.prompt, replyLength: value } }))}
-              options={[{ value: 'adaptive', label: t('Adaptive') }, { value: 'short', label: t('Short') }, { value: 'medium', label: t('Medium') }, { value: 'long', label: t('Long') }]}
-              triggerClassName={`${characterFormInputClassName} [&>span]:text-base`} aria-label={t('Reply length')} />
+          {CHARACTER_TEMPLATE_SECTIONS.slice(1, 9).map(templateField)}
+          <Field label={t('Backstory and world')} hint={t('Only include history or setting details that should shape replies.')}>
+            <TextArea value={form.prompt.backstory} onChange={(v) => update('backstory', v)} placeholder={t('e.g. Three years ago, Mara lost a colleague in a studio fire. Since then, she has secretly kept copies of recordings the company ordered destroyed.')} rows={4} maxLength={1600} />
           </Field>
-        </div>
-      </div>
-      <Field label={t('Reactions and boundaries')} hint={t("Describe how this person responds to disagreement, affection, danger, or secrets. Avoid generic 'always kind' rules.")}>
-        <TextArea value={form.prompt.reactions} onChange={(v) => update('reactions', v)}
-          placeholder={t("e.g. If accused, Mara asks to see the evidence before defending herself. If the user pulls away, she waits instead of following; she never decides their actions.")}
-          rows={4} maxLength={1400} />
-      </Field>
-      <Field label={t('Extra instructions')} hint={t("Optional advanced rules. Existing characters' old prompts appear here and remain intact.")}>
-        <TextArea value={form.prompt.additional} onChange={(v) => update('additional', v)}
-          placeholder={t('e.g. Do not reveal who erased the recording before the user finds a clue. Keep Mara’s knowledge limited to what she has seen or heard.')}
-          rows={4} maxLength={2500} />
-      </Field>
+          <Field label={t('Reactions and boundaries')} hint={t("Describe how this person responds to disagreement, affection, danger, or secrets. Avoid generic 'always kind' rules.")}>
+            <TextArea value={form.prompt.reactions} onChange={(v) => update('reactions', v)} placeholder={t("e.g. If accused, Mara asks to see the evidence before defending herself. If the user pulls away, she waits instead of following; she never decides their actions.")} rows={4} maxLength={1400} />
+          </Field>
+          {templateField(CHARACTER_TEMPLATE_SECTIONS[17])}
+        </>)}
+        {group('relationship', 'User and starting setup', 'Define the user’s role, their connection, and the opening conflict.', <>
+          <Field label={t('Relationship with the user')} hint={t('Define what they know about the user, what they want from them, and how trust changes.')}>
+            <TextArea value={form.prompt.relationship} onChange={(v) => update('relationship', v)} placeholder={t('e.g. The user is Mara’s new partner on the case. She shares evidence but avoids personal questions; she opens up if the user protects a secret.')} rows={4} maxLength={1400} />
+          </Field>
+          <Field label={t('Session and starting setup')} hint={t('Set the user’s role, shared goal, central conflict, and where the story begins.')}>
+            <TextArea value={form.prompt.session} onChange={(v) => update('session', v)} placeholder={t('e.g. The user joins Mara in the archive on their first night shift. They have seven days to find a missing recording before the archive closes.')} rows={5} maxLength={4000} />
+          </Field>
+        </>)}
+        {group('world', 'World and setting', 'Add only the places and rules the two of you need for the story.', <>
+          {CHARACTER_TEMPLATE_SECTIONS.slice(9, 15).map(templateField)}
+          {templateField(CHARACTER_TEMPLATE_SECTIONS[16])}
+        </>)}
+        {group('rules', 'Dialogue and story rules', 'Guide the character’s speech, pace, events, and state changes.', <>
+          <Field label={t('Dialogue rules')} hint={t('Describe narration, formatting, and what the character should never decide for the user.')}>
+            <TextArea value={form.prompt.dialogueRules} onChange={(v) => update('dialogueRules', v)} placeholder={t('e.g. Put actions in italics. Keep Mara’s dialogue concise. Never write the user’s speech or actions.')} rows={4} maxLength={4000} />
+          </Field>
+          <Field label={t('Story progression and state')} hint={t('Describe how trust, clues, or other story states should change.')}>
+            <TextArea value={form.prompt.progressionRules} onChange={(v) => update('progressionRules', v)} placeholder={t('e.g. Trust rises slowly after shared discoveries. At the end of each reply, show the current clue and trust level.')} rows={4} maxLength={4000} />
+          </Field>
+          <Field label={t('Timed events')} hint={t('Add milestones or events that should happen at specific story moments.')}>
+            <TextArea value={form.prompt.eventRules} onChange={(v) => update('eventRules', v)} placeholder={t('e.g. On the third night, a new recording appears in the archive. Reveal it only after the user checks the storage room.')} rows={4} maxLength={4000} />
+          </Field>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Field label={t('Viewpoint')}><InputDropdown value={form.prompt.viewpoint} onValueChange={(value) => update('viewpoint', value)} options={[{ value: 'automatic', label: t('Automatic') }, { value: 'first', label: t('First person') }, { value: 'second', label: t('Second person') }, { value: 'third', label: t('Third person') }]} triggerClassName={`${characterFormInputClassName} [&>span]:text-base`} aria-label={t('Viewpoint')} /></Field>
+            <Field label={t('Pace')}><InputDropdown value={form.prompt.pacing} onValueChange={(value) => update('pacing', value)} options={[{ value: 'natural', label: t('Natural') }, { value: 'slow', label: t('Slow') }, { value: 'fast', label: t('Fast') }]} triggerClassName={`${characterFormInputClassName} [&>span]:text-base`} aria-label={t('Pace')} /></Field>
+            <Field label={t('Reply length')}><InputDropdown value={form.prompt.replyLength} onValueChange={(value) => update('replyLength', value)} options={[{ value: 'adaptive', label: t('Adaptive') }, { value: 'short', label: t('Short') }, { value: 'medium', label: t('Medium') }, { value: 'long', label: t('Long') }]} triggerClassName={`${characterFormInputClassName} [&>span]:text-base`} aria-label={t('Reply length')} /></Field>
+          </div>
+          <Field label={t('Extra instructions')} hint={t("Optional advanced rules. Existing characters' old prompts appear here and remain intact.")}>
+            <TextArea value={form.prompt.additional} onChange={(v) => update('additional', v)} placeholder={t('e.g. Do not reveal who erased the recording before the user finds a clue. Keep Mara’s knowledge limited to what she has seen or heard.')} rows={4} maxLength={2500} />
+          </Field>
+        </>)}
       </div>}
     </div>
   )
@@ -678,8 +710,11 @@ export function CharacterCreateForm({
   // edit 모드에서는 특정 탭만 수정하고 바로 저장할 수 있어야 하므로
   // 전체 폼 기준으로 필수값을 검증한다 (현재 탭 기준이 아님).
   const personaComplete =
-    form.prompt.identity.trim().length > 0 &&
-    form.prompt.personality.trim().length > 0
+    Boolean(form.prompt.identity.trim() || form.prompt.personality.trim() ||
+      form.prompt.backstory.trim() || form.prompt.relationship.trim() ||
+      form.prompt.voice.trim() || form.prompt.reactions.trim() || form.prompt.additional.trim() ||
+      form.prompt.session.trim() || form.prompt.dialogueRules.trim() || form.prompt.progressionRules.trim() || form.prompt.eventRules.trim() ||
+      Object.values(form.prompt.template).some((value) => value.trim()))
   const examplesComplete = form.prompt.examples.every((example) =>
     Boolean(example.user.trim()) === Boolean(example.character.trim()),
   )

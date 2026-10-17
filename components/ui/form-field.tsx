@@ -73,12 +73,14 @@ export function TextArea({
   placeholder,
   maxLength,
   rows = 4,
+  className,
 }: {
   value: string
   onChange: (v: string) => void
   placeholder?: string
   maxLength?: number
   rows?: number
+  className?: string
 }) {
   return (
     <div className="relative">
@@ -92,6 +94,7 @@ export function TextArea({
           characterFormInputClassName,
           'scroll-thumb-only max-h-52 overflow-y-auto',
           maxLength !== undefined && 'pb-8',
+          className,
         )}
       />
       {maxLength !== undefined ? (
