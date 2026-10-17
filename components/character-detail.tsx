@@ -125,6 +125,7 @@ export function CharacterDetail({
           <CharacterIntroPreview
             character={characterData}
             introMessages={characterData.intro_messages}
+            situationImages={characterData.situation_images}
           />
 
           <div className="my-2 border-t border-white/5" />

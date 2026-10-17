@@ -33,6 +33,7 @@ export type MessageBubbleProps = {
   character?: Pick<Character, 'name' | 'profile_image_url'>
   showAvatar?: boolean
   timestamp?: string
+  onCharacterClick?: () => void
 }
 
 export function MessageBubble({
@@ -42,6 +43,7 @@ export function MessageBubble({
   character,
   showAvatar = true,
   timestamp,
+  onCharacterClick,
 }: MessageBubbleProps) {
   const userLabel = useUserLabel()
   content = fillTemplateVars(content, { user: userLabel, char: character?.name })
@@ -67,29 +69,31 @@ export function MessageBubble({
         ? [{ type: 'dialogue', text: content }]
         : []
 
+  const avatar = (
+    <Avatar className="h-8 w-8 border border-border shadow-sm">
+      <AvatarFallback className="bg-muted text-base">
+        {character?.profile_image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={character.profile_image_url} alt={character.name} className="h-full w-full object-cover object-[center_15%]" />
+        ) : character?.name[0] ?? 'AI'}
+      </AvatarFallback>
+    </Avatar>
+  )
+
   return (
     <div data-dev-language-ignore className="flex w-full items-start gap-2">
       {showAvatar ? (
-        <Avatar className="h-8 w-8 shrink-0 border border-border shadow-sm">
-          <AvatarFallback className="bg-muted text-base">
-            {character?.profile_image_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={character.profile_image_url}
-                alt={character.name}
-                className="h-full w-full object-cover object-[center_15%]"
-              />
-            ) : (
-              character?.name[0] ?? 'AI'
-            )}
-          </AvatarFallback>
-        </Avatar>
+        <div className="h-8 w-8 shrink-0">
+          {onCharacterClick ? (
+            <button type="button" onClick={onCharacterClick} aria-label={`Open ${character?.name ?? 'character'} info`} className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">{avatar}</button>
+          ) : avatar}
+        </div>
       ) : (
         <div className="h-8 w-8 shrink-0" aria-hidden="true" />
       )}
       <div className="flex max-w-[85%] flex-col items-start gap-1">
         {showAvatar && character ? (
-          <span className="ml-1 text-sm font-medium text-muted-foreground">{character.name}</span>
+          onCharacterClick ? <button type="button" onClick={onCharacterClick} className="ml-1 text-sm font-medium text-muted-foreground hover:text-foreground">{character.name}</button> : <span className="ml-1 text-sm font-medium text-muted-foreground">{character.name}</span>
         ) : null}
         {timestamp && showAvatar ? (
           <span className="ml-1 text-[11px] text-muted-foreground">{timestamp}</span>

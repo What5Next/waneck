@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { supabaseAdmin } from '@/lib/supabase.server'
 import type { CharacterSituationImage, Message } from '@/lib/types'
 import { ChatPageClient } from '@/components/chat-page-client'
+import { getOpeningImageUrl, isOpeningImageLabel } from '@/lib/character-opening-image'
 
 export default async function ChatPage({
   params,
@@ -34,12 +35,16 @@ export default async function ChatPage({
     .order('sort_order', { ascending: true })
 
   // 새 대화는 저장된 시작 메시지만 있고, 사용자가 아직 보낸 메시지는 없다.
-  const showOpeningSuggestions =
-    (dbMessages?.length ?? 0) === (openingMessages?.length ?? 0) &&
-    (dbMessages ?? []).every((message, index) =>
-      message.role === openingMessages?.[index]?.role &&
-      message.content === openingMessages[index].content,
+  const hasCurrentOpening =
+    (openingMessages?.length ?? 0) > 0 &&
+    (dbMessages?.length ?? 0) >= (openingMessages?.length ?? 0) &&
+    (openingMessages ?? []).every((opening, index) =>
+      dbMessages?.[index]?.role === opening.role &&
+      dbMessages?.[index]?.content === opening.content,
     )
+  const showOpeningSuggestions =
+    hasCurrentOpening &&
+    (dbMessages?.length ?? 0) === (openingMessages?.length ?? 0)
 
   const { data: situationImages } = await supabaseAdmin
     .from('character_situation_images')
@@ -62,7 +67,8 @@ export default async function ChatPage({
       conversationId={conversationId}
       initialMessages={initialMessages}
       showOpeningSuggestions={showOpeningSuggestions}
-      situationImages={(situationImages ?? []) as CharacterSituationImage[]}
+      situationImages={((situationImages ?? []) as CharacterSituationImage[]).filter((image) => !isOpeningImageLabel(image.label))}
+      openingImageUrl={hasCurrentOpening ? getOpeningImageUrl((situationImages ?? []) as CharacterSituationImage[]) : ''}
     />
   )
 }

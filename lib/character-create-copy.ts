@@ -13,6 +13,8 @@ export const characterCreateKoreanCopy: Record<string, string> = {
   'Add example dialogues and images for specific moments.': '대화 예시와 특정 상황에 표시할 이미지를 설정하세요.',
   'Situation images': '상황 이미지',
   'Situation image': '상황 이미지',
+  'Opening image': '인트로 이미지',
+  'Shown with the first character message when a chat begins.': '새 대화가 시작되면 첫 캐릭터 메시지와 함께 표시됩니다.',
   'Show an uploaded image when a chat message contains the trigger phrase.': '대화에 표시 조건 문구가 포함되면 등록한 이미지를 보여줍니다.',
   'Trigger phrase': '표시 조건 문구',
   'Use a short, specific phrase from a user or character message.': '사용자나 캐릭터 메시지에 나올 짧고 구체적인 문구를 입력하세요.',

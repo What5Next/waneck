@@ -22,6 +22,7 @@ import { buildCharacterPrompt, CHARACTER_TEMPLATE_SECTIONS, EMPTY_CHARACTER_PROM
 import { organizeCharacterPrompt } from '@/lib/character-prompt-organizer'
 import { useDevLanguage } from '@/components/dev-language-provider'
 import { characterCreateText } from '@/lib/character-create-copy'
+import { getOpeningImageUrl, isOpeningImageLabel, OPENING_IMAGE_LABEL } from '@/lib/character-opening-image'
 
 function useFormText() {
   const { language } = useDevLanguage()
@@ -55,6 +56,7 @@ type SituationImageDraft = { imageUrl: string; label: string; file?: File }
 
 type FormState = {
   imageUrl: string
+  introImageUrl: string
   name: string
   tagline: string
   introTurns: IntroTurn[]
@@ -67,6 +69,7 @@ type FormState = {
 
 const DEFAULT_FORM: FormState = {
   imageUrl: '',
+  introImageUrl: '',
   name: '',
   tagline: '',
   introTurns: [
@@ -86,6 +89,7 @@ function toFormState(character: CharacterWithDetail): FormState {
 
   return {
     imageUrl: character.profile_image_url ?? '',
+    introImageUrl: getOpeningImageUrl(character.situation_images),
     name: character.name,
     tagline: character.short_intro ?? '',
     introTurns:
@@ -99,7 +103,7 @@ function toFormState(character: CharacterWithDetail): FormState {
     genres: character.genres ?? [],
     desc: character.description ?? '',
     suggestions: [suggestions[0] ?? '', suggestions[1] ?? '', suggestions[2] ?? ''],
-    situationImages: (character.situation_images ?? []).map((image) => ({ imageUrl: image.image_url, label: image.label ?? '' })),
+    situationImages: (character.situation_images ?? []).filter((image) => !isOpeningImageLabel(image.label)).map((image) => ({ imageUrl: image.image_url, label: image.label ?? '' })),
   }
 }
 
@@ -250,11 +254,14 @@ function SettingsTab({
 function IntroTab({
   form,
   setForm,
+  onImageFileChange,
 }: {
   form: FormState
   setForm: React.Dispatch<React.SetStateAction<FormState>>
+  onImageFileChange: (file: File | null) => void
 }) {
   const t = useFormText()
+  const introImageRef = useRef<HTMLInputElement>(null)
   function updateSuggestion(idx: number, value: string) {
     setForm((f) => {
       const suggestions = [...f.suggestions]
@@ -298,6 +305,30 @@ function IntroTab({
           rows={4}
           maxLength={1400}
         />
+      </Field>
+      <Field label={t('Opening image')} hint={t('Shown with the first character message when a chat begins.')}>
+        <div className="flex items-start gap-3">
+          <label className="flex h-28 w-24 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-border bg-muted/35 hover:bg-muted/50">
+            {form.introImageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={form.introImageUrl} alt={t('Opening image')} className="h-full w-full object-cover" />
+            ) : <Plus className="h-6 w-6 text-muted-foreground" aria-hidden />}
+            <input ref={introImageRef} type="file" accept="image/*" className="sr-only" onChange={(event) => {
+              const file = event.target.files?.[0]
+              if (!file) return
+              onImageFileChange(file)
+              setForm((current) => ({ ...current, introImageUrl: URL.createObjectURL(file) }))
+            }} />
+          </label>
+          <div className="flex flex-col gap-2 pt-1">
+            <Button type="button" variant="outline" size="sm" onClick={() => introImageRef.current?.click()}>{t('Upload')}</Button>
+            {form.introImageUrl ? <Button type="button" variant="ghost" size="sm" onClick={() => {
+              onImageFileChange(null)
+              setForm((current) => ({ ...current, introImageUrl: '' }))
+              if (introImageRef.current) introImageRef.current.value = ''
+            }}>{t('Remove image')}</Button> : null}
+          </div>
+        </div>
       </Field>
       <Field
         label={t('Starting messages')}
@@ -621,6 +652,7 @@ export function CharacterCreateForm({
     initialData ? toFormState(initialData) : DEFAULT_FORM,
   )
   const [imageFile, setImageFile] = useState<File | null>(null)
+  const [introImageFile, setIntroImageFile] = useState<File | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -659,6 +691,8 @@ export function CharacterCreateForm({
         image_url: image.file ? await uploadImage(image.file) : image.imageUrl,
         label: image.label.trim(),
       })))
+      const introImageUrl = introImageFile ? await uploadImage(introImageFile) : form.introImageUrl
+      if (introImageUrl) situationImages.push({ image_url: introImageUrl, label: OPENING_IMAGE_LABEL })
 
       const payload = {
         name: form.name,
@@ -677,7 +711,8 @@ export function CharacterCreateForm({
       if (mode === 'edit' && characterId) {
         const updated = await updateCharacterMutation.mutateAsync(payload)
         setImageFile(null)
-        setForm((f) => ({ ...f, imageUrl: updated.profile_image_url ?? '', situationImages: situationImages.map((image) => ({ imageUrl: image.image_url, label: image.label })) }))
+        setIntroImageFile(null)
+        setForm((f) => ({ ...f, imageUrl: updated.profile_image_url ?? '', introImageUrl, situationImages: situationImages.filter((image) => !isOpeningImageLabel(image.label)).map((image) => ({ imageUrl: image.image_url, label: image.label })) }))
         toast.success(t('Saved'))
       } else {
         const data = await createCharacterMutation.mutateAsync(payload)
@@ -752,6 +787,7 @@ export function CharacterCreateForm({
     name: form.name,
     tagline: form.tagline,
     imageUrl: form.imageUrl,
+    introImageUrl: form.introImageUrl,
     description: form.desc,
     genres: form.genres,
     introTurns: form.introTurns,
@@ -793,7 +829,7 @@ export function CharacterCreateForm({
             <p className={characterFormDescriptionClassName}>{t(TAB_INTROS[activeTab].description)}</p>
           </div>
           {activeTab === 'settings' && <SettingsTab form={form} setForm={setForm} onFileChange={setImageFile} />}
-          {activeTab === 'intro'    && <IntroTab    form={form} setForm={setForm} />}
+          {activeTab === 'intro'    && <IntroTab    form={form} setForm={setForm} onImageFileChange={setIntroImageFile} />}
           {activeTab === 'prompt'   && <PromptTab   form={form} setForm={setForm} />}
           {activeTab === 'examples' && <ExamplesTab form={form} setForm={setForm} />}
         </div>

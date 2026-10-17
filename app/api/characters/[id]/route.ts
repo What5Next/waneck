@@ -12,6 +12,7 @@ import {
 } from "@/lib/api/character-stats-auth";
 import { normalizeCharacterGenres } from "@/lib/character-genres";
 import { deleteS3ObjectByUrl } from "@/lib/s3";
+import { isOpeningImageLabel } from '@/lib/character-opening-image'
 
 export async function GET(
   _req: Request,
@@ -137,7 +138,7 @@ export async function PATCH(
     );
   }
 
-  if (body.situationImages && (body.situationImages.length > 5 || body.situationImages.some((image) => !image.image_url?.trim() || !image.label?.trim()))) {
+  if (body.situationImages && (body.situationImages.filter((image) => !isOpeningImageLabel(image.label)).length > 5 || body.situationImages.filter((image) => isOpeningImageLabel(image.label)).length > 1 || body.situationImages.some((image) => !image.image_url?.trim() || !image.label?.trim()))) {
     return NextResponse.json({ error: "상황 이미지마다 사진과 표시 조건 문구가 필요합니다" }, { status: 400 });
   }
 

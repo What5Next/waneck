@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 
 import type { Message } from '@/lib/types'
 import type { Character, CharacterSituationImage } from '@/lib/types'
+import { isOpeningImageLabel } from '@/lib/character-opening-image'
 import { cn } from '@/lib/utils'
 import { MessageBubble } from './message-bubble'
 import { SuggestedReplies, type SuggestedReply } from './suggested-replies'
@@ -24,6 +25,8 @@ export type ChatThreadProps = {
   situationImages?: CharacterSituationImage[]
   suggestedReplies?: SuggestedReply[]
   onSelectSuggestedReply?: (item: SuggestedReply) => void
+  openingImageUrl?: string
+  onOpenCharacterInfo?: () => void
 }
 
 export function ChatThread({
@@ -34,8 +37,11 @@ export function ChatThread({
   situationImages = [],
   suggestedReplies = [],
   onSelectSuggestedReply,
+  openingImageUrl,
+  onOpenCharacterInfo,
 }: ChatThreadProps) {
   const bottomRef = useRef<HTMLDivElement>(null)
+  const firstModelIndex = messages.findIndex((message) => message.role === 'model')
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -64,7 +70,7 @@ export function ChatThread({
           const isConsecutiveSameRole = prevMsg?.role === m.role
           const showAvatar = m.role === 'model' && !isConsecutiveSameRole
           const situationImage = !(isLoading && idx === messages.length - 1)
-            ? situationImages.find((image) => image.label?.trim() && m.content.toLocaleLowerCase().includes(image.label.trim().toLocaleLowerCase()))
+            ? situationImages.find((image) => !isOpeningImageLabel(image.label) && image.label?.trim() && m.content.toLocaleLowerCase().includes(image.label.trim().toLocaleLowerCase()))
             : undefined
           return (
             <div
@@ -76,7 +82,12 @@ export function ChatThread({
                 content={m.content}
                 character={character}
                 showAvatar={showAvatar}
+                onCharacterClick={m.role === 'model' ? onOpenCharacterInfo : undefined}
               />
+              {openingImageUrl && idx === firstModelIndex ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={openingImageUrl} alt={`${character.name} opening scene`} className="mt-2 ml-10 max-h-80 max-w-[min(80%,20rem)] rounded-xl object-contain" />
+              ) : null}
               {situationImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={situationImage.image_url} alt={situationImage.label ?? ''}
@@ -87,7 +98,7 @@ export function ChatThread({
           )
         })}
         {isLoading && (
-          <MessageBubble role="model" content="" isLoading character={character} showAvatar />
+          <MessageBubble role="model" content="" isLoading character={character} showAvatar onCharacterClick={onOpenCharacterInfo} />
         )}
         {suggestedReplies.length > 0 && onSelectSuggestedReply ? (
           <SuggestedReplies items={suggestedReplies} onSelect={onSelectSuggestedReply} />

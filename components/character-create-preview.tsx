@@ -20,6 +20,7 @@ type PreviewProps = {
   name: string
   tagline: string
   imageUrl: string
+  introImageUrl: string
   description: string
   genres: string[]
   introTurns: { role: 'user' | 'model'; text: string }[]
@@ -36,6 +37,7 @@ export function CharacterCreatePreview({
   name,
   tagline,
   imageUrl,
+  introImageUrl,
   description,
   genres,
   introTurns,
@@ -110,13 +112,18 @@ export function CharacterCreatePreview({
         ) : view === 'chat' ? (
           <div className="flex flex-col gap-4" data-dev-language-ignore>
             {introTurns.map((turn, index) => (
-              <MessageBubble
-                key={index}
-                role={turn.role}
-                content={turn.text.trim() || t(turn.role === 'user' ? 'Please enter a user message.' : 'Please enter an intro.')}
-                character={previewCharacter}
-                showAvatar={turn.role === 'model' && (index === 0 || introTurns[index - 1].role !== 'model')}
-              />
+              <div key={index} className="flex flex-col gap-2">
+                <MessageBubble
+                  role={turn.role}
+                  content={turn.text.trim() || t(turn.role === 'user' ? 'Please enter a user message.' : 'Please enter an intro.')}
+                  character={previewCharacter}
+                  showAvatar={turn.role === 'model' && (index === 0 || introTurns[index - 1].role !== 'model')}
+                />
+                {introImageUrl && turn.role === 'model' && !introTurns.slice(0, index).some((previous) => previous.role === 'model') ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={introImageUrl} alt={t('Opening image')} className="ml-10 max-h-80 max-w-[min(80%,20rem)] rounded-xl object-contain" />
+                ) : null}
+              </div>
             ))}
             {!introTurns.some((turn) => turn.role === 'user') ? (
               <MessageBubble

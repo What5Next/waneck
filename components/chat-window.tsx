@@ -124,12 +124,16 @@ export default function ChatWindow({
   initialMessages = [],
   showOpeningSuggestions = false,
   situationImages = [],
+  openingImageUrl = '',
+  onOpenCharacterInfo,
 }: {
   character: Character
   conversationId?: string | null
   initialMessages?: Message[]
   showOpeningSuggestions?: boolean
   situationImages?: CharacterSituationImage[]
+  openingImageUrl?: string
+  onOpenCharacterInfo?: () => void
 }) {
   const [messages, setMessages] = useState<Message[]>(() => initialMessages.map((message) => {
     if (message.role !== 'model') return message
@@ -403,6 +407,8 @@ export default function ChatWindow({
             isLoading={isLoading}
             character={character}
             situationImages={situationImages}
+            openingImageUrl={openingImageUrl}
+            onOpenCharacterInfo={onOpenCharacterInfo}
             suggestedReplies={suggestedReplies}
             onSelectSuggestedReply={selectSuggestedReply}
           />

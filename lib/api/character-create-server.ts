@@ -1,6 +1,7 @@
 import { normalizeCharacterGenres } from '@/lib/character-genres'
 import { supabaseAdmin } from '@/lib/supabase.server'
 import type { Tables } from '@/lib/database.types'
+import { isOpeningImageLabel } from '@/lib/character-opening-image'
 
 type IntroTurn = { role: string; text: string }
 
@@ -44,7 +45,7 @@ export async function createCharacter(
   if (!body.system_prompt?.trim()) {
     return { ok: false, status: 400, error: '시스템 프롬프트는 필수입니다' }
   }
-  if (body.situationImages && (body.situationImages.length > 5 || body.situationImages.some((image) => !image.image_url?.trim() || !image.label?.trim()))) {
+  if (body.situationImages && (body.situationImages.filter((image) => !isOpeningImageLabel(image.label)).length > 5 || body.situationImages.filter((image) => isOpeningImageLabel(image.label)).length > 1 || body.situationImages.some((image) => !image.image_url?.trim() || !image.label?.trim()))) {
     return { ok: false, status: 400, error: '상황 이미지마다 사진과 표시 조건 문구가 필요합니다' }
   }
 

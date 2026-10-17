@@ -19,12 +19,14 @@ interface ChatHeaderProps {
   characterId: string;
   characterName: string;
   conversationId?: string | null;
+  onOpenCharacterInfo: () => void;
 }
 
 export function ChatHeader({
   characterId,
   characterName,
   conversationId,
+  onOpenCharacterInfo,
 }: ChatHeaderProps) {
   const [mobileSettingsOpen, setMobileSettingsOpen] = useState(false);
   const [desktopSettingsOpen, setDesktopSettingsOpen] = useState(false);
@@ -38,27 +40,24 @@ export function ChatHeader({
     >
       <header className="flex h-14 items-center justify-between px-5">
       {/* 모바일: 뒤로가기 + 캐릭터명 */}
-      <Link
-        href={`/characters/${characterId}`}
-        className="flex min-w-0 items-center gap-0.5 sm:hidden"
-        aria-label={`Back to ${characterName}`}
-      >
-        <ChevronLeft className="h-5 w-5 shrink-0 text-foreground" aria-hidden />
-        <h1 className="min-w-0 truncate text-base font-medium text-foreground">
-          {characterName}
-        </h1>
-      </Link>
+      <div className="flex min-w-0 items-center gap-0.5 sm:hidden">
+        <Link href={`/characters/${characterId}`} aria-label={`Back to ${characterName}`} className="shrink-0">
+          <ChevronLeft className="h-5 w-5 text-foreground" aria-hidden />
+        </Link>
+        <button type="button" onClick={onOpenCharacterInfo} aria-label={`Open ${characterName} character info`} className="min-w-0 text-left">
+          <h1 className="min-w-0 truncate text-base font-medium text-foreground">
+            {characterName}
+          </h1>
+        </button>
+      </div>
 
-      {/* 데스크톱: 캐릭터명 (클릭 시 상세 페이지) */}
-      <Link
-        href={`/characters/${characterId}`}
-        className="hidden min-w-0 items-center gap-0.5 text-foreground transition-colors hover:text-foreground/70 sm:flex"
-      >
+      {/* 데스크톱: 캐릭터명 (클릭 시 정보창) */}
+      <button type="button" onClick={onOpenCharacterInfo} aria-label={`Open ${characterName} character info`} className="hidden min-w-0 items-center gap-0.5 text-foreground transition-colors hover:text-foreground/70 sm:flex">
         <h1 className="min-w-0 truncate text-base font-medium">
           {characterName}
         </h1>
         <ChevronRight className="h-5 w-5 shrink-0" aria-hidden />
-      </Link>
+      </button>
 
       {/* 우측: 설정 */}
       <div className="flex shrink-0 items-center gap-1">
