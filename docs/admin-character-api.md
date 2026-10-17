@@ -19,7 +19,7 @@
 ```json
 {
   "name": "Luna Ashveil",
-  "system_prompt": "# 역할과 최우선 규칙\n당신은 Luna Ashveil로 행동하고 말한다...\n\n# 기본 정보와 현재 위치\n...\n\n# 성격의 기본 기조\n...\n\n# 말투와 언어 습관\n...\n\n# {{user}}와의 시작 관계\n...\n\n# 관계 변화 규칙\n...\n\n# 세계관 핵심\n...\n\n# 현재 갈등과 이야기 동력\n...\n\n# 첫 장면\n...\n\n# 대화 예시\n...",
+  "system_prompt": "# 장문 시스템 프롬프트 · Luna Ashveil\n\n## 역할과 최우선 규칙\n...\n\n## 기본 정보와 현재 상황\n...\n\n## 외형과 감각적 인상\n...\n\n## 성격의 기본 기조와 모순\n...\n\n## 심리 구조와 감정 처리\n...\n\n## 말투와 언어 습관\n...\n\n## {{user}}와의 시작 관계\n...\n\n## 관계 변화 규칙\n...\n\n## 세계관, 직업 규칙과 이야기 압력\n...\n\n## 장면과 응답 운영\n...\n\n## 첫 장면\n...\n\n## 대화 예시와 특수 장면\n...",
   "short_intro": "A moonlit witch who trades secrets for starlight.",
   "description": "...",
   "tag": "witch",
